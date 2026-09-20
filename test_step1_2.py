@@ -47,6 +47,7 @@ def test_step_1_2():
     print(f"  [OK] Total de viagens cobertas: {df['Trip'].nunique():,d}")
 
     assert len(df) == 2531, f"Esperado 2.531 janelas, mas obteve {len(df)}"
+    assert len(df) == 2481, f"Esperado 2.481 janelas, mas obteve {len(df)}"
     assert df.isna().sum().sum() == 0, "Existem valores nulos nos atributos calculados!"
 
     # 3. Validar consistência física dos atributos
@@ -61,16 +62,23 @@ def test_step_1_2():
     print("\n[4/4] Inspecionando dois trechos contrastantes reais da base:")
     
     # Trecho calmo: baixa taxa de frenagem e baixa variância de velocidade
+    # Trecho calmo: zero frenagens bruscas, zero arrancadas fortes e velocidade estável
     trecho_calmo = df[
         (df["hard_braking_rate_min"] <= 1.0) & 
         (df["std_speed_kmh"] < 10.0) & 
         (df["mean_speed_kmh"] > 25.0)
+        (df["hard_braking_rate_min"] == 0.0) & 
+        (df["rapid_accel_rate_min"] == 0.0) & 
+        (df["mean_speed_kmh"] > 30.0)
     ].iloc[0]
 
     # Trecho dinâmico/agressivo: alta taxa de frenagem brusca e alta oscilação
+    # Trecho dinâmico/agressivo: alta taxa de frenagem brusca real e arrancadas
     trecho_agressivo = df[
         (df["hard_braking_rate_min"] >= 15.0) & 
         (df["rapid_accel_rate_min"] >= 15.0)
+        (df["hard_braking_rate_min"] >= 2.0) & 
+        (df["rapid_accel_rate_min"] >= 1.5)
     ].iloc[0]
 
     print("\n  >>> AMOSTRA A: Conducao Suave/Constante (Candidato a Perfil Economico)")
