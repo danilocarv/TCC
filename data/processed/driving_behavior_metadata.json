@@ -1,0 +1,132 @@
+{
+    "dataset": "VED - Pure Electric Vehicles Driving Behavior Features",
+    "description": "Atributos comportamentais de condução agregados em janelas de 120 segundos",
+    "total_windows": 2531,
+    "total_trips_covered": 491,
+    "vehicles": [
+        10,
+        455,
+        541
+    ],
+    "feature_columns": [
+        "mean_speed_kmh",
+        "max_speed_kmh",
+        "std_speed_kmh",
+        "mean_pos_accel_ms2",
+        "max_pos_accel_ms2",
+        "mean_neg_accel_ms2",
+        "min_neg_accel_ms2",
+        "hard_braking_events",
+        "hard_braking_rate_min",
+        "rapid_accel_events",
+        "rapid_accel_rate_min",
+        "high_jerk_events",
+        "idle_ratio"
+    ],
+    "descriptive_statistics": {
+        "mean_speed_kmh": {
+            "mean": 35.03,
+            "std": 18.253,
+            "min": 0.0,
+            "p50": 35.24,
+            "p90": 56.09,
+            "max": 116.57
+        },
+        "max_speed_kmh": {
+            "mean": 55.914,
+            "std": 21.363,
+            "min": 0.0,
+            "p50": 58.97,
+            "p90": 76.42,
+            "max": 132.13
+        },
+        "std_speed_kmh": {
+            "mean": 15.76,
+            "std": 7.077,
+            "min": 0.0,
+            "p50": 16.07,
+            "p90": 24.21,
+            "max": 46.54
+        },
+        "mean_pos_accel_ms2": {
+            "mean": 1.194,
+            "std": 0.502,
+            "min": 0.0,
+            "p50": 1.222,
+            "p90": 1.781,
+            "max": 3.693
+        },
+        "max_pos_accel_ms2": {
+            "mean": 5.222,
+            "std": 1.671,
+            "min": 0.0,
+            "p50": 6.0,
+            "p90": 6.0,
+            "max": 6.0
+        },
+        "mean_neg_accel_ms2": {
+            "mean": -1.351,
+            "std": 0.579,
+            "min": -3.636,
+            "p50": -1.372,
+            "p90": -0.636,
+            "max": 0.0
+        },
+        "min_neg_accel_ms2": {
+            "mean": -6.508,
+            "std": 2.348,
+            "min": -8.0,
+            "p50": -8.0,
+            "p90": -2.866,
+            "max": 0.0
+        },
+        "hard_braking_events": {
+            "mean": 14.308,
+            "std": 8.821,
+            "min": 0.0,
+            "p50": 14.0,
+            "p90": 26.0,
+            "max": 44.0
+        },
+        "hard_braking_rate_min": {
+            "mean": 8.002,
+            "std": 4.953,
+            "min": 0.0,
+            "p50": 7.95,
+            "p90": 14.29,
+            "max": 41.62
+        },
+        "rapid_accel_events": {
+            "mean": 13.655,
+            "std": 8.702,
+            "min": 0.0,
+            "p50": 13.0,
+            "p90": 25.0,
+            "max": 50.0
+        },
+        "rapid_accel_rate_min": {
+            "mean": 7.669,
+            "std": 4.84,
+            "min": 0.0,
+            "p50": 7.47,
+            "p90": 13.95,
+            "max": 32.53
+        },
+        "high_jerk_events": {
+            "mean": 69.493,
+            "std": 34.895,
+            "min": 0.0,
+            "p50": 71.0,
+            "p90": 114.0,
+            "max": 169.0
+        },
+        "idle_ratio": {
+            "mean": 0.171,
+            "std": 0.245,
+            "min": 0.0,
+            "p50": 0.085,
+            "p90": 0.435,
+            "max": 1.0
+        }
+    }
+}

@@ -1,0 +1,73 @@
+{
+    "dataset_name": "Vehicle Energy Dataset (VED) - Pure Electric Vehicles (EV)",
+    "models": "Nissan Leaf 2013 (24 kWh battery)",
+    "vehicle_ids": [
+        10,
+        455,
+        541
+    ],
+    "total_rows": 476308,
+    "total_trips": 491,
+    "columns": [
+        "DayNum",
+        "VehId",
+        "Trip",
+        "Timestamp(ms)",
+        "Latitude[deg]",
+        "Longitude[deg]",
+        "Vehicle Speed[km/h]",
+        "OAT[DegC]",
+        "Air Conditioning Power[Watts]",
+        "Heater Power[Watts]",
+        "HV Battery Current[A]",
+        "HV Battery SOC[%]",
+        "HV Battery Voltage[V]"
+    ],
+    "null_counts": {
+        "DayNum": 0,
+        "VehId": 0,
+        "Trip": 0,
+        "Timestamp(ms)": 0,
+        "Latitude[deg]": 0,
+        "Longitude[deg]": 0,
+        "Vehicle Speed[km/h]": 0,
+        "OAT[DegC]": 0,
+        "Air Conditioning Power[Watts]": 0,
+        "Heater Power[Watts]": 0,
+        "HV Battery Current[A]": 0,
+        "HV Battery SOC[%]": 0,
+        "HV Battery Voltage[V]": 0
+    },
+    "per_vehicle_summary": {
+        "10": {
+            "total_records": 167257,
+            "total_trips": 201,
+            "speed_kmh_mean": 34.5,
+            "speed_kmh_max": 103.43000030517578,
+            "current_a_min": -290.5,
+            "current_a_max": 97.5,
+            "voltage_v_mean": 382.4800109863281,
+            "soc_pct_mean": 84.4000015258789
+        },
+        "455": {
+            "total_records": 303824,
+            "total_trips": 293,
+            "speed_kmh_mean": 40.72999954223633,
+            "speed_kmh_max": 132.1300048828125,
+            "current_a_min": -229.5,
+            "current_a_max": 118.5,
+            "voltage_v_mean": 378.1400146484375,
+            "soc_pct_mean": 70.52999877929688
+        },
+        "541": {
+            "total_records": 5227,
+            "total_trips": 10,
+            "speed_kmh_mean": 49.43000030517578,
+            "speed_kmh_max": 85.70999908447266,
+            "current_a_min": -189.0,
+            "current_a_max": 110.0,
+            "voltage_v_mean": 375.6700134277344,
+            "soc_pct_mean": 63.310001373291016
+        }
+    }
+}
