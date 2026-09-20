@@ -16,12 +16,14 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
 | `docs/Pré-banca de TCC - Danilo Carvalho de Oliveira.pdf` | Documento original da proposta de TCC apresentada à banca | ✅ Concluído |
 | `docs/PLANO_DE_IMPLEMENTACAO.md` | Plano mestre detalhado contendo a arquitetura e divisão das fases | ✅ Concluído |
 | `docs/REGISTRO_DE_DESENVOLVIMENTO.md` | Este diário de bordo com o histórico e mapeamento do projeto | ✅ Ativo |
+| `docs/HISTORICO_TECNICO_E_AJUSTES.md` | Relatório técnico detalhado com histórico de decisões, causas-raízes e correções | ✅ Ativo |
 | `src/__init__.py` | Arquivo de inicialização do pacote principal | ✅ Concluído |
 | `src/config.py` | Configurações globais, caminhos, constantes e metadados dos EVs | ✅ Concluído |
 | `src/data_loader.py` | Pipeline de extração e consolidação dos dados dos veículos elétricos | ✅ Concluído |
 | `src/feature_engineering.py` | Cálculo de cinemática (aceleração, jerk) e janelamento comportamental | ✅ Concluído |
 | `test_step1.py` | Script de teste e validação automatizada da integridade dos dados extraídos | ✅ Concluído |
 | `test_step1_2.py` | Script de teste e validação dos atributos comportamentais calculados | ✅ Concluído |
+| `inspect_trip.py` | Inspecionador interativo para consultar métricas de qualquer viagem real do dataset | ✅ Concluído |
 | `data/raw/ev_telemetry.parquet` | Base consolidada dos EVs puros em Parquet (3.72 MB) | ✅ Concluído |
 | `data/raw/ev_telemetry.csv` | Cópia direta em CSV para inspeção tabular (41.69 MB) | ✅ Concluído |
 | `data/raw/ev_dataset_metadata.json` | Metadados estatísticos e contagem de nulos do dataset extraído | ✅ Concluído |

@@ -36,62 +36,70 @@ from src.config import (
 
 def compute_point_kinematics(df_telemetry: pd.DataFrame) -> pd.DataFrame:
     """
-    Calcula variáveis cinemáticas ponto a ponto segundo a segundo:
-    - Delta de tempo (dt em segundos);
-    - Velocidade suavizada (para filtrar ruído de quantização dos sensores OBD);
-    - Aceleração longitudinal (a em m/s²);
-    - Taxa de variação da aceleração (jerk em m/s³);
-    - Potência instantânea da bateria (kW).
+    Calcula variáveis cinemáticas ponto a ponto regularizadas em grade temporal de 1 Hz exato.
+    Remove os ruídos de polling sub-segundo do barramento CAN (0.1s a 0.4s) que inflacionavam
+    artificialmente a aceleração (dv/dt) em leituras repetidas dos sensores OBD-II.
     """
-    print("-> [1/4] Calculando variáveis cinemáticas ponto a ponto (1 Hz)...")
+    print("-> [1/4] Regularizando telemetria para 1 Hz exato e calculando cinemática...")
     start_t = time.time()
     
-    # Criar cópia para não alterar o DataFrame original
     df = df_telemetry.copy()
     
-    # Garantir ordenação temporal estrita
-    df.sort_values(by=["VehId", "Trip", "Timestamp(ms)"], inplace=True)
-    df.reset_index(drop=True, inplace=True)
+    # 1. Converter timestamp relativo de cada viagem em segundos inteiros exatos (1 Hz)
+    df["second_id"] = (
+        (df["Timestamp(ms)"] - df.groupby(["VehId", "Trip"])["Timestamp(ms)"].transform("min")) / 1000.0
+    ).round().astype(int)
     
-    # Delta de tempo por viagem
-    df["dt"] = df.groupby("Trip")["Timestamp(ms)"].diff() / 1000.0
-    # Preencher primeiro ponto da viagem com 1.0s e limitar dt mínimo em 0.5s para evitar divisão por zero
-    df["dt"] = df["dt"].fillna(1.0)
-    # Se houver saltos anômalos de tempo (> 10s), limitar para 1.0s para não distorcer aceleração
-    df.loc[df["dt"] <= 0, "dt"] = 1.0
-    df.loc[df["dt"] > 10.0, "dt"] = 1.0
+    # 2. Reamostragem/agregação para 1 segundo exato por viagem
+    # Agrupa múltiplas mensagens da rede CAN que chegam no mesmo segundo
+    df_1hz = df.groupby(["VehId", "Trip", "second_id"], as_index=False).agg({
+        "DayNum": "first",
+        "Latitude[deg]": "first",
+        "Longitude[deg]": "first",
+        "Vehicle Speed[km/h]": "mean",
+        "OAT[DegC]": "mean",
+        "Air Conditioning Power[Watts]": "mean",
+        "Heater Power[Watts]": "mean",
+        "HV Battery Current[A]": "mean",
+        "HV Battery SOC[%]": "last",
+        "HV Battery Voltage[V]": "mean",
+    })
+    
+    # Garantir ordenação temporal estrita
+    df_1hz.sort_values(by=["VehId", "Trip", "second_id"], inplace=True)
+    df_1hz.reset_index(drop=True, inplace=True)
+    
+    # Delta de tempo exato em segundos entre registros (1.0s)
+    df_1hz["dt"] = (
+        df_1hz.groupby(["VehId", "Trip"])["second_id"].diff().fillna(1.0).clip(lower=1.0, upper=5.0)
+    )
     
     # Conversão de velocidade: km/h para m/s
-    df["v_ms"] = df["Vehicle Speed[km/h]"] / 3.6
+    df_1hz["v_ms"] = df_1hz["Vehicle Speed[km/h]"] / 3.6
     
-    # Suavização móvel de 3 pontos para velocidade por viagem (remove ruído de degrau do sensor OBD)
-    df["v_smooth_ms"] = (
-        df.groupby("Trip")["v_ms"]
+    # Suavização móvel de 3 pontos para velocidade (filtra ruído de degrau de 1 km/h do OBD)
+    df_1hz["v_smooth_ms"] = (
+        df_1hz.groupby(["VehId", "Trip"])["v_ms"]
         .transform(lambda s: s.rolling(window=3, min_periods=1, center=True).mean())
     )
     
-    # Aceleração longitudinal: a = dv / dt (m/s²)
-    df["accel_ms2"] = (
-        df.groupby("Trip")["v_smooth_ms"].diff() / df["dt"]
-    ).fillna(0.0)
+    # Aceleração longitudinal real em 1 Hz: a = dv / dt (m/s²)
+    df_1hz["accel_ms2"] = (
+        df_1hz.groupby(["VehId", "Trip"])["v_smooth_ms"].diff() / df_1hz["dt"]
+    ).fillna(0.0).clip(lower=-8.0, upper=6.0)
     
-    # Limites físicos de segurança para veículos urbanos (Nissan Leaf: -8.0 a +6.0 m/s²)
-    df["accel_ms2"] = df["accel_ms2"].clip(lower=-8.0, upper=6.0)
-    
-    # Jerk (variação de aceleração): j = da / dt (m/s³)
-    df["jerk_ms3"] = (
-        df.groupby("Trip")["accel_ms2"].diff() / df["dt"]
+    # Jerk (taxa de variação da aceleração em m/s³)
+    df_1hz["jerk_ms3"] = (
+        df_1hz.groupby(["VehId", "Trip"])["accel_ms2"].diff() / df_1hz["dt"]
     ).fillna(0.0).clip(lower=-15.0, upper=15.0)
     
-    # Potência instantânea da bateria em kW (P = V * I / 1000)
-    # No VED: corrente negativa = descarga (consumo do motor elétrico); corrente positiva = regeneração
-    # Padronizamos Potência Elétrica Consumida: P_consumida = - (Tensão * Corrente) / 1000
-    # Assim, valores positivos indicam consumo de energia e valores negativos indicam recarga por regeneração
-    df["power_kw"] = -(df["HV Battery Voltage[V]"] * df["HV Battery Current[A]"]) / 1000.0
+    # Potência instantânea consumida da bateria em kW (P = - V * I / 1000)
+    # Valores positivos = consumo; valores negativos = regeneração
+    df_1hz["power_kw"] = -(df_1hz["HV Battery Voltage[V]"] * df_1hz["HV Battery Current[A]"]) / 1000.0
     
     elapsed = time.time() - start_t
-    print(f"   Cinemática calculada com sucesso em {elapsed:.1f}s!")
-    return df
+    print(f"   Telemetria regularizada a 1 Hz ({len(df_1hz):,d} segundos de operação) em {elapsed:.1f}s!")
+    return df_1hz
 
 
 def extract_driving_behavior_windows(
@@ -108,7 +116,7 @@ def extract_driving_behavior_windows(
     
     # Tempo relativo decorrido dentro de cada viagem (em segundos)
     df = df_kinematics.copy()
-    df["elapsed_s"] = df.groupby("Trip")["Timestamp(ms)"].transform(lambda x: (x - x.min()) / 1000.0)
+    df["elapsed_s"] = df.groupby(["VehId", "Trip"])["second_id"].transform(lambda x: x - x.min())
     
     # Identificador da janela temporal dentro de cada viagem
     df["window_id"] = (df["elapsed_s"] // window_size_seconds).astype(int)
