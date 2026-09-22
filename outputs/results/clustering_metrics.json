@@ -1,0 +1,64 @@
+{
+    "evaluation_metrics": {
+        "k": [
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "inertia": [
+            10175.069091151563,
+            8397.566500395258,
+            7294.156199699702,
+            6428.028937218431,
+            5900.206989831781
+        ],
+        "silhouette": [
+            0.2551928949643557,
+            0.2422741108848859,
+            0.2500995559485596,
+            0.2144620648579635,
+            0.22062963667614727
+        ],
+        "davies_bouldin": [
+            1.5903764195835774,
+            1.4537463867304865,
+            1.3515281683231668,
+            1.3279190911066037,
+            1.2920480906773786
+        ],
+        "calinski_harabasz": [
+            708.2972827002272,
+            665.0370931526372,
+            622.6423501062673,
+            604.75145844897,
+            566.7072648626335
+        ]
+    },
+    "optimal_k_selected": 3,
+    "cluster_distribution": {
+        "counts": {
+            "Moderado / Regular": 1377,
+            "Econômico / Suave": 690,
+            "Agressivo / Dinâmico": 414
+        },
+        "percentages": {
+            "Moderado / Regular": 55.5,
+            "Econômico / Suave": 27.81,
+            "Agressivo / Dinâmico": 16.69
+        }
+    },
+    "pca_explained_variance_ratio": [
+        0.4964195130571595,
+        0.19742308343751744
+    ],
+    "feature_columns_used": [
+        "mean_speed_kmh",
+        "std_speed_kmh",
+        "mean_pos_accel_ms2",
+        "max_pos_accel_ms2",
+        "hard_braking_rate_min",
+        "rapid_accel_rate_min"
+    ]
+}

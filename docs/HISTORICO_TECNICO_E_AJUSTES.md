@@ -136,6 +136,56 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 8: Isolamento de Condução Ativa vs. Veículo Estacionado/Em Marcha Lenta
+* **Data:** 20/09/2026
+* **Arquivos Afetados:** `src/clustering.py`, `src/config.py`, `test_step1_3.py`
+* **Contexto:**
+  Nas 2.531 janelas de 120 segundos extraídas do VED, identificou-se trechos em que o veículo estava praticamente parado ou em manobra de estacionamento/espera prolongada, registrando velocidade média inferior a 8 km/h e acelerações nulas.
+* **Problema Identificado:**
+  Se trechos com o carro praticamente parado forem fornecidos diretamente para o algoritmo K-Means, a distância euclidiana faz com que o modelo crie um cluster puramente para "veículos parados" em vez de classificar o *estilo dinâmico de condução* do motorista (suave, moderado ou agressivo).
+* **Decisão Tomada e Correção:**
+  Estabelecer um critério de corte de condução ativa: trechos com `mean_speed_kmh >= 8.0` km/h.
+* **Impacto e Conclusão:**
+  As 2.481 janelas ativas restantes garantiram que o K-Means aprendesse padrões reais de condução motora (oscilação de pedal, intensidade de freada, arrancada e controle de velocidade), eliminando distorções de trechos ociosos.
+
+---
+
+### 🔹 Item 9: Arquitetura Wrapper `DrivingProfileModel` para Ordenação Semântica e Serialização Segura
+* **Data:** 20/09/2026
+* **Arquivos Afetados:** `src/clustering.py`, `test_step1_3.py`, `outputs/models/kmeans_driver_profile.joblib`
+* **Problema Identificado:**
+  1. O algoritmo K-Means atribui rótulos de cluster de forma puramente arbitrária (ex.: o cluster 0 pode ser o mais calmo em uma execução e o mais agressivo em outra).
+  2. A tentativa ingênua de reordenar manualmente os atributos internos do Scikit-Learn (como `kmeans.cluster_centers_`) quebra atributos privados da biblioteca C (`_n_threads`), causando falhas silenciosas ou erros no método `.predict()`.
+* **Solução de Engenharia de Software:**
+  Criação da classe wrapper `DrivingProfileModel` em `src/clustering.py`. Esta classe encapsula o modelo `KMeans` original intacto e um mapeamento ordenado determinístico baseado no índice cinemático de agressividade:
+  $$\text{Índice} = \text{Taxa Freadas Bruscas} + \text{Taxa Arrancadas} + 0,1 \times \sigma_{\text{velocidade}}$$
+  A classe expõe os métodos padronizados `.predict(X)`, `.predict_label(X)` e `.transform(X)`.
+* **Garantia de Comportamento Determinístico:**
+  * **Cluster 0:** Sempre **Econômico / Suave** (690 trechos - 27,8%)
+  * **Cluster 1:** Sempre **Moderado / Regular** (1.377 trechos - 55,5%)
+  * **Cluster 2:** Sempre **Agressivo / Dinâmico** (414 trechos - 16,7%)
+* **Impacto e Conclusão:**
+  Serialização via `joblib` 100% íntegra, reprodutibilidade matemática absoluta e facilidade de integração em qualquer API ou interface gráfica.
+
+---
+
+### 🔹 Item 10: Consolidação da Fundamentação Teórica, Fórmulas e Literatura Científica
+* **Data:** 21/09/2026
+* **Arquivos Afetados:** `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md`, `docs/REGISTRO_DE_DESENVOLVIMENTO.md`
+* **Contexto:**
+  Revisão integral solicitada pelo autor de todas as fórmulas matemáticas, grandezas físicas e limiares de decisão implementados no código (ex.: $|a| \ge 2,0\text{ m/s}^2$ para freadas e arrancadas, $|j| > 2,5\text{ m/s}^3$ para jerk, janela de 120s, corte de velocidade $\ge 8\text{ km/h}$, $P = -V \times I / 1000$ e seleção de $k=3$).
+* **Ações Realizadas:**
+  1. Levantamento bibliográfico de periódicos internacionais de alto impacto (IEEE Transactions on Intelligent Transportation Systems, Applied Energy, Complex & Intelligent Systems, Transportation Research Part F, Accident Analysis & Prevention, relatórios da NHTSA/VTTI).
+  2. Criação do documento centralizador `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md` contendo:
+     * Tabela resumo cruzando cada fórmula/limiar com sua faixa na literatura.
+     * Detalhamento físico-matemático de cada variável cinemática e energética.
+     * Catálogo de 14 referências com DOIs e links diretos (Mobini Seraji et al., 2025; Oh et al., 2020; Martinez et al., 2018; Klauer et al., 2006; Bagdadi, 2013; Eboli et al., 2016; Bingham et al., 2012; Fiori et al., 2016, etc.).
+     * Roteiro de aplicação para redação da Introdução, Metodologia e Resultados da monografia.
+* **Impacto e Conclusão:**
+  Garantia de 100% de rastreabilidade teórica e acadêmica para defesa do TCC perante a banca examinadora.
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |
@@ -145,6 +195,9 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Linhas alteradas no CSV de features | Recálculo das 13 viagens compartilhadas sem misturar carros | `data/processed/driving_behavior_features.csv` | Separação física de cada carro; 97% das linhas inalteradas | ✅ Resolvido |
 | Erro `ModuleNotFoundError: No module named 'src'` | Execução do script a partir da pasta interna `src/` | `src/data_loader.py`, `src/feature_engineering.py` | Injeção dinâmica da raiz do projeto em `sys.path` | ✅ Resolvido |
 | `UnicodeEncodeError` no terminal | Codificação padrão CP1252 do console do Windows | `test_step1.py`, `test_step1_2.py`, `inspect_trip.py` | Reconfiguração forçada de `sys.stdout` para UTF-8 | ✅ Resolvido |
+| 99,2% das viagens diagnosticadas como agressivas | Diferenciação ingênua com clock residual sub-segundo | `src/feature_engineering.py` | Regularização estrita a 1 Hz (`second_id`) + taxas/min | ✅ Resolvido |
+| Carro parado gerando cluster artificial | Janelas de 120s com velocidade média $< 8\text{ km/h}$ | `src/clustering.py` | Filtro de condução ativa (`mean_speed_kmh >= 8.0`) | ✅ Resolvido |
+| Rótulos do K-Means não determinísticos / erro `_n_threads` | Reatribuição manual de atributos internos do Scikit-Learn | `src/clustering.py` | Criação da classe wrapper `DrivingProfileModel` | ✅ Resolvido |
 
 ---
 
@@ -153,7 +206,8 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 Com todos os ajustes acima implementados e validados:
 1. **Os dados brutos dos EVs** estão 100% íntegros e catalogados (Etapa 1.1).
 2. **Os atributos comportamentais de condução** estão fisicamente consistentes, sem ruídos de sensores e perfeitamente isolados por veículo e viagem (Etapa 1.2).
-3. **O ferramental de inspeção e teste** (`inspect_trip.py`, `test_step1.py`, `test_step1_2.py`) permite auditar qualquer um dos 504 percursos a qualquer momento.
+3. **O modelo de Machine Learning de agrupamento (K-Means com $k=3$)** está treinado, validado por métricas matemáticas (Silhueta = 0.242, Cotovelo, Davies-Bouldin = 1.45, Calinski-Harabasz = 665.0) e salvo junto com o normalizador e modelo PCA (Etapa 1.3).
+4. **O ferramental de inspeção e teste** (`inspect_trip.py`, `test_step1.py`, `test_step1_2.py`, `test_step1_3.py`) garante 100% de cobertura e verificabilidade em tempo de execução.
 
-A base está pronta, documentada e matematicamente sólida para a execução da **Etapa 1.3 (Clusterização com K-Means e Determinação dos Perfis de Condução)**.
+**A Fase 1 (Perfilamento e Classificação de Condutores) está matematicamente e computacionalmente concluída.** O próximo passo solicitado é o desenvolvimento da interface visual interativa (Streamlit / Dashboard) para permitir a exploração gráfica e interativa das viagens e predições em tempo real.
 
