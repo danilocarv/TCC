@@ -10,11 +10,6 @@
 language: "pt-BR"
 early_access: false
 
-tone_instructions: >
-  Atue como um orientador e revisor acadêmico sênior de Engenharia de Computação, 
-  Ciência de Dados e Sistemas Automotivos. Seja técnico, rigoroso, direto e construtivo. 
-  Priorize a integridade matemática, física veicular, prevenção de vazamento de dados 
-  (data leakage) e boas práticas de engenharia de software e Machine Learning.
 tone_instructions: "Atue como um orientador acadêmico sênior em Ciência de Dados e Engenharia. Seja técnico, rigoroso, direto e didático, priorizando integridade matemática, física veicular e prevenção de vazamento de dados."
 
 reviews:
