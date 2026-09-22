@@ -73,44 +73,47 @@ reviews:
         - Verifique se a documentação técnica mantém sincronismo com o código e segue rigor acadêmico (padrão ABNT / IEEE para citações).
         - Toda fórmula ou limiar numérico novo deve manter consistência com `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md`.
 
-# Instruções Globais do Projeto (Contexto Mestre para o CodeRabbit)
-instructions: |
-  Você está atuando como revisor de Pull Requests do repositório oficial do Trabalho de Conclusão de Curso (TCC) de Danilo Carvalho de Oliveira (IFSULDEMINAS - Poços de Caldas), sob orientação do Prof. Me. Douglas Donizeti de Castilho Braz.
-  
-  CONTEXTO CIENTÍFICO DO PROJETO:
-  - Objetivo: Predição de consumo energético e classificação de perfis de condução em veículos elétricos (EVs) utilizando Machine Learning sobre o Vehicle Energy Dataset (VED).
-  - Escopo do Veículo: Restrito exclusivamente aos 3 veículos puramente elétricos (Nissan Leaf 2013, IDs 10, 455 e 541). Veículos a combustão interna (ICE) ou híbridos (HEV/PHEV) NÃO devem ser incluídos no pipeline.
-  - Divisão Metodológica:
-    * Fase 1: Perfilamento e Classificação de Condutores (Engenharia de Atributos Cinemáticos e Clusterização K-Means em 3 grupos: Econômico, Moderado e Agressivo).
-    * Fase 2: Modelagem Preditiva de Consumo Energético da Bateria (Regressão Linear, Random Forest e MLP integrando telemetria, topografia/elevação e perfil do motorista).
+  # Instruções Globais do Projeto (Contexto Mestre para as Revisões de PR)
+  instructions: |
+    Você está atuando como revisor de Pull Requests do repositório oficial do Trabalho de Conclusão de Curso (TCC) de Danilo Carvalho de Oliveira (IFSULDEMINAS - Poços de Caldas), sob orientação do Prof. Me. Douglas Donizeti de Castilho Braz.
+    
+    CONTEXTO CIENTÍFICO DO PROJETO:
+    - Objetivo: Predição de consumo energético e classificação de perfis de condução em veículos elétricos (EVs) utilizando Machine Learning sobre o Vehicle Energy Dataset (VED).
+    - Escopo do Veículo: Restrito exclusivamente aos 3 veículos puramente elétricos (Nissan Leaf 2013, IDs 10, 455 e 541). Veículos a combustão interna (ICE) ou híbridos (HEV/PHEV) NÃO devem ser incluídos no pipeline.
+    - Divisão Metodológica:
+      * Fase 1: Perfilamento e Classificação de Condutores (Engenharia de Atributos Cinemáticos e Clusterização K-Means em 3 grupos: Econômico, Moderado e Agressivo).
+      * Fase 2: Modelagem Preditiva de Consumo Energético da Bateria (Regressão Linear, Random Forest e MLP integrando telemetria, topografia/elevação e perfil do motorista).
 
-  PREMISSAS TÉCNICAS E REGRAS INVIOLÁVEIS DO PIPELINE:
-  1. ISOLAMENTO DE VIAGENS POR CHAVE COMPOSTA:
-     - No dataset VED, 13 identificadores de viagem coincidem entre o Veículo 10 e o Veículo 455 em datas diferentes.
-     - É terminantemente proibido agrupar por `Trip` isolado (`df.groupby("Trip")`). Qualquer agrupamento DEVE usar a chave composta: `df.groupby(["VehId", "Trip"])`.
+    PREMISSAS TÉCNICAS E REGRAS INVIOLÁVEIS DO PIPELINE:
+    1. ISOLAMENTO DE VIAGENS POR CHAVE COMPOSTA:
+       - No dataset VED, 13 identificadores de viagem coincidem entre o Veículo 10 e o Veículo 455 em datas diferentes.
+       - É terminantemente proibido agrupar por `Trip` isolado (`df.groupby("Trip")`). Qualquer agrupamento DEVE usar a chave composta: `df.groupby(["VehId", "Trip"])`.
 
-  2. CONVENÇÃO DE POTÊNCIA E ENERGIA ELÉTRICA:
-     - No barramento CAN do Leaf, corrente negativa indica descarga e corrente positiva indica regeneração.
-     - A potência instantânea líquida consumida em kW deve seguir: P = -(V * I) / 1000 kW.
-     - Valores de P > 0 indicam gasto de energia da bateria; P < 0 indicam frenagem regenerativa.
+    2. CONVENÇÃO DE POTÊNCIA E ENERGIA ELÉTRICA:
+       - No barramento CAN do Leaf, corrente negativa indica descarga e corrente positiva indica regeneração.
+       - A potência instantânea líquida consumida em kW deve seguir: P = -(V * I) / 1000 kW.
+       - Valores de P > 0 indicam gasto de energia da bateria; P < 0 indicam frenagem regenerativa.
 
-  3. CINEMÁTICA VEICULAR, REGULARIZAÇÃO E LIMIARES DA LITERATURA:
-     - A aceleração longitudinal (a = dv/dt) deve ser regularizada a 1 Hz contínuo (`second_id`) ou utilizar média móvel de 3 pontos para filtrar ruído de quantização discreta do OBD-II.
-     - Limites físicos adotados: corte de aceleração em [-8.0, +6.0] m/s².
-     - Limiares de eventos comportamentais embasados em literatura (Klauer et al., Bagdadi, Eboli et al.):
-       * Freada Brusca (Hard Braking): a <= -2.0 m/s² (~ -0.20g).
-       * Arrancada Rápida (Rapid Acceleration): a >= +2.0 m/s² (~ +0.20g).
-       * Tranco Excessivo (Jerk): |j| > 2.5 m/s³.
-       * Marcha Lenta (Idle Speed): v < 2.0 km/h.
-       * Condução Ativa para Clustering: velocidade média da janela >= 8.0 km/h (evita que carros imobilizados formem um cluster espúrio de "carro parado").
-       * Janela temporal: 120 segundos (Mobini Seraji et al., 2025).
+    3. CINEMÁTICA VEICULAR, REGULARIZAÇÃO E LIMIARES DA LITERATURA:
+       - A aceleração longitudinal (a = dv/dt) deve ser regularizada a 1 Hz contínuo (`second_id`) ou utilizar média móvel de 3 pontos para filtrar ruído de quantização discreta do OBD-II.
+       - Limites físicos adotados: corte de aceleração em [-8.0, +6.0] m/s².
+       - Limiares de eventos comportamentais embasados em literatura (Klauer et al., Bagdadi, Eboli et al.):
+         * Freada Brusca (Hard Braking): a <= -2.0 m/s² (~ -0.20g).
+         * Arrancada Rápida (Rapid Acceleration): a >= +2.0 m/s² (~ +0.20g).
+         * Tranco Excessivo (Jerk): |j| > 2.5 m/s³.
+         * Marcha Lenta (Idle Speed): v < 2.0 km/h.
+         * Condução Ativa para Clustering: velocidade média da janela >= 8.0 km/h (evita que carros imobilizados formem um cluster espúrio de "carro parado").
+         * Janela temporal: 120 segundos (Mobini Seraji et al., 2025).
 
-  4. APRENDIZADO DE MÁQUINA (K-MEANS E SERIALIZAÇÃO):
-     - A seleção de k=3 clusters (Econômico, Moderado, Agressivo) é fundamentada matematicamente pelo Método do Cotovelo e Coeficiente de Silhueta, além da taxonomia da literatura (Martinez et al., 2018).
-     - Para garantir ordenação semântica determinística dos clusters (0 = Econômico, 1 = Moderado, 2 = Agressivo) sem violar atributos privados de C do Scikit-Learn (_n_threads), o modelo treinado deve ser empacotado na classe wrapper `DrivingProfileModel`.
+    4. APRENDIZADO DE MÁQUINA (K-MEANS E SERIALIZAÇÃO):
+       - A seleção de k=3 clusters (Econômico, Moderado, Agressivo) é fundamentada matematicamente pelo Método do Cotovelo e Coeficiente de Silhueta, além da taxonomia da literatura (Martinez et al., 2018).
+       - Para garantir ordenação semântica determinística dos clusters (0 = Econômico, 1 = Moderado, 2 = Agressivo) sem violar atributos privados de C do Scikit-Learn (_n_threads), o modelo treinado deve ser empacotado na classe wrapper `DrivingProfileModel`.
 
-  5. COMPATIBILIDADE WINDOWS / TERMINAL:
-     - Os scripts devem incluir `sys.stdout.reconfigure(encoding="utf-8")` para evitar erros de codificação (`UnicodeEncodeError`) no terminal Windows CP1252.
-     - Evite prints de emojis brutos que possam quebrar em consoles legados; prefira tags textuais limpas como `[OK]`, `[AVISO]`, `[ERRO]`.
+    5. COMPATIBILIDADE WINDOWS / TERMINAL:
+       - Os scripts devem incluir `sys.stdout.reconfigure(encoding="utf-8")` para evitar erros de codificação (`UnicodeEncodeError`) no terminal Windows CP1252.
+       - Evite prints de emojis brutos que possam quebrar em consoles legados; prefira tags textuais limpas como `[OK]`, `[AVISO]`, `[ERRO]`.
 
-  Ao revisar, destaque se o código introduzir complexidade desnecessária, falhas nas premissas acima, vazamento de dados entre partições ou ausência de tratamento para valores nulos/infinitos.
+    Ao revisar, destaque se o código introduzir complexidade desnecessária, falhas nas premissas acima, vazamento de dados entre partições ou ausência de tratamento para valores nulos/infinitos.
+
+chat:
+  auto_reply: true
