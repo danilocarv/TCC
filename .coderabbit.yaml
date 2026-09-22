@@ -1,0 +1,119 @@
+# ==============================================================================
+# CodeRabbit Configuration (.coderabbit.yaml)
+# Projeto de TCC: Predição de Consumo Energético e Classificação de Perfis de
+# Condução em Veículos Elétricos Utilizando Aprendizado de Máquina
+# Autor: Danilo Carvalho de Oliveira | Orientador: Prof. Douglas D. C. Braz
+# Instituição: IFSULDEMINAS - Campus Poços de Caldas
+# ==============================================================================
+
+language: "pt-BR"
+early_access: false
+
+tone_instructions: >
+  Atue como um orientador e revisor acadêmico sênior de Engenharia de Computação, 
+  Ciência de Dados e Sistemas Automotivos. Seja técnico, rigoroso, direto e construtivo. 
+  Priorize a integridade matemática, física veicular, prevenção de vazamento de dados 
+  (data leakage) e boas práticas de engenharia de software e Machine Learning.
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "WIP"
+      - "DRAFT"
+      - "WORK IN PROGRESS"
+
+  # Filtro estrito para ignorar dados binários, modelos pesados e datasets brutos
+  path_filters:
+    - "!data/**"
+    - "!outputs/models/**"
+    - "!outputs/figures/**"
+    - "!outputs/results/*.json"
+    - "!VED-master/**"
+    - "!**/*.parquet"
+    - "!**/*.joblib"
+    - "!**/*.csv"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.pdf"
+    - "!**/*.pkl"
+    - "!**/__pycache__/**"
+    - "!**/.pytest_cache/**"
+
+  # Regras específicas por contexto de diretório
+  path_instructions:
+    - path: "src/**"
+      instructions: |
+        - Verifique estritamente se qualquer agrupamento de viagens utiliza a chave composta ['VehId', 'Trip']. Nunca permita agrupar apenas por 'Trip'.
+        - Verifique se a potência instantânea obedece à convenção física P = -(V * I) / 1000 kW (positivo = consumo/descarga, negativo = regeneração).
+        - Verifique se operações de derivação temporal da velocidade (a = dv/dt) possuem proteção contra delta_t sub-segundo (< 0.5s) e se utilizam regularização temporal a 1 Hz ou filtro móvel para amortecer o ruído do barramento CAN/OBD-II.
+        - Assegure limites físicos veiculares coerentes (clipping) para veículos de passeio (Nissan Leaf: aceleração entre -8.0 m/s² e +6.0 m/s²).
+        - No Scikit-Learn, previna Data Leakage: transformadores (StandardScaler, PCA) devem ser ajustados (.fit) apenas no conjunto de treino e aplicados (.transform) nas demais partições.
+        - Exija reprodutibilidade definindo random_state (ex.: random_state=42) em estimadores estocásticos (KMeans, PCA, divisões de treino/teste).
+        - Prefira sempre operações vetorizadas em Pandas e NumPy. Aponte e sugira alternativas para loops iterativos lentos (.iterrows(), .itertuples() ou for explícito em DataFrames volumosos).
+
+    - path: "app/**"
+      instructions: |
+        - Aplicação Web / Dashboard (Streamlit): verifique o uso adequado de decoradores de cache (@st.cache_data para dataframes/cálculos e @st.cache_resource para modelos de ML pesados) para evitar reprocessamento desnecessário a cada interação do usuário.
+        - Certifique-se de que caminhos de arquivos utilizem pathlib.Path ou as constantes centralizadas em `src/config.py`.
+        - Verifique a robustez do tratamento de exceções (try/except) em carregamentos de arquivos ausentes e entradas do usuário.
+
+    - path: "test_*.py"
+      instructions: |
+        - Assegure que os testes automatizados contenham asserções (assert) claras e com mensagens explicativas de erro em caso de falha.
+        - Verifique se os testes cobrem casos de borda: entradas vazias, valores nulos, divisão por zero em delta_t e integridade dos formatos de saída.
+        - Garanta a presença de configuração de encoding UTF-8 (sys.stdout.reconfigure(encoding="utf-8")) para compatibilidade com terminais Windows CP1252.
+
+    - path: "docs/**"
+      instructions: |
+        - Verifique se a documentação técnica mantém sincronismo com o código e segue rigor acadêmico (padrão ABNT / IEEE para citações).
+        - Toda fórmula ou limiar numérico novo deve manter consistência com `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md`.
+
+# Instruções Globais do Projeto (Contexto Mestre para o CodeRabbit)
+instructions: |
+  Você está atuando como revisor de Pull Requests do repositório oficial do Trabalho de Conclusão de Curso (TCC) de Danilo Carvalho de Oliveira (IFSULDEMINAS - Poços de Caldas), sob orientação do Prof. Me. Douglas Donizeti de Castilho Braz.
+  
+  CONTEXTO CIENTÍFICO DO PROJETO:
+  - Objetivo: Predição de consumo energético e classificação de perfis de condução em veículos elétricos (EVs) utilizando Machine Learning sobre o Vehicle Energy Dataset (VED).
+  - Escopo do Veículo: Restrito exclusivamente aos 3 veículos puramente elétricos (Nissan Leaf 2013, IDs 10, 455 e 541). Veículos a combustão interna (ICE) ou híbridos (HEV/PHEV) NÃO devem ser incluídos no pipeline.
+  - Divisão Metodológica:
+    * Fase 1: Perfilamento e Classificação de Condutores (Engenharia de Atributos Cinemáticos e Clusterização K-Means em 3 grupos: Econômico, Moderado e Agressivo).
+    * Fase 2: Modelagem Preditiva de Consumo Energético da Bateria (Regressão Linear, Random Forest e MLP integrando telemetria, topografia/elevação e perfil do motorista).
+
+  PREMISSAS TÉCNICAS E REGRAS INVIOLÁVEIS DO PIPELINE:
+  1. ISOLAMENTO DE VIAGENS POR CHAVE COMPOSTA:
+     - No dataset VED, 13 identificadores de viagem coincidem entre o Veículo 10 e o Veículo 455 em datas diferentes.
+     - É terminantemente proibido agrupar por `Trip` isolado (`df.groupby("Trip")`). Qualquer agrupamento DEVE usar a chave composta: `df.groupby(["VehId", "Trip"])`.
+
+  2. CONVENÇÃO DE POTÊNCIA E ENERGIA ELÉTRICA:
+     - No barramento CAN do Leaf, corrente negativa indica descarga e corrente positiva indica regeneração.
+     - A potência instantânea líquida consumida em kW deve seguir: P = -(V * I) / 1000 kW.
+     - Valores de P > 0 indicam gasto de energia da bateria; P < 0 indicam frenagem regenerativa.
+
+  3. CINEMÁTICA VEICULAR, REGULARIZAÇÃO E LIMIARES DA LITERATURA:
+     - A aceleração longitudinal (a = dv/dt) deve ser regularizada a 1 Hz contínuo (`second_id`) ou utilizar média móvel de 3 pontos para filtrar ruído de quantização discreta do OBD-II.
+     - Limites físicos adotados: corte de aceleração em [-8.0, +6.0] m/s².
+     - Limiares de eventos comportamentais embasados em literatura (Klauer et al., Bagdadi, Eboli et al.):
+       * Freada Brusca (Hard Braking): a <= -2.0 m/s² (~ -0.20g).
+       * Arrancada Rápida (Rapid Acceleration): a >= +2.0 m/s² (~ +0.20g).
+       * Tranco Excessivo (Jerk): |j| > 2.5 m/s³.
+       * Marcha Lenta (Idle Speed): v < 2.0 km/h.
+       * Condução Ativa para Clustering: velocidade média da janela >= 8.0 km/h (evita que carros imobilizados formem um cluster espúrio de "carro parado").
+       * Janela temporal: 120 segundos (Mobini Seraji et al., 2025).
+
+  4. APRENDIZADO DE MÁQUINA (K-MEANS E SERIALIZAÇÃO):
+     - A seleção de k=3 clusters (Econômico, Moderado, Agressivo) é fundamentada matematicamente pelo Método do Cotovelo e Coeficiente de Silhueta, além da taxonomia da literatura (Martinez et al., 2018).
+     - Para garantir ordenação semântica determinística dos clusters (0 = Econômico, 1 = Moderado, 2 = Agressivo) sem violar atributos privados de C do Scikit-Learn (_n_threads), o modelo treinado deve ser empacotado na classe wrapper `DrivingProfileModel`.
+
+  5. COMPATIBILIDADE WINDOWS / TERMINAL:
+     - Os scripts devem incluir `sys.stdout.reconfigure(encoding="utf-8")` para evitar erros de codificação (`UnicodeEncodeError`) no terminal Windows CP1252.
+     - Evite prints de emojis brutos que possam quebrar em consoles legados; prefira tags textuais limpas como `[OK]`, `[AVISO]`, `[ERRO]`.
+
+  Ao revisar, destaque se o código introduzir complexidade desnecessária, falhas nas premissas acima, vazamento de dados entre partições ou ausência de tratamento para valores nulos/infinitos.

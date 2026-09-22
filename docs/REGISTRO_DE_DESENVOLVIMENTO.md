@@ -43,6 +43,7 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
 | `outputs/figures/driving_clusters_pca_2d.png` | Visualização dos clusters no espaço bidimensional do PCA (300 DPI) | ✅ Concluído |
 | `outputs/figures/cluster_profiles_comparison.png` | Gráfico de barras comparando as métricas cinemáticas médias por perfil (300 DPI) | ✅ Concluído |
 | `requirements.txt` | Lista de bibliotecas e dependências do ambiente Python | ✅ Concluído |
+| `.coderabbit.yaml` | Configuração de revisão automatizada de Pull Requests com contexto acadêmico do TCC | ✅ Concluído |
 | `VED-master/` | Repositório original com os 54 arquivos de dados semanais do VED | ✅ Disponível |
 
 ---
