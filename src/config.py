@@ -69,6 +69,29 @@ PROCESSED_BEHAVIOR_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_features.par
 PROCESSED_BEHAVIOR_CSV = PROCESSED_DATA_DIR / "driving_behavior_features.csv"
 PROCESSED_BEHAVIOR_METADATA_JSON = PROCESSED_DATA_DIR / "driving_behavior_metadata.json"
 
+# Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
+PROCESSED_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_clusters.parquet"
+PROCESSED_CLUSTERS_CSV = PROCESSED_DATA_DIR / "driving_behavior_clusters.csv"
+KMEANS_MODEL_PATH = MODELS_DIR / "kmeans_driver_profile.joblib"
+SCALER_MODEL_PATH = MODELS_DIR / "scaler_driver_profile.joblib"
+PCA_MODEL_PATH = MODELS_DIR / "pca_driver_profile.joblib"
+CLUSTERING_METRICS_JSON = RESULTS_DIR / "clustering_metrics.json"
+
+# Figuras geradas para a monografia / artigo
+FIG_ELBOW_SILHOUETTE = FIGURES_DIR / "elbow_and_silhouette_analysis.png"
+FIG_CLUSTERS_PCA_2D = FIGURES_DIR / "driving_clusters_pca_2d.png"
+FIG_CLUSTER_PROFILES = FIGURES_DIR / "cluster_profiles_comparison.png"
+
+# Atributos comportamentais selecionados para a clusterização
+CLUSTER_FEATURE_COLS = [
+    "mean_speed_kmh",
+    "std_speed_kmh",
+    "mean_pos_accel_ms2",
+    "max_pos_accel_ms2",
+    "hard_braking_rate_min",
+    "rapid_accel_rate_min",
+]
+
 # Parâmetros de janelamento e cinemática
 WINDOW_SIZE_SECONDS = 120  # Janelas de 2 minutos (120 segundos) conforme literatura
 MIN_WINDOW_POINTS = 30     # Mínimo de 30 segundos de dados válidos para formar uma janela
