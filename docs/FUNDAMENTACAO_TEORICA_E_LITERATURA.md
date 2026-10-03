@@ -17,7 +17,7 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
 | **Aceleração Longitudinal ($a$)** | $a(t) = \frac{\Delta v}{\Delta t}$ | Amostragem a 1 Hz exato; suavização móvel de 3s | Taxa de variação temporal da velocidade; corte físico $[-8,0, +6,0]\text{ m/s}^2$ | $[-8,0, +4,0]\text{ m/s}^2$ para veículos elétricos de passeio | Oh et al. (2020), Fiori et al. (2016) |
 | **Frenagem Brusca (Hard Braking)** | $a(t) \le a_{\text{lim\_brake}}$ | $a \le -2,0\text{ m/s}^2$ ($\approx -0,20g$) | Desacelerações mais intensas que o conforto usual; sinaliza condução agressiva | $-2,0\text{ m/s}^2$ a $-4,0\text{ m/s}^2$ (ou $-0,20g$ a $-0,40g$) | Bagdadi (2013), Klauer et al. (2006), Eboli et al. (2016) |
 | **Arrancada Rápida (Rapid Accel)** | $a(t) \ge a_{\text{lim\_accel}}$ | $a \ge +2,0\text{ m/s}^2$ ($\approx +0,20g$) | Demanda de pico instantâneo de corrente da bateria; condução esportiva | $+2,0\text{ m/s}^2$ a $+4,0\text{ m/s}^2$ (ou $+0,20g$ a $+0,40g$) | Wang et al. (2018), Martinez et al. (2018) |
-| **Tranco Longitudinal (Jerk - $j$)** | $j(t) = \frac{\Delta a}{\Delta t}$ | $\|j\| \ge 3,0\text{ m/s}^3$ | Variação brusca da aceleração; causa desconforto e estresse mecânico | $> 2,0\text{ m/s}^3$ a $> 3,0\text{ m/s}^3$ (ISO 2631 / JATD) | Bagdadi & Várhelyi (2011), Eboli et al. (2016) |
+| **Tranco Longitudinal (Jerk - $j$)** | $j(t) = \frac{\Delta a}{\Delta t}$ | $\|j\| \ge 3,0\text{ m/s}^3$ | Variação brusca da aceleração; causa desconforto e estresse mecânico | $> 2,0\text{ m/s}^3$ a $> 3,0\text{ m/s}^3$ (ISO 2631 / Bagdadi & Várhelyi, 2011) | Bagdadi & Várhelyi (2011), Norma ISO 2631 |
 | **Taxas por Minuto** | $\text{Rate} = \frac{N_{\text{eventos}}}{\Delta t_{\text{min}}}$ | Eventos normalizados por 2 min | Remove o viés do tempo absoluto de percurso | Padrão em telemetria veicular e seguros UBI | Mobini Seraji et al. (2025), Eboli et al. (2016) |
 | **Tamanho da Janela Temporal** | $W_{\text{size}} = T$ | $T = 120\text{ s}$ (2 minutos) | Horizonte temporal para extração de atributos comportamentais | $60\text{ s}$ a $180\text{ s}$ para perfis gerais de estilo | Mobini Seraji et al. (2025), Zhang et al. (2019) |
 | **Tempo Ocioso (Idle Speed)** | $v(t) < v_{\text{idle}}$ | $v < 2,0\text{ km/h}$ ($\approx 0,55\text{ m/s}$) | Veículo imobilizado em semáforo ou parada | $v < 2,0\text{ km/h}$ ou $v < 1,6\text{ km/h}$ (1 mph) | Ciclos EPA / WLTP, SAE J2951 |
@@ -208,7 +208,7 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * **Título:** *Measuring bus comfort levels by using acceleration instantaneous values*
    * **Periódico:** *Transport*, Vol. 31, No. 1, pp. 62-73.
    * **DOI:** [10.3846/16484142.2015.1018318](https://doi.org/10.3846/16484142.2015.1018318)
-   * **Aplicação no TCC:** Algoritmo JATD (Jerk-Acceleration Threshold Detection) e limiares de transição de conforto ($1,47\text{ m/s}^2$ a $2,0\text{ m/s}^2$).
+   * **Aplicação no TCC:** Avaliação de níveis de conforto através de valores instantâneos de aceleração e limiares de transição ($1,47\text{ m/s}^2$ a $2,0\text{ m/s}^2$).
 
 10. **Klauer, S. G., Dingus, T. A., Neale, V. L., Sudweeks, J. D., & Ramsey, D. J. (2006)**
     * **Título:** *The Impact of Driver Inattention on Near-Crash/Crash Risk: An Analysis Using the 100-Car Naturalistic Driving Study Data*
@@ -251,8 +251,8 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * Citar **Bingham et al. (2012)** para demonstrar como o estilo de dirigir pode impactar em até 30% a autonomia de veículos elétricos.
 2. **Na Metodologia:**
    * Citar **Oh et al. (2020)** para descrever o dataset VED e justificar a regularização temporal a 1 Hz.
-   * Citar **Klauer et al. (2006)** e **Bagdadi (2013)** para fundamentar os limiares de $|a| \ge 2,0\text{ m/s}^2$ como frenagem brusca e arrancada rápida.
-   * Citar **Bagdadi & Várhelyi (2011)** e **Eboli et al. (2016)** para a derivada da aceleração (*jerk*) e os limiares de referência da literatura ($> 2,5\text{ m/s}^3$ e $2,0\text{ a }3,0\text{ m/s}^3$), diferenciando do limiar adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$, constante `HIGH_JERK_THRESHOLD`) com a justificativa técnica de filtrar ruídos de quantização da telemetria OBD-II (degraus de $1\text{ km/h}$) na segunda derivada e mitigar falsos positivos.
+   * Citar **Klauer et al. (2006)**, **Bagdadi (2013)** e **Eboli et al. (2016)** para fundamentar os limiares de aceleração instantânea e $|a| \ge 2,0\text{ m/s}^2$ como frenagem brusca e arrancada rápida.
+   * Citar **Bagdadi & Várhelyi (2011)** para a derivada da aceleração (*jerk*) e o limiar crítico de literatura ($> 2,5\text{ m/s}^3$) e a **Norma ISO 2631** para os limites de conforto e choque mecânico veicular ($2,0\text{ a }3,0\text{ m/s}^3$), diferenciando do limiar adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$, constante `HIGH_JERK_THRESHOLD`) com a justificativa técnica de filtrar ruídos de quantização da telemetria OBD-II (degraus de $1\text{ km/h}$) na segunda derivada e mitigar falsos positivos.
    * Citar **Fiori et al. (2016)** para a fórmula e convenção da potência elétrica instantânea da bateria ($P = -V \times I / 1000$).
 3. **Nos Resultados e Discussão:**
    * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta), **Davies & Bouldin (1979)** e **Caliński & Harabasz (1974)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura.

@@ -100,9 +100,9 @@ reviews:
        - Limiares de eventos comportamentais embasados em literatura (Klauer et al., Bagdadi, Eboli et al.):
          * Freada Brusca (Hard Braking): a <= -2.0 m/s² (~ -0.20g).
          * Arrancada Rápida (Rapid Acceleration): a >= +2.0 m/s² (~ +0.20g).
-         * Tranco Excessivo (Jerk): |j| > 2.5 m/s³.
+         * Tranco Excessivo (Jerk): Referência de literatura de |j| > 2.5 m/s³ (Bagdadi & Várhelyi, 2011) e faixa de 2.0 a 3.0 m/s³ (ISO 2631). No pipeline de extração, adota-se o limiar conservador de |j| >= 3.0 m/s³ (HIGH_JERK_THRESHOLD = 3.0 em src/config.py) para mitigar ruídos residuais de quantização discreta (degraus de 1 km/h) da telemetria OBD-II na 2ª derivada.
          * Marcha Lenta (Idle Speed): v < 2.0 km/h.
-         * Condução Ativa para Clustering: velocidade média da janela >= 8.0 km/h (evita que carros imobilizados formem um cluster espúrio de "carro parado").
+         * Condução Ativa para Clustering: velocidade média da janela >= 8.0 km/h (isola o subconjunto de 2.234 janelas ativas das 2.481 totais para treinar/ajustar K-Means e PCA, evitando cluster de "carro parado", preservando todas as 2.481 janelas na base rotulada final).
          * Janela temporal: 120 segundos (Mobini Seraji et al., 2025).
 
     4. APRENDIZADO DE MÁQUINA (K-MEANS E SERIALIZAÇÃO):

@@ -140,13 +140,13 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 * **Data:** 20/09/2026
 * **Arquivos Afetados:** `src/clustering.py`, `src/config.py`, `test_step1_3.py`
 * **Contexto:**
-  Nas 2.531 janelas de 120 segundos extraídas do VED, identificou-se trechos em que o veículo estava praticamente parado ou em manobra de estacionamento/espera prolongada, registrando velocidade média inferior a 8 km/h e acelerações nulas.
+  No universo das 2.481 janelas de 120 segundos extraídas do VED, identificou-se trechos em que o veículo estava praticamente parado ou em manobra de estacionamento/espera prolongada, registrando velocidade média inferior a 8 km/h e acelerações nulas.
 * **Problema Identificado:**
   Se trechos com o carro praticamente parado forem fornecidos diretamente para o algoritmo K-Means, a distância euclidiana faz com que o modelo crie um cluster puramente para "veículos parados" em vez de classificar o *estilo dinâmico de condução* do motorista (suave, moderado ou agressivo).
 * **Decisão Tomada e Correção:**
   Estabelecer um critério de corte de condução ativa: trechos com `mean_speed_kmh >= 8.0` km/h.
 * **Impacto e Conclusão:**
-  As 2.481 janelas ativas restantes garantiram que o K-Means aprendesse padrões reais de condução motora (oscilação de pedal, intensidade de freada, arrancada e controle de velocidade), eliminando distorções de trechos ociosos.
+  O filtro isola o subconjunto de 2.234 janelas de condução ativa para ajuste do K-Means e do PCA, eliminando distorções de trechos ociosos no treinamento do modelo. Todas as 2.481 janelas da base são preservadas no arquivo rotulado final (`driving_behavior_clusters`), recebendo rótulos inferidos pelo modelo treinado para assegurar continuidade temporal completa na predição energética de viagens.
 
 ---
 

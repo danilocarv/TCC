@@ -28,7 +28,7 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
 | `data/raw/ev_telemetry.parquet` | Base consolidada dos EVs puros em Parquet (3.72 MB) | ✅ Concluído |
 | `data/raw/ev_telemetry.csv` | Cópia direta em CSV para inspeção tabular (41.69 MB) | ✅ Concluído |
 | `data/raw/ev_dataset_metadata.json` | Metadados estatísticos e contagem de nulos do dataset extraído | ✅ Concluído |
-| `data/processed/driving_behavior_features.parquet` | Base com os atributos comportamentais das 2.481 janelas ativas de condução (121 KB) | ✅ Concluído |
+| `data/processed/driving_behavior_features.parquet` | Base com os atributos comportamentais do total de 2.481 janelas de condução (121 KB) | ✅ Concluído |
 | `data/processed/driving_behavior_features.csv` | Tabela dos atributos comportamentais para abertura no Excel/VS Code (230 KB) | ✅ Concluído |
 | `data/processed/driving_behavior_metadata.json` | Metadados descritivos das variáveis comportamentais | ✅ Concluído |
 | `src/clustering.py` | Pipeline de clusterização K-Means, avaliação de métricas e ordenação semântica de perfis | ✅ Concluído |
@@ -76,7 +76,7 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
 ### [Marco 3: Execução da Etapa 1.3 - Clusterização K-Means e Classificação de Perfis] - 20/09/2026
 * **Ações Realizadas:**
   * Implementação do pipeline de clusterização em `src/clustering.py`.
-  * Filtragem de trechos com velocidade média $\ge 8\text{ km/h}$ para avaliar estritamente condução ativa (2.481 janelas operacionais).
+  * Filtragem de trechos com velocidade média $\ge 8\text{ km/h}$ para isolar o subconjunto de condução ativa (2.234 janelas para treinamento/ajuste de K-Means e PCA), preservando o total de 2.481 janelas na base rotulada final.
   * Padronização via `StandardScaler` sobre 6 variáveis comportamentais essenciais.
   * Varredura paramétrica de $k \in [2, 6]$ avaliada com Inércia (Método do Cotovelo), Coeficiente de Silhueta, Davies-Bouldin Index e Calinski-Harabasz Index.
   * Seleção de $k=3$ (Econômico / Suave, Moderado / Regular, Agressivo / Dinâmico).
