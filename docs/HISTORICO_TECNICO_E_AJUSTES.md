@@ -186,6 +186,41 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 11: Desacoplamento do PCA para Eliminação de Vazamento de Trechos Inativos
+* **Data:** 02/10/2026
+* **Arquivos Afetados:** `src/clustering.py`
+* **Problema Identificado:**
+  A redução de dimensionalidade com PCA estava executando `pca.fit_transform(X_all_scaled)` sobre todas as 2.481 janelas, incluindo trechos de trânsito estagnado ou estacionamento ($v < 8\text{ km/h}$). Isso introduzia leve viés de dispersão na base vetorial principal.
+* **Solução de Engenharia de Software e Machine Learning:**
+  Desacoplamento estrito do ajuste e da transformação:
+  1. `pca.fit(X_train_scaled)`: O ajuste dos autovetores principais é calculado estritamente sobre as 2.234 janelas de condução ativa.
+  2. `pca.transform(X_all_scaled)`: As 2.481 janelas são projetadas na base ajustada para garantir continuidade na predição energética de viagens completas.
+* **Impacto e Conclusão:**
+  Eliminação do vazamento de trechos inativos na definição dos eixos de variância comportamental. A variância acumulada explicada atinge 63,0% (42,1% no PC1 e 20,9% no PC2).
+
+---
+
+### 🔹 Item 12: Parametrização e Limiar de Jerk Longitudinal (`HIGH_JERK_THRESHOLD = 3.0`)
+* **Data:** 02/10/2026
+* **Arquivos Afetados:** `src/config.py`, `src/feature_engineering.py`, `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md`
+* **Problema Identificado:**
+  O limiar de tranco longitudinal (*jerk*) estava declarado como valor fixo não parametrizado (`3.0`) no código de extração de atributos, divergindo de citações preliminares de $2,5\text{ m/s}^3$ na documentação.
+* **Solução de Engenharia e Alinhamento Físico:**
+  1. Centralização da constante `HIGH_JERK_THRESHOLD = 3.0` em `src/config.py` e sua importação em `src/feature_engineering.py`.
+  2. Documentação formal da justificativa física: como o *jerk* é a derivada de segunda ordem da velocidade e a telemetria OBD-II possui quantização discreta em degraus de $1\text{ km/h}$, a dupla diferenciação tende a amplificar ruídos de discretização. O limiar conservador de $\ge 3,0\text{ m/s}^3$ (topo da faixa de desconforto severo da ISO 2631 e respaldado por Bagdadi & Várhelyi, 2011) atua como filtro de ruído natural, evitando falsos positivos.
+
+---
+
+### 🔹 Item 13: Sincronização dos Testes Unitários de Extração de Atributos (`test_step1_2.py`)
+* **Data:** 02/10/2026
+* **Arquivos Afetados:** `test_step1_2.py`
+* **Problema Identificado:**
+  A suíte de testes unitários da Etapa 1.2 ainda continha asserções antigas (esperando 2.531 janelas de versões preliminares antes da separação de viagens compartilhadas) e critérios de filtragem com taxas irrealistas para trechos dinâmicos ($\ge 15$ eventos/min).
+* **Solução:**
+  Atualização da asserção para o total real de 2.481 janelas e adequação dos filtros de teste dos trechos contrastantes para valores estatisticamente representativos da base de dados.
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |
@@ -198,6 +233,9 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | 99,2% das viagens diagnosticadas como agressivas | Diferenciação ingênua com clock residual sub-segundo | `src/feature_engineering.py` | Regularização estrita a 1 Hz (`second_id`) + taxas/min | ✅ Resolvido |
 | Carro parado gerando cluster artificial | Janelas de 120s com velocidade média $< 8\text{ km/h}$ | `src/clustering.py` | Filtro de condução ativa (`mean_speed_kmh >= 8.0`) | ✅ Resolvido |
 | Rótulos do K-Means não determinísticos / erro `_n_threads` | Reatribuição manual de atributos internos do Scikit-Learn | `src/clustering.py` | Criação da classe wrapper `DrivingProfileModel` | ✅ Resolvido |
+| Contaminação de eixos PCA por trechos inativos | `pca.fit_transform` executado sobre janelas $< 8\text{ km/h}$ | `src/clustering.py` | `pca.fit(X_train_scaled)` e `pca.transform(X_all_scaled)` | ✅ Resolvido |
+| Limiar de jerk hardcoded e descompasso na documentação | Constante mágica em `src/feature_engineering.py` | `src/config.py`, `src/feature_engineering.py`, `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md` | `HIGH_JERK_THRESHOLD = 3.0` centralizado e fundamentado teoricamente | ✅ Resolvido |
+| Asserções desatualizadas em `test_step1_2.py` | Total de 2.531 janelas antigas e filtros extremos de teste | `test_step1_2.py` | Asserção corrigida para 2.481 janelas e filtros calibrados | ✅ Resolvido |
 
 ---
 

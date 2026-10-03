@@ -208,7 +208,10 @@ def train_and_label_clusters(
 
 
 def generate_visualizations(
-    df_clusters: pd.DataFrame, X_all_scaled: np.ndarray, kmeans: KMeans
+    df_clusters: pd.DataFrame,
+    X_train_scaled: np.ndarray,
+    X_all_scaled: np.ndarray,
+    kmeans: KMeans,
 ):
     """
     Gera as figuras acadêmicas de alta resolução para o TCC:
@@ -218,8 +221,10 @@ def generate_visualizations(
     print("\n-> [3/5] Gerando visualizações espaciais (PCA) e perfis comparativos...")
 
     # 1. Redução de Dimensionalidade com PCA (2 componentes)
+    # PCA ajustado exclusivamente sobre as janelas de condução ativa (sem data leakage de trechos inativos)
     pca = PCA(n_components=2, random_state=42)
-    X_pca = pca.fit_transform(X_all_scaled)
+    pca.fit(X_train_scaled)
+    X_pca = pca.transform(X_all_scaled)
     df_clusters["pca_x"] = X_pca[:, 0]
     df_clusters["pca_y"] = X_pca[:, 1]
 
@@ -441,7 +446,9 @@ def run_clustering_pipeline():
     )
 
     # 3. Visualizações PCA e Perfis
-    pca, centroids_original = generate_visualizations(df_labeled, X_all_scaled, kmeans)
+    pca, centroids_original = generate_visualizations(
+        df_labeled, X_train_scaled, X_all_scaled, kmeans
+    )
 
     # 4. Salvar tudo
     save_artifacts_and_metrics(

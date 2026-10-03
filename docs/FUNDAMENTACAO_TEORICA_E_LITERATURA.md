@@ -17,7 +17,7 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
 | **Aceleração Longitudinal ($a$)** | $a(t) = \frac{\Delta v}{\Delta t}$ | Amostragem a 1 Hz exato; suavização móvel de 3s | Taxa de variação temporal da velocidade; corte físico $[-8,0, +6,0]\text{ m/s}^2$ | $[-8,0, +4,0]\text{ m/s}^2$ para veículos elétricos de passeio | Oh et al. (2020), Fiori et al. (2016) |
 | **Frenagem Brusca (Hard Braking)** | $a(t) \le a_{\text{lim\_brake}}$ | $a \le -2,0\text{ m/s}^2$ ($\approx -0,20g$) | Desacelerações mais intensas que o conforto usual; sinaliza condução agressiva | $-2,0\text{ m/s}^2$ a $-4,0\text{ m/s}^2$ (ou $-0,20g$ a $-0,40g$) | Bagdadi (2013), Klauer et al. (2006), Eboli et al. (2016) |
 | **Arrancada Rápida (Rapid Accel)** | $a(t) \ge a_{\text{lim\_accel}}$ | $a \ge +2,0\text{ m/s}^2$ ($\approx +0,20g$) | Demanda de pico instantâneo de corrente da bateria; condução esportiva | $+2,0\text{ m/s}^2$ a $+4,0\text{ m/s}^2$ (ou $+0,20g$ a $+0,40g$) | Wang et al. (2018), Martinez et al. (2018) |
-| **Tranco Longitudinal (Jerk - $j$)** | $j(t) = \frac{\Delta a}{\Delta t}$ | $\|j\| > 2,5\text{ m/s}^3$ | Variação brusca da aceleração; causa desconforto e estresse mecânico | $> 2,0\text{ m/s}^3$ a $> 3,0\text{ m/s}^3$ (ISO 2631 / JATD) | Bagdadi & Várhelyi (2011), Eboli et al. (2016) |
+| **Tranco Longitudinal (Jerk - $j$)** | $j(t) = \frac{\Delta a}{\Delta t}$ | $\|j\| \ge 3,0\text{ m/s}^3$ | Variação brusca da aceleração; causa desconforto e estresse mecânico | $> 2,0\text{ m/s}^3$ a $> 3,0\text{ m/s}^3$ (ISO 2631 / JATD) | Bagdadi & Várhelyi (2011), Eboli et al. (2016) |
 | **Taxas por Minuto** | $\text{Rate} = \frac{N_{\text{eventos}}}{\Delta t_{\text{min}}}$ | Eventos normalizados por 2 min | Remove o viés do tempo absoluto de percurso | Padrão em telemetria veicular e seguros UBI | Mobini Seraji et al. (2025), Eboli et al. (2016) |
 | **Tamanho da Janela Temporal** | $W_{\text{size}} = T$ | $T = 120\text{ s}$ (2 minutos) | Horizonte temporal para extração de atributos comportamentais | $60\text{ s}$ a $180\text{ s}$ para perfis gerais de estilo | Mobini Seraji et al. (2025), Zhang et al. (2019) |
 | **Tempo Ocioso (Idle Speed)** | $v(t) < v_{\text{idle}}$ | $v < 2,0\text{ km/h}$ ($\approx 0,55\text{ m/s}$) | Veículo imobilizado em semáforo ou parada | $v < 2,0\text{ km/h}$ ou $v < 1,6\text{ km/h}$ (1 mph) | Ciclos EPA / WLTP, SAE J2951 |
@@ -62,13 +62,15 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
 * **Fundamentação na Literatura:**
   * **Martinez et al. (2018) & Wang et al. (2018):** Classificam arrancadas acima de $1,8\text{ a }2,0\text{ m/s}^2$ como características típicas de condutores no perfil *"Aggressive / Sporty"*, contrastando com condutores *"Eco / Calm"* que raramente ultrapassam $1,0\text{ m/s}^2$.
 
-#### C) Tranco Longitudinal (Jerk): $\|j\| > 2,5\text{ m/s}^3$
+#### C) Tranco Longitudinal (Jerk): $\|j\| \ge 3,0\text{ m/s}^3$
 * **Fórmula:**
   $$j(t) = \frac{a(t) - a(t - \Delta t)}{\Delta t}$$
-* **O que significa:** O *jerk* (ou solavanco) mede a rapidez com que a aceleração varia. Um motorista que freia forte mas pisa no freio de maneira progressiva tem jerk baixo; já aquele que "dá patada" no pedal gera alto jerk.
-* **Fundamentação na Literatura:**
+* **Limiar Adotado na Extração:** A feature contabiliza eventos com $\|j\| \ge 3,0\text{ m/s}^3$ (`HIGH_JERK_THRESHOLD`).
+* **O que significa:** O *jerk* (ou solavanco) mede a rapidez com que a aceleração varia no tempo. Um motorista que freia forte mas pisa no freio de maneira progressiva tem jerk baixo; já aquele que "dá patada" no acelerador ou no freio gera alto jerk.
+* **Fundamentação na Literatura e Justificativa Técnica:**
+  * **Filtro de Ruído da Segunda Derivada:** Como o *jerk* é a derivada de segunda ordem da velocidade e a telemetria OBD-II possui discretização em degraus de $1\text{ km/h}$, a dupla diferenciação discreta tende a amplificar ruídos residuais de quantização. Por isso, adotou-se o limiar conservador de $\ge 3,0\text{ m/s}^3$ (limite superior da faixa de literatura), garantindo que apenas solavancos mecânicos reais e severos sejam contabilizados, evitando falsos positivos.
   * **Bagdadi & Várhelyi (2011) - "Jerky driving: An indicator of accident proneness":** Os autores provaram estatisticamente que condutores que apresentam picos de jerk $> 2,5\text{ m/s}^3$ possuem propensão significativamente maior a acidentes e estilo impulsivo.
-  * **Norma ISO 2631:** Define limites de vibração e choque mecânico veicular para o corpo humano, indicando que variações de aceleração superiores a $2,0\text{ a }2,5\text{ m/s}^3$ provocam desconforto ergonômico.
+  * **Norma ISO 2631:** Define limites de vibração e choque mecânico veicular para o corpo humano, indicando que variações de aceleração superiores a $2,0\text{ a }3,0\text{ m/s}^3$ provocam desconforto ergonômico severo.
 
 ---
 
@@ -253,5 +255,5 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * Citar **Bagdadi & Várhelyi (2011)** e **Eboli et al. (2016)** para a derivada da aceleração (*jerk*) e limiar de $2,5\text{ m/s}^3$.
    * Citar **Fiori et al. (2016)** para a fórmula e convenção da potência elétrica instantânea da bateria ($P = -V \times I / 1000$).
 3. **Nos Resultados e Discussão:**
-   * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta) e **Davies & Bouldin (1979)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura.
+   * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta), **Davies & Bouldin (1979)** e **Caliński & Harabasz (1974)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura.
 

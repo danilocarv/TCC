@@ -97,6 +97,7 @@ WINDOW_SIZE_SECONDS = 120  # Janelas de 2 minutos (120 segundos) conforme litera
 MIN_WINDOW_POINTS = 30     # Mínimo de 30 segundos de dados válidos para formar uma janela
 HARD_BRAKING_THRESHOLD = -2.0  # Limiar de frenagem brusca em m/s²
 RAPID_ACCEL_THRESHOLD = 2.0    # Limiar de aceleração brusca em m/s²
+HIGH_JERK_THRESHOLD = 3.0      # Limiar de tranco longitudinal / jerk severo em m/s³
 
 # Garantir criação automática das pastas necessárias
 def ensure_directories():
