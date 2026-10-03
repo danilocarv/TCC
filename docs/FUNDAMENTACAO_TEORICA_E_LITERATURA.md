@@ -202,7 +202,7 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * **Título:** *Jerky driving—an indicator of accident proneness?*
    * **Periódico:** *Accident Analysis & Prevention*, Elsevier, Vol. 43, No. 4, pp. 1359-1363.
    * **DOI:** [10.1016/j.aap.2011.02.009](https://doi.org/10.1016/j.aap.2011.02.009)
-   * **Aplicação no TCC:** Definição física de *jerk* ($j = \Delta a / \Delta t$) e do limiar crítico $\|j\| > 2,5\text{ m/s}^3$ para identificação de conduta brusca.
+   * **Aplicação no TCC:** Definição física de *jerk* ($j = \Delta a / \Delta t$) e do limiar crítico da literatura ($\|j\| > 2,5\text{ m/s}^3$), servindo de base teórica para a calibração do limiar conservador adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$) contra ruídos de quantização OBD-II.
 
 9. **Eboli, L., Mazzulla, G., & Pungillo, G. (2016)**
    * **Título:** *Measuring bus comfort levels by using acceleration instantaneous values*
@@ -252,7 +252,7 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
 2. **Na Metodologia:**
    * Citar **Oh et al. (2020)** para descrever o dataset VED e justificar a regularização temporal a 1 Hz.
    * Citar **Klauer et al. (2006)** e **Bagdadi (2013)** para fundamentar os limiares de $|a| \ge 2,0\text{ m/s}^2$ como frenagem brusca e arrancada rápida.
-   * Citar **Bagdadi & Várhelyi (2011)** e **Eboli et al. (2016)** para a derivada da aceleração (*jerk*) e limiar de $2,5\text{ m/s}^3$.
+   * Citar **Bagdadi & Várhelyi (2011)** e **Eboli et al. (2016)** para a derivada da aceleração (*jerk*) e os limiares de referência da literatura ($> 2,5\text{ m/s}^3$ e $2,0\text{ a }3,0\text{ m/s}^3$), diferenciando do limiar adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$, constante `HIGH_JERK_THRESHOLD`) com a justificativa técnica de filtrar ruídos de quantização da telemetria OBD-II (degraus de $1\text{ km/h}$) na segunda derivada e mitigar falsos positivos.
    * Citar **Fiori et al. (2016)** para a fórmula e convenção da potência elétrica instantânea da bateria ($P = -V \times I / 1000$).
 3. **Nos Resultados e Discussão:**
    * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta), **Davies & Bouldin (1979)** e **Caliński & Harabasz (1974)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura.

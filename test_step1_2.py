@@ -61,18 +61,28 @@ def test_step_1_2():
     print("\n[4/4] Inspecionando dois trechos contrastantes reais da base:")
     
     # Trecho calmo: zero frenagens bruscas, zero arrancadas fortes e velocidade estável
-    trecho_calmo = df[
+    df_calmo = df[
         (df["hard_braking_rate_min"] == 0.0) & 
         (df["rapid_accel_rate_min"] == 0.0) & 
         (df["std_speed_kmh"] < 10.0) & 
         (df["mean_speed_kmh"] > 30.0)
-    ].iloc[0]
+    ]
+    assert not df_calmo.empty, (
+        "Nenhum trecho atendeu aos critérios de condução calma/suave "
+        "(zero frenagens/arrancadas, std_speed < 10 km/h, mean_speed > 30 km/h)!"
+    )
+    trecho_calmo = df_calmo.iloc[0]
 
     # Trecho dinâmico/agressivo: alta taxa de frenagem brusca real e arrancadas
-    trecho_agressivo = df[
+    df_agressivo = df[
         (df["hard_braking_rate_min"] >= 2.0) & 
         (df["rapid_accel_rate_min"] >= 1.5)
-    ].iloc[0]
+    ]
+    assert not df_agressivo.empty, (
+        "Nenhum trecho atendeu aos critérios de condução agressiva/dinâmica "
+        "(hard_braking_rate_min >= 2.0 e rapid_accel_rate_min >= 1.5)!"
+    )
+    trecho_agressivo = df_agressivo.iloc[0]
 
     print("\n  >>> AMOSTRA A: Conducao Suave/Constante (Candidato a Perfil Economico)")
     print(f"      • Viagem ID: {trecho_calmo['Trip']} | Janela: {trecho_calmo['window_id']}")
