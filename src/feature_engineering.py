@@ -30,6 +30,7 @@ from src.config import (
     MIN_WINDOW_POINTS,
     HARD_BRAKING_THRESHOLD,
     RAPID_ACCEL_THRESHOLD,
+    HIGH_JERK_THRESHOLD,
     ensure_directories,
 )
 
@@ -152,7 +153,7 @@ def extract_driving_behavior_windows(
         # Eventos extremos comportamentais
         hard_brakes = int((accels <= HARD_BRAKING_THRESHOLD).sum())
         rapid_accels = int((accels >= RAPID_ACCEL_THRESHOLD).sum())
-        high_jerks = int((jerks.abs() >= 3.0).sum())
+        high_jerks = int((jerks.abs() >= HIGH_JERK_THRESHOLD).sum())
         
         # Taxas normalizadas por minuto
         duration_min = max(duration_s / 60.0, 0.1)
