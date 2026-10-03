@@ -105,7 +105,7 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
 
 ### 2.6. Fundamentação da Escolha de $k=3$ no Algoritmo K-Means
 
-A escolha do número de perfis de condução $k=3$ foi respaldada pela análise conjunta de 4 métricas matemáticas e pela literatura especializada:
+A seleção de $k=3$ perfis de condução configura um **compromisso ótimo orientado pelo domínio (*domain-driven trade-off*)**, equilibrando a inflexão da curva de inércia, a estabilidade dos indicadores de validação interna e a taxonomia tripartite consolidada na literatura especializada:
 
 ```
 Resultados Computados no Projeto:
@@ -116,19 +116,19 @@ k=5 | Inércia:  6428.03 | Silhueta: 0.2145 | Davies-Bouldin: 1.3279 | Calinski-
 k=6 | Inércia:  5900.21 | Silhueta: 0.2206 | Davies-Bouldin: 1.2920 | Calinski-Harabasz: 566.7
 ```
 
-1. **Método do Cotovelo (Inércia / WCSS - Thorndike, 1953):**
-   * A maior taxa de ganho na redução da inércia ocorre de $k=2$ para $k=3$ ($\Delta = -1.777,5$). A partir de $k=3$, a redução torna-se linear e com ganhos marginais decrescentes.
-2. **Coeficiente de Silhueta (Rousseeuw, 1987):**
-   * O valor de $0,2423$ para $k=3$ demonstra coesão interna adequada em dados reais e contínuos de tráfego. Embora $k=2$ tenha silhueta de $0,2552$, agrupamentos binários são insuficientes para captar o motorista mediano.
-3. **Índice Davies-Bouldin (Davies & Bouldin, 1979):**
-   * Redução de $1,59$ ($k=2$) para $1,45$ ($k=3$), atestando maior distinção entre os centróides.
-4. **Literatura Científica (Taxonomia Tripartite):**
-   * Estudos como **Martinez et al. (2018)**, **Wang et al. (2018)** e **Mobini Seraji et al. (2025)** estabelecem de forma quase unânime que o comportamento do motorista distribui-se em 3 classes fundamentais:
+1. **Método do Cotovelo e Critério de Inflexão da Inércia (Thorndike, 1953):**
+   * Avaliando o ganho marginal de compactação ($\Delta \text{WCSS}$), a transição de $k=2$ para $k=3$ proporciona a maior redução absoluta e relativa da inércia: **$-1.777,50$ ($-17,47\%$)**.
+   * Nas transições subsequentes ($k=3 \to 4$: $-1.103,41$; $k=4 \to 5$: $-866,13$; $k=5 \to 6$: $-527,82$), a taxa de redução desacelera (inflexão de segunda diferença $\Delta^2 \text{WCSS} = +674,09$ em $k=3$), caracterizando matematicamente o ponto de cotovelo onde novos grupos passam a oferecer retornos decrescentes.
+2. **Análise Conjunta dos Indicadores de Validação (Silhueta, Davies-Bouldin e Calinski-Harabasz):**
+   * Em dados contínuos de telemetria real (onde não existem fronteiras vazias artificiais entre condutores), métricas isoladas divergem nos extremos: o Coeficiente de Silhueta ($0,2552$) e o Calinski-Harabasz ($708,3$) favorecem a divisão mínima binária ($k=2$), enquanto o Davies-Bouldin ($1,2920$) cai monotonicamente até $k=6$ por premiar micro-partições.
+   * Em $k=3$, o modelo preserva alta qualidade estrutural (Silhueta $= 0,2423$, Davies-Bouldin reduzido de $1,5904$ para $1,4537$ e Calinski-Harabasz $= 665,0$), sem sofrer a queda abrupta de coesão observada em $k \ge 5$ (onde a Silhueta cai para $0,2145$).
+3. **Alinhamento com a Literatura Científica (Taxonomia Tripartite):**
+   * Enquanto $k=2$ impõe uma dicotomia excessivamente simplista (omitindo o condutor típico urbano) e $k \ge 4$ produz subdivisões sobrepostas de difícil interpretação física, $k=3$ converge diretamente com o consenso de **Martinez et al. (2018)**, **Wang et al. (2018)** e **Mobini Seraji et al. (2025)**:
      * **Econômico / Suave (Eco/Calm):** Foco em conservação e inércia.
      * **Moderado / Regular (Normal/Average):** O padrão da maioria dos condutores urbanos.
      * **Agressivo / Dinâmico (Aggressive/Dynamic):** Alta aceleração, freadas bruscas e consumo elevado.
-5. **Distribuição Normal na Amostra:**
-   * A proporção encontrada na base (Moderado: 55,5%, Econômico: 27,8%, Agressivo: 16,7%) segue exatamente a curva gaussiana esperada para amostras populacionais de motoristas.
+4. **Proporção e Equilíbrio Amostral dos Perfis:**
+   * A partição resultante na base concentra a maioria dos registros no perfil intermediário (**Moderado / Regular: 55,5%** — 1.377 janelas), mantendo representatividade substancial nos perfis extremos (**Econômico / Suave: 27,8%** — 690 janelas; **Agressivo / Dinâmico: 16,7%** — 414 janelas), sem gerar grupos residuais ou desbalanceamento severo para as etapas subsequentes de modelagem.
 
 ---
 
@@ -253,5 +253,5 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * Citar **Bagdadi & Várhelyi (2011)** e **Eboli et al. (2016)** para a derivada da aceleração (*jerk*) e limiar de $2,5\text{ m/s}^3$.
    * Citar **Fiori et al. (2016)** para a fórmula e convenção da potência elétrica instantânea da bateria ($P = -V \times I / 1000$).
 3. **Nos Resultados e Discussão:**
-   * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta) e **Davies & Bouldin (1979)** para justificar a escolha matemática irrefutável de $k=3$.
+   * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta) e **Davies & Bouldin (1979)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura.
 

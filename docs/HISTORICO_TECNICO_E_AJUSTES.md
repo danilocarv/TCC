@@ -129,7 +129,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
   2. *Ajuste das Taxas Normalizadas*: O diagnóstico em `inspect_trip.py` passou a utilizar **taxas normalizadas por minuto** de condução (`hard_brakes_per_min` e `rapid_accels_per_min`).
 * **Resultados e Conclusão:**
   * A física da aceleração foi perfeitamente restaurada: condução estável representa 67,3% do tempo, frenagens normais 14,9%, acelerações normais 14,9%, frenagens bruscas reais apenas 1,68% e arrancadas 1,18%.
-  * A distribuição de estilos da frota atingiu uma curva gaussiana perfeitamente realista e equilibrada:
+  * A distribuição de estilos da frota atingiu uma partição unimodal realista e equilibrada, centrada no perfil intermediário:
     * **Suave / Econômico**: **23,0%** (ex.: viagens 1582, 1602, 1727, 1781)
     * **Moderado / Regular**: **50,0%** (ex.: viagens 1568, 1578, 1674)
     * **Agressivo / Dinâmico**: **27,0%** (ex.: viagens 1561, 1601, 1625)
@@ -158,7 +158,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
   2. A tentativa ingênua de reordenar manualmente os atributos internos do Scikit-Learn (como `kmeans.cluster_centers_`) quebra atributos privados da biblioteca C (`_n_threads`), causando falhas silenciosas ou erros no método `.predict()`.
 * **Solução de Engenharia de Software:**
   Criação da classe wrapper `DrivingProfileModel` em `src/clustering.py`. Esta classe encapsula o modelo `KMeans` original intacto e um mapeamento ordenado determinístico baseado no índice cinemático de agressividade:
-  $$\text{Índice} = \text{Taxa Freadas Bruscas} + \text{Taxa Arrancadas} + 0,1 \times \sigma_{\text{velocidade}}$$
+  $$\text{Score} = 2 \times \text{hard\_braking\_rate\_min} + 2 \times \text{rapid\_accel\_rate\_min} + 1 \times \text{max\_pos\_accel\_ms2}$$
   A classe expõe os métodos padronizados `.predict(X)`, `.predict_label(X)` e `.transform(X)`.
 * **Garantia de Comportamento Determinístico:**
   * **Cluster 0:** Sempre **Econômico / Suave** (690 trechos - 27,8%)
