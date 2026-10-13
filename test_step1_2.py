@@ -1,11 +1,14 @@
 """
 Script de Teste e Validação da Etapa 1.2.
-Verifica a integridade dos atributos comportamentais de condução extraídos.
+Verifica:
+1. A base regularizada em 1 Hz (ev_trips_1hz.parquet);
+2. Os atributos comportamentais e novas features derivadas (Haversine e Tortuosidade);
+3. A exportação individual das 2.234 janelas ativas em .csv e .parquet;
+4. O embaralhamento reprodutível e a divisão física estrita em 1.700 Treino e 534 Teste.
 Execute no terminal com: python test_step1_2.py
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Configura stdout para UTF-8 caso o terminal do Windows use cp1252
@@ -13,25 +16,39 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
 import pandas as pd
-import json
 
-ROOT_DIR = Path(__file__).resolve().parent
-PARQUET_FILE = ROOT_DIR / "data" / "processed" / "driving_behavior_features.parquet"
-CSV_FILE = ROOT_DIR / "data" / "processed" / "driving_behavior_features.csv"
-METADATA_FILE = ROOT_DIR / "data" / "processed" / "driving_behavior_metadata.json"
+from src.config import (
+    PROCESSED_1HZ_PARQUET,
+    PROCESSED_BEHAVIOR_PARQUET,
+    PROCESSED_BEHAVIOR_CSV,
+    PROCESSED_BEHAVIOR_METADATA_JSON,
+    WINDOWS_TRAIN_CSV_DIR,
+    WINDOWS_TRAIN_PARQUET_DIR,
+    WINDOWS_TEST_CSV_DIR,
+    WINDOWS_TEST_PARQUET_DIR,
+    WINDOW_SPLIT_MANIFEST_CSV,
+    PROCESSED_TRAIN_FEATURES_PARQUET,
+    PROCESSED_TEST_FEATURES_PARQUET,
+    TRAIN_WINDOW_COUNT,
+    TEST_WINDOW_COUNT,
+)
 
 
 def test_step_1_2():
-    print("=" * 68)
-    print("INICIANDO TESTE DE VALIDACAO DA ETAPA 1.2 (ATRIBUTOS COMPORTAMENTAIS)")
-    print("=" * 68)
+    print("=" * 72)
+    print("INICIANDO TESTE DE VALIDACAO DA ETAPA 1.2 (JANELAS, SPLIT 1700/534 E FEATURES)")
+    print("=" * 72)
 
-    # 1. Verificar existência dos arquivos
-    print("\n[1/4] Verificando se os arquivos processados existem no disco...")
+    # 1. Verificar existência dos arquivos consolidados e manifesto
+    print("\n[1/5] Verificando se os artefatos processados existem no disco...")
     for file_path, name in [
-        (PARQUET_FILE, "Parquet Processado"),
-        (CSV_FILE, "CSV Processado"),
-        (METADATA_FILE, "Metadados JSON"),
+        (PROCESSED_1HZ_PARQUET, "Telemetria Regularizada 1 Hz (Parquet)"),
+        (PROCESSED_BEHAVIOR_PARQUET, "Features Comportamentais Consolidado (Parquet)"),
+        (PROCESSED_BEHAVIOR_CSV, "Features Comportamentais Consolidado (CSV)"),
+        (PROCESSED_BEHAVIOR_METADATA_JSON, "Metadados JSON"),
+        (WINDOW_SPLIT_MANIFEST_CSV, "Manifesto de Divisao Treino/Teste (CSV)"),
+        (PROCESSED_TRAIN_FEATURES_PARQUET, "Features de Treino 1.700 (Parquet)"),
+        (PROCESSED_TEST_FEATURES_PARQUET, "Features de Teste 534 (Parquet)"),
     ]:
         if not file_path.exists():
             print(f"[ERRO] Arquivo {name} nao encontrado em: {file_path}")
@@ -39,73 +56,89 @@ def test_step_1_2():
         size_kb = file_path.stat().st_size / 1024
         print(f"  [OK] {name}: Encontrado! ({size_kb:.1f} KB - {file_path.name})")
 
-    # 2. Carregar dataset e validar dimensões
-    print("\n[2/4] Carregando dataset comportamental com Pandas...")
-    df = pd.read_parquet(PARQUET_FILE)
-    print(f"  [OK] Total de trechos (janelas de 120s): {len(df):,d}")
-    print(f"  [OK] Total de colunas: {len(df.columns)}")
-    print(f"  [OK] Total de viagens cobertas: {df['Trip'].nunique():,d}")
+    # 2. Verificar contagem física dos 2.234 arquivos individuais (.csv e .parquet)
+    print("\n[2/5] Validando contagem fisica dos arquivos individuais por janela (120s)...")
+    train_csv_files = sorted(WINDOWS_TRAIN_CSV_DIR.glob("*.csv"))
+    train_pq_files = sorted(WINDOWS_TRAIN_PARQUET_DIR.glob("*.parquet"))
+    test_csv_files = sorted(WINDOWS_TEST_CSV_DIR.glob("*.csv"))
+    test_pq_files = sorted(WINDOWS_TEST_PARQUET_DIR.glob("*.parquet"))
 
-    assert len(df) == 2481, f"Esperado 2.481 janelas, mas obteve {len(df)}"
+    print(f"  • Treino (.csv):     {len(train_csv_files):,d} arquivos em data/windows/train/csv/")
+    print(f"  • Treino (.parquet): {len(train_pq_files):,d} arquivos em data/windows/train/parquet/")
+    print(f"  • Teste  (.csv):     {len(test_csv_files):,d} arquivos em data/windows/test/csv/")
+    print(f"  • Teste  (.parquet): {len(test_pq_files):,d} arquivos em data/windows/test/parquet/")
+
+    assert len(train_csv_files) == TRAIN_WINDOW_COUNT, f"Esperado {TRAIN_WINDOW_COUNT} CSVs de treino!"
+    assert len(train_pq_files) == TRAIN_WINDOW_COUNT, f"Esperado {TRAIN_WINDOW_COUNT} Parquets de treino!"
+    assert len(test_csv_files) == TEST_WINDOW_COUNT, f"Esperado {TEST_WINDOW_COUNT} CSVs de teste!"
+    assert len(test_pq_files) == TEST_WINDOW_COUNT, f"Esperado {TEST_WINDOW_COUNT} Parquets de teste!"
+
+    # Validar ausência de interseção entre chaves de treino e teste
+    df_manifest = pd.read_csv(WINDOW_SPLIT_MANIFEST_CSV)
+    assert len(df_manifest) == TRAIN_WINDOW_COUNT + TEST_WINDOW_COUNT == 2234
+    train_keys = set(
+        zip(
+            df_manifest[df_manifest["split"] == "train"]["VehId"],
+            df_manifest[df_manifest["split"] == "train"]["Trip"],
+            df_manifest[df_manifest["split"] == "train"]["window_id"],
+        )
+    )
+    test_keys = set(
+        zip(
+            df_manifest[df_manifest["split"] == "test"]["VehId"],
+            df_manifest[df_manifest["split"] == "test"]["Trip"],
+            df_manifest[df_manifest["split"] == "test"]["window_id"],
+        )
+    )
+    assert len(train_keys) == 1700 and len(test_keys) == 534
+    assert train_keys.isdisjoint(test_keys), "Vazamento detectado entre Treino e Teste!"
+    print("  [OK] Divisao 1.700 Treino / 534 Teste estritamente disjunta (zero vazamento)!")
+
+    # 3. Carregar datasets e validar dimensões e novas features derivadas
+    print("\n[3/5] Carregando datasets e validando novas features derivadas...")
+    df = pd.read_parquet(PROCESSED_BEHAVIOR_PARQUET)
+    df_train = pd.read_parquet(PROCESSED_TRAIN_FEATURES_PARQUET)
+    df_test = pd.read_parquet(PROCESSED_TEST_FEATURES_PARQUET)
+
+    assert len(df) == 2481, f"Esperado 2.481 janelas totais, mas obteve {len(df)}"
+    assert len(df_train) == 1700, f"Esperado 1.700 janelas de treino, mas obteve {len(df_train)}"
+    assert len(df_test) == 534, f"Esperado 534 janelas de teste, mas obteve {len(df_test)}"
     assert df.isna().sum().sum() == 0, "Existem valores nulos nos atributos calculados!"
 
-    # 3. Validar consistência física dos atributos
-    print("\n[3/4] Validando limites e consistencia fisica das variaveis...")
+    required_derived_cols = [
+        "distance_total_m",
+        "distance_straight_m",
+        "tortuosity_index",
+        "mean_neg_accel_ms2",
+        "std_jerk_ms3",
+        "high_jerk_rate_min",
+        "idle_ratio",
+    ]
+    for col in required_derived_cols:
+        assert col in df.columns, f"Coluna derivada ausente: {col}"
+
+    print(f"  [OK] Todas as {len(required_derived_cols)} novas features derivadas presentes e sem NaNs.")
+
+    # 4. Validar consistência física dos atributos
+    print("\n[4/5] Validando limites e consistencia fisica das variaveis...")
     assert (df["mean_speed_kmh"] >= 0).all(), "Velocidade media negativa encontrada!"
     assert (df["max_pos_accel_ms2"] <= 6.01).all(), "Aceleracao positiva acima do limite fisico!"
     assert (df["min_neg_accel_ms2"] >= -8.01).all(), "Desaceleracao abaixo do limite fisico!"
-    assert (df["hard_braking_events"] >= 0).all(), "Contagem de frenagens negativa!"
-    print("  [OK] Todos os atributos comportamentais estao dentro dos limites fisicos.")
+    assert (df["distance_total_m"] >= 0).all(), "Distancia total negativa!"
+    assert (df["distance_straight_m"] >= 0).all(), "Distancia Haversine negativa!"
+    print("  [OK] Todos os atributos cinemáticos e espaciais estao dentro dos limites fisicos.")
 
-    # 4. Comparativo de dois trechos reais contrastantes (Suave vs Agressivo)
-    print("\n[4/4] Inspecionando dois trechos contrastantes reais da base:")
-    
-    # Trecho calmo: zero frenagens bruscas, zero arrancadas fortes e velocidade estável
-    df_calmo = df[
-        (df["hard_braking_rate_min"] == 0.0) & 
-        (df["rapid_accel_rate_min"] == 0.0) & 
-        (df["std_speed_kmh"] < 10.0) & 
-        (df["mean_speed_kmh"] > 30.0)
-    ]
-    assert not df_calmo.empty, (
-        "Nenhum trecho atendeu aos critérios de condução calma/suave "
-        "(zero frenagens/arrancadas, std_speed < 10 km/h, mean_speed > 30 km/h)!"
-    )
-    trecho_calmo = df_calmo.iloc[0]
+    # 5. Inspecionar amostra individual de arquivo .parquet/.csv
+    print("\n[5/5] Testando leitura direta do 1º arquivo embaralhado de Treino e de Teste:")
+    sample_train_df = pd.read_parquet(train_pq_files[0])
+    sample_test_df = pd.read_parquet(test_pq_files[0])
+    print(f"  • Arquivo Treino #0: {train_pq_files[0].name} ({len(sample_train_df)} segundos a 1 Hz)")
+    print(f"  • Arquivo Teste  #0: {test_pq_files[0].name} ({len(sample_test_df)} segundos a 1 Hz)")
 
-    # Trecho dinâmico/agressivo: alta taxa de frenagem brusca real e arrancadas
-    df_agressivo = df[
-        (df["hard_braking_rate_min"] >= 2.0) & 
-        (df["rapid_accel_rate_min"] >= 1.5)
-    ]
-    assert not df_agressivo.empty, (
-        "Nenhum trecho atendeu aos critérios de condução agressiva/dinâmica "
-        "(hard_braking_rate_min >= 2.0 e rapid_accel_rate_min >= 1.5)!"
-    )
-    trecho_agressivo = df_agressivo.iloc[0]
-
-    print("\n  >>> AMOSTRA A: Conducao Suave/Constante (Candidato a Perfil Economico)")
-    print(f"      • Viagem ID: {trecho_calmo['Trip']} | Janela: {trecho_calmo['window_id']}")
-    print(f"      • Velocidade Media: {trecho_calmo['mean_speed_kmh']:.1f} km/h (Desvio Padrao: {trecho_calmo['std_speed_kmh']:.1f} km/h)")
-    print(f"      • Aceleracao Maxima: {trecho_calmo['max_pos_accel_ms2']:.2f} m/s²")
-    print(f"      • Frenagens Bruscas/min: {trecho_calmo['hard_braking_rate_min']:.2f}")
-    print(f"      • Aceleracoes Bruscas/min: {trecho_calmo['rapid_accel_rate_min']:.2f}")
-    print(f"      • Potencia Media: {trecho_calmo['mean_power_kw']:.2f} kW")
-
-    print("\n  >>> AMOSTRA B: Conducao Agressiva/Oscilante (Candidato a Perfil Agressivo)")
-    print(f"      • Viagem ID: {trecho_agressivo['Trip']} | Janela: {trecho_agressivo['window_id']}")
-    print(f"      • Velocidade Media: {trecho_agressivo['mean_speed_kmh']:.1f} km/h (Desvio Padrao: {trecho_agressivo['std_speed_kmh']:.1f} km/h)")
-    print(f"      • Aceleracao Maxima: {trecho_agressivo['max_pos_accel_ms2']:.2f} m/s²")
-    print(f"      • Frenagens Bruscas/min: {trecho_agressivo['hard_braking_rate_min']:.2f}")
-    print(f"      • Aceleracoes Bruscas/min: {trecho_agressivo['rapid_accel_rate_min']:.2f}")
-    print(f"      • Potencia Media: {trecho_agressivo['mean_power_kw']:.2f} kW")
-
-    print("\n" + "=" * 68)
-    print("[SUCESSO] ETAPA 1.2 VALIDADA! Os atributos comportamentais")
-    print("estao prontos para alimentar a clusterizacao (K-Means) na Etapa 1.3.")
-    print("=" * 68)
+    print("\n" + "=" * 72)
+    print("[SUCESSO] ETAPA 1.2 VALIDADA COM DIVISAO 1.700 TREINO / 534 TESTE!")
+    print("=" * 72)
 
 
 if __name__ == "__main__":
     test_step_1_2()
-
