@@ -78,9 +78,9 @@ Para cada arquivo individual de janela contendo $N \le 120$ pontos em $1\text{ H
 4. **Indicadores Dinâmicos Complementares:**
    * **`mean_neg_accel_ms2`:** Média das desacelerações ($a_t < -0{,}1\text{ m/s}^2$), quantificando a severidade média das frenagens na janela.
    * **`high_jerk_rate_min`:** Taxa de eventos de tranco severo ($|j_t| \ge 3{,}0\text{ m/s}^3$) normalizada por minuto.
-   * **`idle_ratio`:** Proporção do tempo da janela em que o veículo permaneceu com velocidade quase nula ($v_t < 1{,}0\text{ km/h}$), capturando retenções semafóricas.
+   * **`idle_ratio`:** Proporção do tempo da janela em que o veículo permaneceu com velocidade quase nula ($v_t < 2{,}0\text{ km/h}$), capturando retenções semafóricas.
 
-> **Nota de Modelagem (Opção A):** O treinamento do K-Means mantém exclusivamente as **6 features cinemáticas validadas** (`mean_speed_kmh`, `std_speed_kmh`, `mean_pos_accel_ms2`, `max_pos_accel_ms2`, `min_neg_accel_ms2`, `std_jerk_ms3`) para preservar a pureza da classificação de estilo do motorista sem confundir topografia/geometria viária com agressividade humana. As novas features derivadas são armazenadas no dataset rotulado para análise contextual e envio à camada de LLM.
+> **Nota de Modelagem (Opção A):** O treinamento do K-Means mantém exclusivamente as **6 features cinemáticas validadas** (`mean_speed_kmh`, `std_speed_kmh`, `mean_pos_accel_ms2`, `max_pos_accel_ms2`, `hard_braking_rate_min`, `rapid_accel_rate_min`) para preservar a pureza da classificação de estilo do motorista sem confundir topografia/geometria viária com agressividade humana. As novas features derivadas são armazenadas no dataset rotulado para análise contextual e envio à camada de LLM.
 
 ---
 
@@ -95,7 +95,7 @@ com distância final $\text{DTW}(X, Y) = D(n, m)$ (ou versão euclidiana acumula
 * **Dimensão da Matriz:** $1700 \times 1700$ (simétrica, com diagonal principal $D_{ii} = 0$, exigindo o cálculo de $\frac{1700 \times 1699}{2} = 1.444.150$ pares de séries temporais de até 120 pontos).
 * **Aceleração Computacional:** Implementada com compilação *Just-In-Time* paralelizada (`@njit(parallel=True, fastmath=True)` via `numba`), permitindo calcular os $1{,}44\text{ milhão}$ de alinhamentos em poucos segundos.
 * **Visualização em Mapa de Calor (*Heatmap*):**
-  O arquivo `data/processed/plots/07_dtw_speed_heatmap_1700x1700.png` apresenta a matriz de distâncias DTW $1700 \times 1700$:
+  O arquivo `outputs/figures/07_dtw_speed_heatmap_1700x1700.png` apresenta a matriz de distâncias DTW $1700 \times 1700$:
   1. **Na ordem embaralhada do conjunto de treino (`train_0000` a `train_1699`):** Demonstra visualmente que o embaralhamento (*shuffle*) eliminou correlações espúrias entre janelas adjacentes da mesma viagem.
   2. **Reordenada pelos 3 perfis do K-Means (`Suave / Eco`, `Moderado / Normal`, `Agressivo / Intenso`):** Evidencia a formação de blocos estruturados na diagonal principal, comprovando que janelas classificadas no mesmo perfil compartilham padrões temporais de velocidade similares (baixa distância DTW).
 

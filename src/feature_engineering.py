@@ -220,11 +220,14 @@ def compute_single_window_features(
         distance_straight_m = 0.0
 
     # A distância em linha reta nunca pode exceder fisicamente a distância real percorrida
-    # (pequenas flutuações de GPS em trajetos curtos são limitadas por distance_total_m)
-    if distance_straight_m > distance_total_m and distance_total_m > 0.0:
-        distance_straight_m = distance_total_m
-
-    tortuosity_index = float(distance_total_m / max(distance_straight_m, 1.0))
+    # Em veículos parados ou com deslocamento ínfimo (< 1.0 m), neutraliza ruído de jitter do GPS
+    if distance_total_m <= 1.0:
+        distance_straight_m = 0.0
+        tortuosity_index = 1.0
+    else:
+        if distance_straight_m > distance_total_m:
+            distance_straight_m = distance_total_m
+        tortuosity_index = float(distance_total_m / max(distance_straight_m, 1.0))
 
     # Energia consumida aproximada no trecho: E (kWh) = integral(P * dt) / 3600
     trecho_energy_kwh = float((powers * group["dt"]).sum() / 3600.0)
@@ -353,81 +356,87 @@ def export_and_split_active_windows(
     shuffled_indices = rng.permutation(len(df_active))
     df_shuffled = df_active.iloc[shuffled_indices].copy().reset_index(drop=True)
 
-    manifest_rows = []
-    split_map: dict[tuple[int, int, int], tuple[str, int, str]] = {}
+    # Vetorização de split, split_rank e file_stem
+    n_active = len(df_shuffled)
+    shuffle_order = np.arange(n_active, dtype=int)
+    split_labels = np.where(shuffle_order < train_count, "train", "test")
+    split_ranks = np.where(shuffle_order < train_count, shuffle_order, shuffle_order - train_count)
 
-    for global_shuffle_idx, row in df_shuffled.iterrows():
-        veh_id = int(row["VehId"])
-        trip_id = int(row["Trip"])
-        win_id = int(row["window_id"])
-        key = (veh_id, trip_id, win_id)
+    file_stems = [
+        f"{s}_{r:04d}_veh{v}_trip{t}_w{w:03d}"
+        for s, r, v, t, w in zip(
+            split_labels,
+            split_ranks,
+            df_shuffled["VehId"],
+            df_shuffled["Trip"],
+            df_shuffled["window_id"],
+        )
+    ]
 
-        if global_shuffle_idx < train_count:
-            split_label = "train"
-            split_rank = int(global_shuffle_idx)
-            csv_dir = WINDOWS_TRAIN_CSV_DIR
-            parquet_dir = WINDOWS_TRAIN_PARQUET_DIR
-        else:
-            split_label = "test"
-            split_rank = int(global_shuffle_idx - train_count)
-            csv_dir = WINDOWS_TEST_CSV_DIR
-            parquet_dir = WINDOWS_TEST_PARQUET_DIR
+    df_shuffled["shuffle_order"] = shuffle_order
+    df_shuffled["split"] = split_labels
+    df_shuffled["split_rank"] = split_ranks
+    df_shuffled["window_file"] = file_stems
 
-        file_stem = f"{split_label}_{split_rank:04d}_veh{veh_id}_trip{trip_id}_w{win_id:03d}"
-        csv_path = csv_dir / f"{file_stem}.csv"
-        parquet_path = parquet_dir / f"{file_stem}.parquet"
+    # Construção vetorizada do manifesto
+    csv_rel_paths = [
+        f"data/windows/{s}/csv/{stem}.csv" for s, stem in zip(split_labels, file_stems)
+    ]
+    parquet_rel_paths = [
+        f"data/windows/{s}/parquet/{stem}.parquet" for s, stem in zip(split_labels, file_stems)
+    ]
 
-        # Exportar a série temporal de 120s da janela em .csv e .parquet
-        df_window_ts = window_groups[key]
-        df_window_ts.to_csv(csv_path, index=False)
-        df_window_ts.to_parquet(parquet_path, index=False, engine="pyarrow", compression="snappy")
-
-        split_map[key] = (split_label, split_rank, file_stem)
-        manifest_rows.append({
-            "shuffle_order": int(global_shuffle_idx),
-            "split": split_label,
-            "split_rank": split_rank,
-            "file_stem": file_stem,
-            "VehId": veh_id,
-            "Trip": trip_id,
-            "window_id": win_id,
-            "sample_count": int(row["sample_count"]),
-            "duration_s": float(row["duration_s"]),
-            "mean_speed_kmh": float(row["mean_speed_kmh"]),
-            "distance_total_m": float(row["distance_total_m"]),
-            "distance_straight_m": float(row["distance_straight_m"]),
-            "tortuosity_index": float(row["tortuosity_index"]),
-            "csv_rel_path": str(csv_path.relative_to(ROOT_DIR)).replace("\\", "/"),
-            "parquet_rel_path": str(parquet_path.relative_to(ROOT_DIR)).replace("\\", "/"),
-        })
-
-    df_manifest = pd.DataFrame(manifest_rows)
+    df_manifest = pd.DataFrame({
+        "shuffle_order": shuffle_order,
+        "split": split_labels,
+        "split_rank": split_ranks,
+        "file_stem": file_stems,
+        "VehId": df_shuffled["VehId"],
+        "Trip": df_shuffled["Trip"],
+        "window_id": df_shuffled["window_id"],
+        "sample_count": df_shuffled["sample_count"],
+        "duration_s": df_shuffled["duration_s"],
+        "mean_speed_kmh": df_shuffled["mean_speed_kmh"],
+        "distance_total_m": df_shuffled["distance_total_m"],
+        "distance_straight_m": df_shuffled["distance_straight_m"],
+        "tortuosity_index": df_shuffled["tortuosity_index"],
+        "csv_rel_path": csv_rel_paths,
+        "parquet_rel_path": parquet_rel_paths,
+    })
     df_manifest.to_csv(WINDOW_SPLIT_MANIFEST_CSV, index=False)
 
-    # Anotar split, split_rank e file_stem no DataFrame completo (2.481 janelas)
-    splits = []
-    ranks = []
-    stems = []
-    for _, r in df_all.iterrows():
-        k = (int(r["VehId"]), int(r["Trip"]), int(r["window_id"]))
-        if k in split_map:
-            s_lbl, s_rnk, f_stm = split_map[k]
-        else:
-            s_lbl, s_rnk, f_stm = ("inactive", -1, "")
-        splits.append(s_lbl)
-        ranks.append(s_rnk)
-        stems.append(f_stm)
+    # Gravação física em disco (apenas I/O no loop)
+    for s_lbl, stem, veh_id, trip_id, win_id in zip(
+        split_labels,
+        file_stems,
+        df_shuffled["VehId"],
+        df_shuffled["Trip"],
+        df_shuffled["window_id"],
+    ):
+        csv_dir = WINDOWS_TRAIN_CSV_DIR if s_lbl == "train" else WINDOWS_TEST_CSV_DIR
+        parquet_dir = WINDOWS_TRAIN_PARQUET_DIR if s_lbl == "train" else WINDOWS_TEST_PARQUET_DIR
+        key = (int(veh_id), int(trip_id), int(win_id))
 
-    df_all["split"] = splits
-    df_all["split_rank"] = ranks
-    df_all["window_file"] = stems
+        df_window_ts = window_groups[key]
+        df_window_ts.to_csv(csv_dir / f"{stem}.csv", index=False)
+        df_window_ts.to_parquet(parquet_dir / f"{stem}.parquet", index=False, engine="pyarrow", compression="snappy")
 
-    # Construir os DataFrames de Treino (1.700) e Teste (534) na ordem exata do shuffle
-    df_shuffled["split"] = ["train" if i < train_count else "test" for i in range(len(df_shuffled))]
-    df_shuffled["split_rank"] = [
-        i if i < train_count else i - train_count for i in range(len(df_shuffled))
-    ]
-    df_shuffled["window_file"] = df_manifest["file_stem"].values
+    # Anotação vetorizada e segura em df_all via merge(validate="one_to_one")
+    split_info = df_manifest[
+        ["VehId", "Trip", "window_id", "shuffle_order", "split", "split_rank", "file_stem"]
+    ].rename(columns={"file_stem": "window_file"})
+
+    df_all = df_all.merge(
+        split_info,
+        on=["VehId", "Trip", "window_id"],
+        how="left",
+        sort=False,
+        validate="one_to_one",
+    )
+    df_all["shuffle_order"] = df_all["shuffle_order"].fillna(-1).astype(int)
+    df_all["split"] = df_all["split"].fillna("inactive")
+    df_all["split_rank"] = df_all["split_rank"].fillna(-1).astype(int)
+    df_all["window_file"] = df_all["window_file"].fillna("")
 
     df_train = df_shuffled[df_shuffled["split"] == "train"].copy().reset_index(drop=True)
     df_test = df_shuffled[df_shuffled["split"] == "test"].copy().reset_index(drop=True)
@@ -490,7 +499,7 @@ def save_features_and_metadata(
 
     metadata = {
         "dataset": "VED - Pure Electric Vehicles Driving Behavior Features",
-        "description": "Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino (1.700) / Teste (534)",
+        "description": f"Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino ({len(df_train):,d}) / Teste ({len(df_test):,d})",
         "total_windows": int(len(df_features)),
         "active_windows_total": int(len(df_train) + len(df_test)),
         "train_windows_count": int(len(df_train)),
@@ -507,10 +516,14 @@ def save_features_and_metadata(
         json.dump(metadata, f, indent=4, ensure_ascii=False)
     print(f"   Metadados salvos em: {PROCESSED_BEHAVIOR_METADATA_JSON.name}")
 
+    total_active = len(df_train) + len(df_test)
+    train_pct = (len(df_train) / total_active * 100.0) if total_active > 0 else 0.0
+    test_pct = (len(df_test) / total_active * 100.0) if total_active > 0 else 0.0
+
     print("\n-> [5/5] ============ RESUMO DOS ATRIBUTOS E DIVISÃO TREINO/TESTE ============")
-    print(f"Total de Trechos (Janelas 120s): {len(df_features):,d} (Ativas: {len(df_train) + len(df_test):,d})")
-    print(f"  • Conjunto de Treino: {len(df_train):,d} janelas (76,1%) -> data/windows/train/ (.csv e .parquet)")
-    print(f"  • Conjunto de Teste:    {len(df_test):,d} janelas (23,9%) -> data/windows/test/  (.csv e .parquet)")
+    print(f"Total de Trechos (Janelas 120s): {len(df_features):,d} (Ativas: {total_active:,d})")
+    print(f"  • Conjunto de Treino: {len(df_train):,d} janelas ({train_pct:.1f}%) -> data/windows/train/ (.csv e .parquet)")
+    print(f"  • Conjunto de Teste:    {len(df_test):,d} janelas ({test_pct:.1f}%) -> data/windows/test/  (.csv e .parquet)")
     print("\nEstatísticas das Variáveis Cinemáticas e Novas Features Derivadas:")
     print(f"  • Velocidade Média:        {stats_dict['mean_speed_kmh']['mean']:.1f} km/h (Max: {stats_dict['mean_speed_kmh']['max']:.1f} km/h)")
     print(f"  • Desvio Padrão Velocidade:{stats_dict['std_speed_kmh']['mean']:.2f} km/h")

@@ -1,6 +1,6 @@
 {
     "dataset": "VED - Pure Electric Vehicles Driving Behavior Features",
-    "description": "Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino (1.700) / Teste (534)",
+    "description": "Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino (1,700) / Teste (534)",
     "total_windows": 2481,
     "active_windows_total": 2234,
     "train_windows_count": 1700,
@@ -163,17 +163,17 @@
             "max": 3901.39
         },
         "distance_straight_m": {
-            "mean": 808.976,
-            "std": 547.249,
+            "mean": 808.581,
+            "std": 547.828,
             "min": 0.0,
             "p50": 760.37,
             "p90": 1505.69,
             "max": 3820.08
         },
         "tortuosity_index": {
-            "mean": 2.957,
-            "std": 52.681,
-            "min": 0.0,
+            "mean": 3.008,
+            "std": 52.679,
+            "min": 1.0,
             "p50": 1.101,
             "p90": 1.446,
             "max": 2016.746
