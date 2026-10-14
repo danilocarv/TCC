@@ -1,7 +1,12 @@
 {
     "dataset": "VED - Pure Electric Vehicles Driving Behavior Features",
-    "description": "Atributos comportamentais de condução agregados em janelas de 120 segundos",
+    "description": "Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino (1,700) / Teste (534)",
     "total_windows": 2481,
+    "active_windows_total": 2234,
+    "train_windows_count": 1700,
+    "test_windows_count": 534,
+    "inactive_windows_count": 247,
+    "random_seed_shuffle": 42,
     "total_trips_covered": 491,
     "vehicles": [
         10,
@@ -16,12 +21,17 @@
         "max_pos_accel_ms2",
         "mean_neg_accel_ms2",
         "min_neg_accel_ms2",
+        "std_jerk_ms3",
         "hard_braking_events",
         "hard_braking_rate_min",
         "rapid_accel_events",
         "rapid_accel_rate_min",
         "high_jerk_events",
-        "idle_ratio"
+        "high_jerk_rate_min",
+        "idle_ratio",
+        "distance_total_m",
+        "distance_straight_m",
+        "tortuosity_index"
     ],
     "descriptive_statistics": {
         "mean_speed_kmh": {
@@ -80,6 +90,14 @@
             "p90": -0.585,
             "max": 0.0
         },
+        "std_jerk_ms3": {
+            "mean": 0.25,
+            "std": 0.105,
+            "min": 0.0,
+            "p50": 0.25,
+            "p90": 0.377,
+            "max": 0.756
+        },
         "hard_braking_events": {
             "mean": 0.803,
             "std": 1.477,
@@ -120,6 +138,14 @@
             "p90": 0.0,
             "max": 1.0
         },
+        "high_jerk_rate_min": {
+            "mean": 0.0,
+            "std": 0.011,
+            "min": 0.0,
+            "p50": 0.0,
+            "p90": 0.0,
+            "max": 0.53
+        },
         "idle_ratio": {
             "mean": 0.221,
             "std": 0.26,
@@ -127,6 +153,30 @@
             "p50": 0.131,
             "p90": 0.576,
             "max": 1.0
+        },
+        "distance_total_m": {
+            "mean": 940.585,
+            "std": 614.54,
+            "min": 0.0,
+            "p50": 892.38,
+            "p90": 1705.08,
+            "max": 3901.39
+        },
+        "distance_straight_m": {
+            "mean": 808.581,
+            "std": 547.828,
+            "min": 0.0,
+            "p50": 760.37,
+            "p90": 1505.69,
+            "max": 3820.08
+        },
+        "tortuosity_index": {
+            "mean": 3.008,
+            "std": 52.679,
+            "min": 1.0,
+            "p50": 1.101,
+            "p90": 1.446,
+            "max": 2016.746
         }
     }
 }

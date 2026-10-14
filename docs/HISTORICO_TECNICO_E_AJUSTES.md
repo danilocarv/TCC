@@ -221,6 +221,46 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 14: Isolamento das 2.234 Janelas Ativas em Arquivos Individuais (`.csv` e `.parquet`), Embaralhamento e Divisão Treino/Teste (1.700 / 534)
+* **Data:** 12/10/2026
+* **Arquivos Afetados:** `src/config.py`, `src/feature_engineering.py`, `src/clustering.py`, `.gitignore`
+* **Motivação Acadêmica (Orientação TCC):**
+  No fluxo preliminar, todas as 2.234 janelas de condução ativa ($\bar{v} \ge 8,0\text{ km/h}$) estavam consolidadas em um único arquivo sequencial e eram utilizadas integralmente no ajuste do K-Means. Isso impedia a avaliação *out-of-sample* do agrupamento e mantinha as janelas em ordem sequencial por viagem.
+* **Solução de Engenharia de Dados e Machine Learning:**
+  1. **Exportação Individual Dupla (`.csv` e `.parquet`):** Cada uma das 2.234 janelas ativas de 120 segundos passa a ser exportada em arquivo individual contendo sua série temporal de 1 Hz.
+  2. **Embaralhamento Reprodutível (*Shuffle*):** Aplicação de permutação pseudoaleatória com semente fixa (`random_state=42`) sobre as 2.234 janelas antes da partição, eliminando dependências temporais sequenciais de uma mesma viagem.
+  3. **Divisão Física Estrita (`1.700 Treino` / `534 Teste`):**
+     * `data/windows/train/` (`csv/` e `parquet/`): **1.700 arquivos** ($\approx 76,1\%$) destinados exclusivamente ao treinamento (`fit`) do `StandardScaler`, `KMeans(k=3)` e `PCA(n_components=2)`.
+     * `data/windows/test/` (`csv/` e `parquet/`): **534 arquivos** ($\approx 23,9\%$) isolados para avaliação de generalização *out-of-sample* (`transform` + `predict`) e simulação de leitura em tempo real pela camada de LLM.
+
+---
+
+### 🔹 Item 15: Extração de Features Derivadas Espaciais e Cinemáticas por Janela (Haversine e Tortuosidade)
+* **Data:** 12/10/2026
+* **Arquivos Afetados:** `src/feature_engineering.py`, `src/config.py`
+* **Motivação Acadêmica (Orientação TCC):**
+  Necessidade de enriquecer a representação de cada janela de 120s com variáveis derivadas que capturem a geometria espacial do trajeto (retilíneo vs. sinuoso) e indicadores complementares de dinâmica longitudinal.
+* **Solução Implementada:**
+  Cálculo por arquivo individual das novas variáveis derivadas:
+  * `distance_total_m`: Distância acumulada real percorrida na janela ($\sum (v_t / 3,6) \cdot \Delta t$).
+  * `distance_straight_m`: Distância geodésica em linha reta entre a coordenada GPS inicial e final da janela via **Fórmula de Haversine**.
+  * `tortuosity_index`: Razão de sinuosidade da via ($D_{\text{total}} / \max(D_{\text{reta}}, 1,0)$).
+  * `mean_neg_accel_ms2`, `high_jerk_rate_min` e `idle_ratio`: Indicadores complementares de severidade média de frenagem, frequência de trancos por minuto e proporção de retenções/paradas.
+  * **Decisão de Modelagem (Opção A):** O K-Means preserva estritamente as **6 variáveis cinemáticas validadas** na matriz de agrupamento para manter a pureza comportamental do motorista, enquanto as novas variáveis derivadas enriquecem o dataset rotulado para análise exploratória e contexto da LLM.
+
+---
+
+### 🔹 Item 16: Matriz de Distância DTW ($1700 \times 1700$) sobre a Velocidade e Mapa de Calor (*Heatmap*)
+* **Data:** 12/10/2026
+* **Arquivos Afetados:** `src/dtw_analysis.py`, `src/config.py`, `requirements.txt`
+* **Motivação Acadêmica (Orientação TCC):**
+  Avaliar a similaridade morfológica e temporal das curvas de velocidade entre todas as 1.700 janelas selecionadas para o conjunto de treino por meio do algoritmo **Dynamic Time Warping (DTW)**, gerando uma matriz $1700 \times 1700$ e sua respectiva visualização em mapa de calor (*heatmap*).
+* **Solução Matemática e Computacional:**
+  1. **Cálculo Par-a-Par Acelerado via JIT (`numba`):** Implementação do DTW exato sobre a série temporal `speed_kmh` dos 1.700 arquivos de treino ($\frac{1700 \times 1699}{2} = 1.444.150$ pares únicos) utilizando compilação paralelizada `@njit(parallel=True, fastmath=True)`.
+  2. **Visualização em Mapa de Calor (`07_dtw_speed_heatmap_1700x1700.png`):** Geração do gráfico de calor comparando a matriz $1700 \times 1700$ na ordem embaralhada do treino (comprovando ausência de viés sequencial) e reordenada pelos 3 perfis do K-Means (evidenciando os blocos diagonais de similaridade temporal intra-perfil).
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |
@@ -236,16 +276,17 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Contaminação de eixos PCA por trechos inativos | `pca.fit_transform` executado sobre janelas $< 8\text{ km/h}$ | `src/clustering.py` | `pca.fit(X_train_scaled)` e `pca.transform(X_all_scaled)` | ✅ Resolvido |
 | Limiar de jerk hardcoded e descompasso na documentação | Constante mágica em `src/feature_engineering.py` | `src/config.py`, `src/feature_engineering.py`, `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md` | `HIGH_JERK_THRESHOLD = 3.0` centralizado e fundamentado teoricamente | ✅ Resolvido |
 | Asserções desatualizadas em `test_step1_2.py` | Total de 2.531 janelas antigas e filtros extremos de teste | `test_step1_2.py` | Asserção corrigida para 2.481 janelas e filtros calibrados | ✅ Resolvido |
+| Ausência de partição física Treino/Teste por janela | Todas as 2.234 janelas estavam em arquivo único sequencial | `src/feature_engineering.py`, `src/clustering.py` | Exportação individual (`.csv`/`.parquet`), shuffle e split 1.700/534 | 🔄 Em Execução |
+| Ausência de métricas espaciais de sinuosidade da rota | Coordenadas GPS não eram sintetizadas na janela | `src/feature_engineering.py` | Cálculo de Distância Total, Haversine e Tortuosidade por janela | 🔄 Em Execução |
+| Análise de similaridade temporal entre curvas de velocidade | Comparação restrita a estatísticas agregadas da janela | `src/dtw_analysis.py` | Matriz DTW $1700 \times 1700$ sobre `speed_kmh` + Heatmap | 🔄 Em Execução |
 
 ---
 
 ## 🎯 4. Conclusão e Estado Atual do Pipeline
 
-Com todos os ajustes acima implementados e validados:
+Com a evolução metodológica detalhada em `docs/ROTEIRO_SEPARACAO_JANELAS_DTW_E_TREINO_TESTE.md`:
 1. **Os dados brutos dos EVs** estão 100% íntegros e catalogados (Etapa 1.1).
-2. **Os atributos comportamentais de condução** estão fisicamente consistentes, sem ruídos de sensores e perfeitamente isolados por veículo e viagem (Etapa 1.2).
-3. **O modelo de Machine Learning de agrupamento (K-Means com $k=3$)** está treinado, validado por métricas matemáticas (Silhueta = 0.242, Cotovelo, Davies-Bouldin = 1.45, Calinski-Harabasz = 665.0) e salvo junto com o normalizador e modelo PCA (Etapa 1.3).
-4. **O ferramental de inspeção e teste** (`inspect_trip.py`, `test_step1.py`, `test_step1_2.py`, `test_step1_3.py`) garante 100% de cobertura e verificabilidade em tempo de execução.
-
-**A Fase 1 (Perfilamento e Classificação de Condutores) está matematicamente e computacionalmente concluída.** O próximo passo solicitado é o desenvolvimento da interface visual interativa (Streamlit / Dashboard) para permitir a exploração gráfica e interativa das viagens e predições em tempo real.
+2. **As 2.234 janelas de condução ativa (120s)** são exportadas individualmente (`.csv` e `.parquet`), embaralhadas (`random_state=42`) e divididas fisicamente em **1.700 janelas de treino** e **534 janelas de teste**, com extração de features derivadas espaciais e cinemáticas.
+3. **A Matriz DTW $1700 \times 1700$ sobre a velocidade** e seu respectivo mapa de calor validam a similaridade temporal das séries de treino.
+4. **O modelo K-Means ($k=3$) e o PCA** são treinados estritamente nas 1.700 janelas de treino e avaliados nas 534 janelas inéditas de teste, preparando a base para inferência em tempo real integrada à LLM.
 
