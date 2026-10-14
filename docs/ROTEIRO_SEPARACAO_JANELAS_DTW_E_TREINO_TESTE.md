@@ -114,9 +114,13 @@ data/
 │       └── parquet/                             # 534 arquivos .parquet de teste (120s cada)
 └── processed/
     ├── window_split_manifest.csv                # Manifesto rastreável das 2.234 janelas (train vs test)
+    ├── driving_windows_train_features.parquet   # 1.700 janelas de treino com features extraídas
+    ├── driving_windows_test_features.parquet    # 534 janelas de teste com features extraídas
     ├── driving_windows_train_labeled.parquet    # 1.700 janelas de treino com features + rótulos K-Means
     ├── driving_windows_test_labeled.parquet     # 534 janelas de teste com features + predição K-Means
-    ├── dtw_speed_matrix_train_1700x1700.npy     # Matriz numérica DTW 1700x1700 sobre speed_kmh
-    └── plots/
-        └── 07_dtw_speed_heatmap_1700x1700.png   # Gráfico de calor 1700x1700 da matriz DTW
+    └── dtw_speed_matrix_train_1700x1700.npy     # Matriz numérica DTW 1700x1700 sobre speed_kmh
+
+outputs/
+└── figures/
+    └── 07_dtw_speed_heatmap_1700x1700.png       # Gráfico de calor 1700x1700 da matriz DTW
 ```
