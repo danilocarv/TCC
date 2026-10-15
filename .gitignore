@@ -18,7 +18,7 @@ VED-master/
 # Arquivos individuais de janelas (2.234 .csv + 2.234 .parquet) e série 1 Hz pesada
 data/windows/
 data/processed/ev_trips_1hz.parquet
-data/processed/dtw_speed_matrix_train_1700x1700.*
+data/processed/dtw_speed_matrix_*
 
 # Arquivos de sistema e IDE
 .DS_Store
