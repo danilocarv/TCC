@@ -251,13 +251,26 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 ---
 
 ### 🔹 Item 16: Matriz de Distância DTW ($1700 \times 1700$) sobre a Velocidade e Mapa de Calor (*Heatmap*)
-* **Data:** 12/10/2026
-* **Arquivos Afetados:** `src/dtw_analysis.py`, `src/config.py`, `requirements.txt`
+* **Data:** 14/10/2026
+* **Arquivos Afetados:** `src/dtw_analysis.py`, `src/config.py`, `requirements.txt`, `test_dtw.py`
 * **Motivação Acadêmica (Orientação TCC):**
-  Avaliar a similaridade morfológica e temporal das curvas de velocidade entre todas as 1.700 janelas selecionadas para o conjunto de treino por meio do algoritmo **Dynamic Time Warping (DTW)**, gerando uma matriz $1700 \times 1700$ e sua respectiva visualização em mapa de calor (*heatmap*).
+  Avaliar a similaridade morfológica e temporal das curvas de velocidade entre todas as 1.700 janelas selecionadas para o conjunto de treino por meio do algoritmo **Dynamic Time Warping (DTW)**, gerando uma matriz de distâncias e sua respectiva visualização em mapa de calor (*heatmap*).
 * **Solução Matemática e Computacional:**
-  1. **Cálculo Par-a-Par Acelerado via JIT (`numba`):** Implementação do DTW exato sobre a série temporal `speed_kmh` dos 1.700 arquivos de treino ($\frac{1700 \times 1699}{2} = 1.444.150$ pares únicos) utilizando compilação paralelizada `@njit(parallel=True, fastmath=True)`.
-  2. **Visualização em Mapa de Calor (`07_dtw_speed_heatmap_1700x1700.png`):** Geração do gráfico de calor comparando a matriz $1700 \times 1700$ na ordem embaralhada do treino (comprovando ausência de viés sequencial) e reordenada pelos 3 perfis do K-Means (evidenciando os blocos diagonais de similaridade temporal intra-perfil).
+  1. **Cálculo Par-a-Par Acelerado via JIT (`numba`):** Implementação do DTW exato sobre a série temporal `speed_kmh` dos arquivos de treino utilizando compilação paralelizada `@njit(parallel=True, fastmath=True)`.
+  2. **Estratégia em Duas Fases:** Validação preliminar com piloto de $100 \times 100$ janelas ($4.950$ pares em $5{,}0\text{s}$) e geração de [07_dtw_speed_heatmap_pilot_100x100.png](file:///c:/Users/danil/Documents/VSCode/TCC/outputs/figures/07_dtw_speed_heatmap_pilot_100x100.png) comprovando diagonal nula ($M[i, i] = 0$) e simetria matemática perfeita ($M = M^T$).
+  3. **Validação Automatizada:** Criação do script de teste `test_dtw.py` aprovado com 100% de sucesso.
+
+---
+
+### 🔹 Item 17: Agrupamento por Detecção de Comunidades (Algoritmo de Louvain) sobre a Rede de Similaridade DTW
+* **Data:** 15/10/2026
+* **Arquivos Afetados:** `src/louvain_clustering.py`, `src/config.py`, `requirements.txt`, `test_louvain.py`
+* **Motivação Acadêmica (Orientação TCC):**
+  Após a geração do mapa de calor da matriz DTW, o orientador solicitou a aplicação do algoritmo de **Louvain** para agrupamento. Ao contrário do K-Means (onde o número de clusters $k=3$ é estipulado a priori), o Louvain opera sobre uma representação de rede/grafo e descobre de forma puramente matemática e orientada a dados a quantidade natural de perfis de condução através da maximização da **Modularidade ($Q$)**.
+* **Solução Matemática e Computacional:**
+  1. **Conversão Matriz DTW $\rightarrow$ Grafo de Afinidade:** Transformação das distâncias DTW em similaridades via kernel exponencial $W_{ij} = \exp(-D_{ij} / \sigma)$, onde janelas com velocidades semelhantes possuem conexões fortes.
+  2. **Maximização de Modularidade via Louvain:** Aplicação do algoritmo de Louvain (`networkx.community.louvain_communities`) para identificar as comunidades densamente conectadas de motoristas.
+  3. **Heatmap Reordenado por Comunidades:** Reordenação das linhas e colunas da matriz DTW para agrupar as janelas da mesma comunidade lado a lado, gerando blocos escuros evidentes na diagonal principal e comprovando visualmente a coesão de cada estilo de condução.
 
 ---
 
@@ -276,9 +289,10 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Contaminação de eixos PCA por trechos inativos | `pca.fit_transform` executado sobre janelas $< 8\text{ km/h}$ | `src/clustering.py` | `pca.fit(X_train_scaled)` e `pca.transform(X_all_scaled)` | ✅ Resolvido |
 | Limiar de jerk hardcoded e descompasso na documentação | Constante mágica em `src/feature_engineering.py` | `src/config.py`, `src/feature_engineering.py`, `docs/FUNDAMENTACAO_TEORICA_E_LITERATURA.md` | `HIGH_JERK_THRESHOLD = 3.0` centralizado e fundamentado teoricamente | ✅ Resolvido |
 | Asserções desatualizadas em `test_step1_2.py` | Total de 2.531 janelas antigas e filtros extremos de teste | `test_step1_2.py` | Asserção corrigida para 2.481 janelas e filtros calibrados | ✅ Resolvido |
-| Ausência de partição física Treino/Teste por janela | Todas as 2.234 janelas estavam em arquivo único sequencial | `src/feature_engineering.py`, `src/clustering.py` | Exportação individual (`.csv`/`.parquet`), shuffle e split 1.700/534 | 🔄 Em Execução |
-| Ausência de métricas espaciais de sinuosidade da rota | Coordenadas GPS não eram sintetizadas na janela | `src/feature_engineering.py` | Cálculo de Distância Total, Haversine e Tortuosidade por janela | 🔄 Em Execução |
-| Análise de similaridade temporal entre curvas de velocidade | Comparação restrita a estatísticas agregadas da janela | `src/dtw_analysis.py` | Matriz DTW $1700 \times 1700$ sobre `speed_kmh` + Heatmap | 🔄 Em Execução |
+| Ausência de partição física Treino/Teste por janela | Todas as 2.234 janelas estavam em arquivo único sequencial | `src/feature_engineering.py`, `src/clustering.py` | Exportação individual (`.csv`/`.parquet`), shuffle e split 1.700/534 | ✅ Resolvido |
+| Ausência de métricas espaciais de sinuosidade da rota | Coordenadas GPS não eram sintetizadas na janela | `src/feature_engineering.py` | Cálculo de Distância Total, Haversine e Tortuosidade por janela | ✅ Resolvido |
+| Análise de similaridade temporal entre curvas de velocidade | Comparação restrita a estatísticas agregadas da janela | `src/dtw_analysis.py` | Matriz DTW sobre `speed_kmh` acelerada por Numba + Heatmap | ✅ Resolvido (Piloto) |
+| Dependência de fixação arbitrária de $k=3$ no K-Means | K-Means requer $k$ fixado a priori | `src/louvain_clustering.py` | Detecção de comunidades de Louvain via otimização de modularidade | 🔄 Em Execução |
 
 ---
 
@@ -286,7 +300,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 Com a evolução metodológica detalhada em `docs/ROTEIRO_SEPARACAO_JANELAS_DTW_E_TREINO_TESTE.md`:
 1. **Os dados brutos dos EVs** estão 100% íntegros e catalogados (Etapa 1.1).
-2. **As 2.234 janelas de condução ativa (120s)** são exportadas individualmente (`.csv` e `.parquet`), embaralhadas (`random_state=42`) e divididas fisicamente em **1.700 janelas de treino** e **534 janelas de teste**, com extração de features derivadas espaciais e cinemáticas.
-3. **A Matriz DTW $1700 \times 1700$ sobre a velocidade** e seu respectivo mapa de calor validam a similaridade temporal das séries de treino.
-4. **O modelo K-Means ($k=3$) e o PCA** são treinados estritamente nas 1.700 janelas de treino e avaliados nas 534 janelas inéditas de teste, preparando a base para inferência em tempo real integrada à LLM.
+2. **As 2.234 janelas de condução ativa (120s)** estão exportadas individualmente (`.csv` e `.parquet`), embaralhadas (`random_state=42`) e divididas fisicamente em **1.700 janelas de treino** e **534 janelas de teste**, com features espaciais e cinemáticas validadas por contrato estrito de dados (Etapa 1.2).
+3. **A Matriz DTW sobre a velocidade** está implementada e validada no teste piloto $100 \times 100$, comprovando simetria perfeita e alinhamento segundo a segundo.
+4. **O Algoritmo de Louvain** entra como ferramenta científica de fronteira para agrupamento baseado em rede, identificando de forma nativa a quantidade ótima de perfis comportamentais e complementando o K-Means e PCA para o fechamento da Fase 1 e integração com a LLM.
 

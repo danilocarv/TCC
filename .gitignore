@@ -19,6 +19,7 @@ VED-master/
 data/windows/
 data/processed/ev_trips_1hz.parquet
 data/processed/dtw_speed_matrix_*
+data/processed/dtw_louvain_clusters_*
 
 # Arquivos de sistema e IDE
 .DS_Store

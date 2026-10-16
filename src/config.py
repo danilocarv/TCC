@@ -96,6 +96,17 @@ DTW_SPEED_MATRIX_NPY = PROCESSED_DATA_DIR / "dtw_speed_matrix_train_1700x1700.np
 DTW_SPEED_MATRIX_PARQUET = PROCESSED_DATA_DIR / "dtw_speed_matrix_train_1700x1700.parquet"
 FIG_DTW_SPEED_HEATMAP = FIGURES_DIR / "07_dtw_speed_heatmap_1700x1700.png"
 
+# Caminhos dos artefatos de Detecção de Comunidades (Algoritmo de Louvain sobre Grafo DTW)
+LOUVAIN_PILOT_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_louvain_clusters_pilot_100x100.csv"
+LOUVAIN_PILOT_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_louvain_clusters_pilot_100x100.parquet"
+FIG_LOUVAIN_PILOT_HEATMAP = FIGURES_DIR / "08_dtw_louvain_heatmap_pilot_100x100.png"
+
+LOUVAIN_FULL_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_louvain_clusters_train_1700x1700.csv"
+LOUVAIN_FULL_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_louvain_clusters_train_1700x1700.parquet"
+FIG_LOUVAIN_FULL_HEATMAP = FIGURES_DIR / "08_dtw_louvain_heatmap_train_1700x1700.png"
+LOUVAIN_KNN_NEIGHBORS = 15      # Número de vizinhos mais próximos no grafo de afinidade DTW (k-NN)
+LOUVAIN_RANDOM_SEED = 42        # Semente pseudoaleatória para reprodutibilidade do Louvain
+
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
 PROCESSED_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_clusters.parquet"
