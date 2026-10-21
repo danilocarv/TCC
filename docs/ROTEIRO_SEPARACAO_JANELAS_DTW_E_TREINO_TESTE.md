@@ -95,9 +95,24 @@ com distância final $\text{DTW}(X, Y) = D(n, m)$ (ou versão euclidiana acumula
 * **Dimensão da Matriz:** $1700 \times 1700$ (simétrica, com diagonal principal $D_{ii} = 0$, exigindo o cálculo de $\frac{1700 \times 1699}{2} = 1.444.150$ pares de séries temporais de até 120 pontos).
 * **Aceleração Computacional:** Implementada com compilação *Just-In-Time* paralelizada (`@njit(parallel=True, fastmath=True)` via `numba`), permitindo calcular os $1{,}44\text{ milhão}$ de alinhamentos em poucos segundos.
 * **Visualização em Mapa de Calor (*Heatmap*):**
-  O arquivo `outputs/figures/07_dtw_speed_heatmap_1700x1700.png` apresenta a matriz de distâncias DTW $1700 \times 1700$:
+  O arquivo `outputs/figures/07_dtw_speed_heatmap_1700x1700.png` (e piloto `07_dtw_speed_heatmap_pilot_100x100.png`) apresenta a matriz de distâncias DTW:
   1. **Na ordem embaralhada do conjunto de treino (`train_0000` a `train_1699`):** Demonstra visualmente que o embaralhamento (*shuffle*) eliminou correlações espúrias entre janelas adjacentes da mesma viagem.
-  2. **Reordenada pelos 3 perfis do K-Means (`Suave / Eco`, `Moderado / Normal`, `Agressivo / Intenso`):** Evidencia a formação de blocos estruturados na diagonal principal, comprovando que janelas classificadas no mesmo perfil compartilham padrões temporais de velocidade similares (baixa distância DTW).
+  2. **Reordenada pelos perfis de condução:** Evidencia a formação de blocos estruturados na diagonal principal.
+
+---
+
+### 3.3. Agrupamento por Detecção de Comunidades: O Algoritmo de Louvain
+
+A partir da matriz de distâncias DTW $D$, aplica-se o algoritmo de **Louvain** (Blondel et al., 2008) para identificar as comunidades naturais de condução baseadas na topologia de rede:
+
+1. **Construção do Grafo de Afinidade Puro ($W_{ij}$):**
+   Converte-se a matriz de distâncias em similaridade via kernel exponencial:
+   $$W_{ij} = \exp\left(-\frac{D_{ij}}{\sigma}\right) \quad \text{para } i \neq j, \quad W_{ii} = 0$$
+   onde $\sigma = \text{mediana}(D)$, alimentando diretamente o grafo ponderado completo sem filtros intermediários.
+2. **Otimização da Modularidade ($Q$):**
+   O algoritmo de Louvain busca a partição de janelas que maximiza a densidade de conexões internas nas comunidades em relação a uma rede aleatória nula, **sem necessidade de fixar previamente o número de clusters $k$**.
+3. **Novo Heatmap com Divisórias das Comunidades:**
+   Reordenando as janelas pelas comunidades descobertas pelo Louvain, gera-se a figura `outputs/figures/08_dtw_louvain_heatmap_train_1700x1700.png` (e versão piloto `08_dtw_louvain_heatmap_pilot_100x100.png`), exibindo blocos escuros na diagonal principal delimitados por linhas estruturais que comprovam visualmente a separação dos estilos de condução.
 
 ---
 
@@ -118,9 +133,14 @@ data/
     ├── driving_windows_test_features.parquet    # 534 janelas de teste com features extraídas
     ├── driving_windows_train_labeled.parquet    # 1.700 janelas de treino com features + rótulos K-Means
     ├── driving_windows_test_labeled.parquet     # 534 janelas de teste com features + predição K-Means
-    └── dtw_speed_matrix_train_1700x1700.npy     # Matriz numérica DTW 1700x1700 sobre speed_kmh
+    ├── dtw_speed_matrix_pilot_100x100.npy       # Matriz DTW piloto 100x100 (NumPy)
+    ├── dtw_speed_matrix_pilot_100x100.parquet   # Matriz DTW piloto 100x100 (Parquet estruturado)
+    ├── dtw_speed_matrix_train_1700x1700.npy     # Matriz DTW final 1700x1700 (NumPy)
+    └── dtw_louvain_clusters_pilot_100x100.csv   # Mapeamento de comunidades Louvain (Piloto)
 
 outputs/
 └── figures/
-    └── 07_dtw_speed_heatmap_1700x1700.png       # Gráfico de calor 1700x1700 da matriz DTW
+    ├── 07_dtw_speed_heatmap_pilot_100x100.png   # Heatmap piloto 100x100 (Ordem Shuffle)
+    ├── 07_dtw_speed_heatmap_1700x1700.png       # Heatmap final 1700x1700 (Ordem Shuffle)
+    └── 08_dtw_louvain_heatmap_pilot_100x100.png # Heatmap reordenado pelas comunidades de Louvain
 ```
