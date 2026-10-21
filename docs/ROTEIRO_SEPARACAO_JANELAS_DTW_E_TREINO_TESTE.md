@@ -105,14 +105,14 @@ com distância final $\text{DTW}(X, Y) = D(n, m)$ (ou versão euclidiana acumula
 
 A partir da matriz de distâncias DTW $D$, aplica-se o algoritmo de **Louvain** (Blondel et al., 2008) para identificar as comunidades naturais de condução baseadas na topologia de rede:
 
-1. **Construção do Grafo de Afinidade ($W_{ij}$):**
+1. **Construção do Grafo de Afinidade Puro ($W_{ij}$):**
    Converte-se a matriz de distâncias em similaridade via kernel exponencial:
    $$W_{ij} = \exp\left(-\frac{D_{ij}}{\sigma}\right) \quad \text{para } i \neq j, \quad W_{ii} = 0$$
-   onde $\sigma = \text{mediana}(D)$, associado a um grafo esparso de vizinhos mais próximos ($k\text{-NN}$) para remover ruído e focar nas conexões de alta similaridade temporal.
+   onde $\sigma = \text{mediana}(D)$, alimentando diretamente o grafo ponderado completo sem filtros intermediários.
 2. **Otimização da Modularidade ($Q$):**
    O algoritmo de Louvain busca a partição de janelas que maximiza a densidade de conexões internas nas comunidades em relação a uma rede aleatória nula, **sem necessidade de fixar previamente o número de clusters $k$**.
 3. **Novo Heatmap com Divisórias das Comunidades:**
-   Reordenando as janelas pelas comunidades descobertas pelo Louvain, gera-se a figura `outputs/figures/08_dtw_louvain_heatmap_pilot_100x100.png` (e futura versão 1700x1700), exibindo blocos escuros na diagonal principal delimitados por linhas estruturais que comprovam visualmente a separação dos estilos de condução.
+   Reordenando as janelas pelas comunidades descobertas pelo Louvain, gera-se a figura `outputs/figures/08_dtw_louvain_heatmap_train_1700x1700.png` (e versão piloto `08_dtw_louvain_heatmap_pilot_100x100.png`), exibindo blocos escuros na diagonal principal delimitados por linhas estruturais que comprovam visualmente a separação dos estilos de condução.
 
 ---
 

@@ -268,9 +268,9 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 * **Motivação Acadêmica (Orientação TCC):**
   Após a geração do mapa de calor da matriz DTW, o orientador solicitou a aplicação do algoritmo de **Louvain** para agrupamento. Ao contrário do K-Means (onde o número de clusters $k=3$ é estipulado a priori), o Louvain opera sobre uma representação de rede/grafo e descobre de forma puramente matemática e orientada a dados a quantidade natural de perfis de condução através da maximização da **Modularidade ($Q$)**.
 * **Solução Matemática e Computacional:**
-  1. **Conversão Matriz DTW $\rightarrow$ Grafo de Afinidade:** Transformação das distâncias DTW em similaridades via kernel exponencial $W_{ij} = \exp(-D_{ij} / \sigma)$, onde janelas com velocidades semelhantes possuem conexões fortes.
-  2. **Maximização de Modularidade via Louvain:** Aplicação do algoritmo de Louvain (`networkx.community.louvain_communities`) para identificar as comunidades densamente conectadas de motoristas.
-  3. **Heatmap Reordenado por Comunidades:** Reordenação das linhas e colunas da matriz DTW para agrupar as janelas da mesma comunidade lado a lado, gerando blocos escuros evidentes na diagonal principal e comprovando visualmente a coesão de cada estilo de condução.
+  1. **Conversão Matriz DTW $\rightarrow$ Grafo de Afinidade Puro:** Transformação direta das distâncias DTW em similaridades via kernel exponencial $W_{ij} = \exp(-D_{ij} / \sigma)$ para todos os pares ($1{,}44\text{ milhão}$ de arestas), sem filtragens intermediárias ou k-NN.
+  2. **Maximização de Modularidade via Louvain Puro:** Aplicação do algoritmo de Louvain (`networkx.community.louvain_communities`) diretamente sobre o grafo ponderado completo ($Q = 0{,}1035$), revelando 3 comunidades estruturais (`C0`, `C1`, `C2`) sem uso de variáveis externas e sem rótulos heurísticos forçados.
+  3. **Heatmap Reordenado por Comunidades Puras:** Reordenação das linhas e colunas da matriz DTW agrupando apenas os nós da mesma comunidade e mantendo estritamente a ordem original dos índices internos, comprovando que a distância DTW intra-comunidade é substancialmente menor que a distância inter-comunidade.
 
 ---
 
@@ -291,8 +291,8 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Asserções desatualizadas em `test_step1_2.py` | Total de 2.531 janelas antigas e filtros extremos de teste | `test_step1_2.py` | Asserção corrigida para 2.481 janelas e filtros calibrados | ✅ Resolvido |
 | Ausência de partição física Treino/Teste por janela | Todas as 2.234 janelas estavam em arquivo único sequencial | `src/feature_engineering.py`, `src/clustering.py` | Exportação individual (`.csv`/`.parquet`), shuffle e split 1.700/534 | ✅ Resolvido |
 | Ausência de métricas espaciais de sinuosidade da rota | Coordenadas GPS não eram sintetizadas na janela | `src/feature_engineering.py` | Cálculo de Distância Total, Haversine e Tortuosidade por janela | ✅ Resolvido |
-| Análise de similaridade temporal entre curvas de velocidade | Comparação restrita a estatísticas agregadas da janela | `src/dtw_analysis.py` | Matriz DTW sobre `speed_kmh` acelerada por Numba + Heatmap | ✅ Resolvido (Piloto) |
-| Dependência de fixação arbitrária de $k=3$ no K-Means | K-Means requer $k$ fixado a priori | `src/louvain_clustering.py` | Detecção de comunidades de Louvain via otimização de modularidade | 🔄 Em Execução |
+| Análise de similaridade temporal entre curvas de velocidade | Comparação restrita a estatísticas agregadas da janela | `src/dtw_analysis.py` | Matriz DTW 1700x1700 sobre `speed_kmh` acelerada por Numba + Heatmap | ✅ Resolvido |
+| Dependência de fixação arbitrária de $k=3$ no K-Means | K-Means requer $k$ fixado a priori | `src/louvain_clustering.py` | Detecção de comunidades de Louvain puro direto na matriz DTW (3 grupos) | ✅ Resolvido |
 
 ---
 
@@ -301,6 +301,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 Com a evolução metodológica detalhada em `docs/ROTEIRO_SEPARACAO_JANELAS_DTW_E_TREINO_TESTE.md`:
 1. **Os dados brutos dos EVs** estão 100% íntegros e catalogados (Etapa 1.1).
 2. **As 2.234 janelas de condução ativa (120s)** estão exportadas individualmente (`.csv` e `.parquet`), embaralhadas (`random_state=42`) e divididas fisicamente em **1.700 janelas de treino** e **534 janelas de teste**, com features espaciais e cinemáticas validadas por contrato estrito de dados (Etapa 1.2).
-3. **A Matriz DTW sobre a velocidade** está implementada e validada no teste piloto $100 \times 100$, comprovando simetria perfeita e alinhamento segundo a segundo.
-4. **O Algoritmo de Louvain** entra como ferramenta científica de fronteira para agrupamento baseado em rede, identificando de forma nativa a quantidade ótima de perfis comportamentais e complementando o K-Means e PCA para o fechamento da Fase 1 e integração com a LLM.
+3. **A Matriz DTW 1700x1700 sobre a velocidade** está totalmente calculada (1.444.150 pares em 28,4s) e validada matematicamente por testes automatizados, gerando o heatmap estrutural da base de treino.
+4. **O Algoritmo de Louvain Puro na base de 1.700 nós** ($1{,}44\text{ milhão}$ de conexões, sem $k$-NN e sem vieses de ordenação por variáveis externas) segmentou a matriz DTW em **3 comunidades naturais (`C0`, `C1`, `C2`, com $Q = 0{,}1035$)**, comprovando coesão interna ($\text{DTW}_{\text{intra}} < \text{DTW}_{\text{inter}}$) e permitindo comparação científica rigorosa e isenta com o K-Means.
+
 
