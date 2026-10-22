@@ -1,0 +1,92 @@
+{
+  "pilot_100x100": {
+    "n_nodes": 100,
+    "percentile_dtw": 25.0,
+    "equivalent_affinity_percentile": 75.0,
+    "sigma_median_dtw_kmh": 1601.2242136001587,
+    "dtw_p25_threshold_kmh": 1054.246310710907,
+    "affinity_p75_threshold": 0.517678865284537,
+    "dtw_min_kmh": 80.35016787052155,
+    "dtw_p50_median_kmh": 1601.2242136001587,
+    "dtw_p75_kmh": 2348.831839323044,
+    "dtw_max_kmh": 7344.1611704826355,
+    "full_graph_edges": 4950,
+    "retained_edges": 1238,
+    "retained_edges_pct": 25.01010101010101,
+    "is_connected": false,
+    "total_connected_components": 5,
+    "non_trivial_components_count": 1,
+    "largest_component_nodes": 96,
+    "largest_component_pct": 96.0,
+    "connected_nodes_count": 96,
+    "isolated_orphan_nodes_count": 4,
+    "isolated_orphan_nodes_pct": 4.0,
+    "isolated_orphan_nodes_sample": [
+      {
+        "node_id": 14,
+        "window_file": "train_0014_veh10_trip2019_w003"
+      },
+      {
+        "node_id": 25,
+        "window_file": "train_0025_veh455_trip1424_w002"
+      },
+      {
+        "node_id": 64,
+        "window_file": "train_0064_veh455_trip658_w003"
+      },
+      {
+        "node_id": 71,
+        "window_file": "train_0071_veh10_trip2019_w002"
+      }
+    ],
+    "mean_degree": 24.76,
+    "max_degree": 63,
+    "louvain_execution_time_s": 0.02995157241821289,
+    "modularity_q": 0.3433045131735326,
+    "total_partitions_returned": 8,
+    "active_communities_count": 4,
+    "orphan_singletons_count": 4,
+    "active_weighted_intra_dtw_mean": 1008.0736307870216,
+    "active_weighted_inter_dtw_mean": 2012.7215888775743,
+    "active_intra_inter_ratio": 0.5008510051055743
+  },
+  "train_1700x1700": {
+    "n_nodes": 1700,
+    "percentile_dtw": 25.0,
+    "equivalent_affinity_percentile": 75.0,
+    "sigma_median_dtw_kmh": 1532.1146447658539,
+    "dtw_p25_threshold_kmh": 1013.56707239151,
+    "affinity_p75_threshold": 0.5160519708510748,
+    "dtw_min_kmh": 32.913328886032104,
+    "dtw_p50_median_kmh": 1532.1146447658539,
+    "dtw_p75_kmh": 2284.0821980834007,
+    "dtw_max_kmh": 12856.68139243126,
+    "full_graph_edges": 1444150,
+    "retained_edges": 361038,
+    "retained_edges_pct": 25.000034622442268,
+    "is_connected": false,
+    "total_connected_components": 2,
+    "non_trivial_components_count": 1,
+    "largest_component_nodes": 1699,
+    "largest_component_pct": 99.94117647058823,
+    "connected_nodes_count": 1699,
+    "isolated_orphan_nodes_count": 1,
+    "isolated_orphan_nodes_pct": 0.0588235294117647,
+    "isolated_orphan_nodes_sample": [
+      {
+        "node_id": 1650,
+        "window_file": "train_1650_veh455_trip2025_w001"
+      }
+    ],
+    "mean_degree": 424.7505882352941,
+    "max_degree": 1046,
+    "louvain_execution_time_s": 5.945033311843872,
+    "modularity_q": 0.3184978527690641,
+    "total_partitions_returned": 6,
+    "active_communities_count": 5,
+    "orphan_singletons_count": 1,
+    "active_weighted_intra_dtw_mean": 1078.3106571308676,
+    "active_weighted_inter_dtw_mean": 2087.357806932154,
+    "active_intra_inter_ratio": 0.5165911917687414
+  }
+}

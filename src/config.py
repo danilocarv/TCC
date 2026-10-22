@@ -132,6 +132,18 @@ FIG_LOUVAIN_MST_TOPOLOGY_FULL = FIGURES_DIR / "11_dtw_mst_louvain_topology_train
 LOUVAIN_MST_COMPARISON_JSON = RESULTS_DIR / "mst_vs_full_louvain_comparison.json"
 LOUVAIN_MST_COMPARISON_CSV = RESULTS_DIR / "mst_vs_full_louvain_comparison.csv"
 
+# Caminhos dos artefatos da Filtragem Direta por Percentil 25 de Distância DTW + Louvain Puro (Etapa 3A)
+DTW_PERCENTILE_CUTOFF = 25.0
+P25_DIRECT_PILOT_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_p25_direct_clusters_pilot_100x100.csv"
+P25_DIRECT_PILOT_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_p25_direct_clusters_pilot_100x100.parquet"
+FIG_P25_DIRECT_PILOT_HEATMAP = FIGURES_DIR / "12_dtw_p25_direct_heatmap_pilot_100x100.png"
+
+P25_DIRECT_FULL_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_p25_direct_clusters_train_1700x1700.csv"
+P25_DIRECT_FULL_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_p25_direct_clusters_train_1700x1700.parquet"
+FIG_P25_DIRECT_FULL_HEATMAP = FIGURES_DIR / "12_dtw_p25_direct_heatmap_train_1700x1700.png"
+P25_DIRECT_METRICS_JSON = RESULTS_DIR / "dtw_p25_direct_metrics.json"
+P25_DIRECT_SUMMARY_CSV = RESULTS_DIR / "dtw_p25_direct_summary.csv"
+
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
 PROCESSED_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_clusters.parquet"

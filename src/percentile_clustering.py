@@ -1,0 +1,500 @@
+"""
+Módulo da Etapa 3A: Filtragem Direta por Percentil 25 de Distância DTW (Top 25% Melhores Conexões)
+e Detecção de Comunidades via Algoritmo de Louvain 100% Puro (Sem União com a MST).
+
+Executa estritamente a primeira etapa solicitada pelo orientador:
+1. Carrega a matriz DTW completa (100x100 no piloto ou 1.700x1.700 no treino);
+2. Calcula o valor exato do Percentil 25 (P25) das distâncias DTW fora da diagonal (i < j),
+   equivalente ao Top 25% de maior similaridade/afinidade (P75 de W_ij = exp(-D_ij / sigma));
+3. Constrói o grafo filtrado mantendo EXCLUSIVAMENTE as arestas com D_ij <= P25 (sem MST);
+4. Audita a topologia resultante (quantidade de arestas, componentes conexas e nós órfãos/isolados);
+5. Executa o Algoritmo de Louvain 100% puro (resolution=1.0, sem induzir k e sem variáveis externas);
+6. Gera o Heatmap reordenado (300 DPI), tabelas de comunidades (.csv/.parquet) e métricas (.json).
+
+Autor: Danilo Carvalho de Oliveira
+Orientador: Douglas Donizeti de Castilho Braz
+"""
+
+import sys
+import json
+import time
+import argparse
+from pathlib import Path
+
+# Adiciona a raiz do projeto ao sys.path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+# Configura stdout para UTF-8 no Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import networkx as nx
+
+from src.config import (
+    PROCESSED_TRAIN_FEATURES_PARQUET,
+    DTW_PILOT_SIZE,
+    DTW_PILOT_MATRIX_NPY,
+    DTW_SPEED_MATRIX_NPY,
+    LOUVAIN_RANDOM_SEED,
+    DTW_PERCENTILE_CUTOFF,
+    P25_DIRECT_PILOT_CLUSTERS_CSV,
+    P25_DIRECT_PILOT_CLUSTERS_PARQUET,
+    FIG_P25_DIRECT_PILOT_HEATMAP,
+    P25_DIRECT_FULL_CLUSTERS_CSV,
+    P25_DIRECT_FULL_CLUSTERS_PARQUET,
+    FIG_P25_DIRECT_FULL_HEATMAP,
+    P25_DIRECT_METRICS_JSON,
+    P25_DIRECT_SUMMARY_CSV,
+    ensure_directories,
+)
+from src.louvain_clustering import (
+    detect_louvain_communities,
+    reorder_dtw_matrix,
+    compute_pure_dtw_community_metrics,
+)
+
+
+def build_direct_percentile_graph(
+    dist_matrix: np.ndarray,
+    percentile: float = DTW_PERCENTILE_CUTOFF,
+    window_files: list[str] | None = None,
+) -> tuple[nx.Graph, dict]:
+    """
+    Calcula o limiar do Percentil 25 de distância DTW (Top 25% menores distâncias)
+    sobre o triângulo superior estrito (i < j) e constrói o grafo filtrado direto
+    (sem adicionar arestas da MST).
+    """
+    n = dist_matrix.shape[0]
+    rows, cols = np.triu_indices(n, k=1)
+    off_diag_dtw = dist_matrix[rows, cols]
+    total_pairs = len(off_diag_dtw)
+
+    # Largura de banda sigma = mediana das distâncias fora da diagonal
+    sigma = float(np.median(off_diag_dtw))
+    if sigma <= 0.0:
+        sigma = 1.0
+
+    # Valor de corte do Percentil 25 na distância DTW (equivale ao Percentil 75 na afinidade W_ij)
+    dtw_p25_threshold = float(np.percentile(off_diag_dtw, percentile))
+    affinity_p75_threshold = float(np.exp(-dtw_p25_threshold / sigma))
+
+    # Filtra apenas os pares (i, j) com D_ij <= P25
+    mask = off_diag_dtw <= dtw_p25_threshold
+    sel_rows = rows[mask]
+    sel_cols = cols[mask]
+    sel_dtw = off_diag_dtw[mask]
+    sel_aff = np.exp(-sel_dtw / sigma)
+
+    G = nx.Graph()
+    G.add_nodes_from(range(n))
+
+    edges = [
+        (int(u), int(v), {"weight": float(w), "dtw_distance": float(d)})
+        for u, v, w, d in zip(sel_rows, sel_cols, sel_aff, sel_dtw)
+    ]
+    G.add_edges_from(edges)
+
+    assert nx.number_of_selfloops(G) == 0, "O grafo filtrado não pode conter auto-laços da diagonal!"
+
+    # Auditoria topológica de conectividade e nós isolados (órfãos)
+    degrees = dict(G.degree())
+    degree_vals = np.array(list(degrees.values()), dtype=np.int64)
+    isolated_nodes = [int(node) for node, deg in degrees.items() if deg == 0]
+    connected_nodes_count = int(n - len(isolated_nodes))
+
+    components = sorted(nx.connected_components(G), key=len, reverse=True)
+    largest_cc_size = len(components[0]) if components else 0
+    non_trivial_components = [c for c in components if len(c) > 1]
+
+    isolated_details = []
+    if window_files is not None:
+        for idx in isolated_nodes[:15]:
+            isolated_details.append({"node_id": int(idx), "window_file": window_files[idx]})
+
+    topo_info = {
+        "n_nodes": int(n),
+        "percentile_dtw": float(percentile),
+        "equivalent_affinity_percentile": float(100.0 - percentile),
+        "sigma_median_dtw_kmh": sigma,
+        "dtw_p25_threshold_kmh": dtw_p25_threshold,
+        "affinity_p75_threshold": affinity_p75_threshold,
+        "dtw_min_kmh": float(off_diag_dtw.min()),
+        "dtw_p50_median_kmh": sigma,
+        "dtw_p75_kmh": float(np.percentile(off_diag_dtw, 75.0)),
+        "dtw_max_kmh": float(off_diag_dtw.max()),
+        "full_graph_edges": int(total_pairs),
+        "retained_edges": int(G.number_of_edges()),
+        "retained_edges_pct": float((G.number_of_edges() / total_pairs) * 100.0),
+        "is_connected": bool(nx.is_connected(G)),
+        "total_connected_components": int(len(components)),
+        "non_trivial_components_count": int(len(non_trivial_components)),
+        "largest_component_nodes": int(largest_cc_size),
+        "largest_component_pct": float((largest_cc_size / n) * 100.0),
+        "connected_nodes_count": connected_nodes_count,
+        "isolated_orphan_nodes_count": int(len(isolated_nodes)),
+        "isolated_orphan_nodes_pct": float((len(isolated_nodes) / n) * 100.0),
+        "isolated_orphan_nodes_sample": isolated_details,
+        "mean_degree": float(degree_vals.mean()),
+        "max_degree": int(degree_vals.max()),
+    }
+
+    return G, topo_info
+
+
+def plot_p25_direct_heatmap(
+    matrix_reordered: np.ndarray,
+    boundary_indices: list[int],
+    communities: list[list[int]],
+    output_png: Path,
+    n_windows: int,
+    dtw_threshold: float,
+    modularity_q: float,
+    n_isolated: int,
+):
+    """
+    Plota o Heatmap em 300 DPI da matriz DTW reordenada pelas comunidades descobertas
+    pelo Louvain Puro sobre o grafo do Percentil 25 Direto.
+    """
+    output_png.parent.mkdir(parents=True, exist_ok=True)
+    n_comm = len(communities)
+    n_active_comm = sum(1 for c in communities if len(c) > 1)
+
+    plt.figure(figsize=(11, 9), dpi=300)
+    ax = plt.gca()
+
+    im = ax.imshow(
+        matrix_reordered,
+        cmap="viridis",
+        aspect="auto",
+        origin="upper",
+        interpolation="nearest",
+    )
+
+    cbar = plt.colorbar(im, pad=0.02)
+    cbar.set_label("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=11, labelpad=10)
+
+    # Desenha linhas divisórias para comunidades com >= 2 nós
+    for idx, b in enumerate(boundary_indices[:-1]):
+        comm_size = len(communities[idx])
+        if comm_size >= 2:
+            ax.axvline(b - 0.5, color="red", linestyle="--", linewidth=1.4, alpha=0.88)
+            ax.axhline(b - 0.5, color="red", linestyle="--", linewidth=1.4, alpha=0.88)
+
+    midpoints = []
+    labels = []
+    prev_b = 0
+    for comm_id, b in enumerate(boundary_indices):
+        size = b - prev_b
+        mid = (prev_b + b - 1) / 2.0
+        if size >= 2:
+            midpoints.append(mid)
+            labels.append(f"C{comm_id}\n(N={size})")
+        prev_b = b
+
+    ax.set_xticks(midpoints)
+    ax.set_xticklabels(labels, fontsize=9, fontweight="bold")
+    ax.set_yticks(midpoints)
+    ax.set_yticklabels(labels, fontsize=9, fontweight="bold")
+
+    isolated_str = f" | {n_isolated} Nós Órfãos" if n_isolated > 0 else " | 0 Nós Órfãos"
+    plt.title(
+        f"Matriz DTW Reordenada — Louvain Puro sobre Percentil 25 Direto ({n_windows}x{n_windows})\n"
+        f"Corte D_ij <= {dtw_threshold:.2f} km/h (Top 25% Conexões) | "
+        f"{n_active_comm} Comunidades Principais{isolated_str} | Modularidade Q = {modularity_q:.4f}",
+        fontsize=11,
+        fontweight="bold",
+        pad=14,
+    )
+    plt.xlabel("Comunidades de Louvain no Percentil 25 Direto (Ordem Original Interna Preservada)", fontsize=10.5, labelpad=8)
+    plt.ylabel("Comunidades de Louvain no Percentil 25 Direto (Ordem Original Interna Preservada)", fontsize=10.5, labelpad=8)
+
+    plt.tight_layout()
+    plt.savefig(output_png, bbox_inches="tight")
+    plt.close()
+    print(f"   Heatmap Percentil 25 Direto salvo em: {output_png.name} ({output_png})")
+
+
+def print_stage_3a_report(
+    topo_info: dict,
+    df_dtw_metrics: pd.DataFrame,
+    df_features: pd.DataFrame,
+    modularity_q: float,
+    resolution: float,
+):
+    """Imprime o relatório detalhado da Etapa 3A (Percentil 25 Direto + Louvain Puro)."""
+    n_comm_total = len(df_dtw_metrics)
+    df_active = df_dtw_metrics[df_dtw_metrics["count"] > 1].copy()
+    df_orphans = df_dtw_metrics[df_dtw_metrics["count"] == 1].copy()
+
+    print("\n" + "=" * 96)
+    print("   ETAPA 3A — PARTE 1: AUDITORIA DO LIMIAR DO PERCENTIL 25 DIRETO (SEM MST)")
+    print("=" * 96)
+    print(f"-> Total de Janelas (Vértices):               {topo_info['n_nodes']:,d} nós")
+    print(f"-> Total de Pares na Matriz DTW Inteira:      {topo_info['full_graph_edges']:,d} arestas")
+    print(f"-> Limiar Calculado do Percentil 25 (P25):    D_ij <= {topo_info['dtw_p25_threshold_kmh']:,.2f} km/h")
+    print(f"   (Quartis da Matriz DTW: Mín={topo_info['dtw_min_kmh']:.2f} | P25={topo_info['dtw_p25_threshold_kmh']:.2f} | "
+          f"Mediana P50={topo_info['dtw_p50_median_kmh']:.2f} | P75={topo_info['dtw_p75_kmh']:.2f} | Máx={topo_info['dtw_max_kmh']:.2f} km/h)")
+    print(f"-> Afinidade Mínima Equivalente (P75 W_ij):   W_ij >= {topo_info['affinity_p75_threshold']:.4f} (sigma = {topo_info['sigma_median_dtw_kmh']:.2f} km/h)")
+    print(f"-> Arestas Retidas no Top 25%:                {topo_info['retained_edges']:,d} arestas ({topo_info['retained_edges_pct']:.2f}%)")
+    print("-" * 96)
+    print("-> DIAGNÓSTICO DE CONECTIVIDADE DO CORTE DIRETO P25 (SEM MST):")
+    print(f"   • Grafo 100% Conexo?                       {topo_info['is_connected']}")
+    print(f"   • Total de Componentes Conexas:            {topo_info['total_connected_components']}")
+    print(f"   • Maior Componente Conexa (Gigante):       {topo_info['largest_component_nodes']} nós ({topo_info['largest_component_pct']:.2f}% da base)")
+    print(f"   • Janelas Conectadas (Grau >= 1):          {topo_info['connected_nodes_count']} nós")
+    print(f"   • Janelas Órfãs / Isoladas (Grau == 0):    {topo_info['isolated_orphan_nodes_count']} nós ({topo_info['isolated_orphan_nodes_pct']:.2f}% da base)")
+    if topo_info["isolated_orphan_nodes_sample"]:
+        sample_str = ", ".join(
+            f"Nó {x['node_id']} ({x['window_file']})"
+            for x in topo_info["isolated_orphan_nodes_sample"][:5]
+        )
+        print(f"   • Exemplo de Janelas Órfãs:                {sample_str}")
+
+    print("\n" + "=" * 96)
+    print("   ETAPA 3A — PARTE 2: RESULTADO DO LOUVAIN 100% PURO SOBRE O PERCENTIL 25 DIRETO")
+    print("=" * 96)
+    print(f"-> Modularidade de Newman (Q) no P25 Direto = {modularity_q:.4f} (Resolução = {resolution})")
+    print(f"-> Partições Totais Retornadas pelo Louvain:  {n_comm_total} "
+          f"({len(df_active)} comunidades reais com >= 2 nós + {len(df_orphans)} nós órfãos individuais)")
+    print("-" * 96)
+    print(
+        f"{'Comunidade':<12} | {'Janelas':<8} | {'Proporção':<10} | "
+        f"{'DTW Interno Médio':<19} | {'DTW Externo Médio':<19} | {'Razão Int/Ext':<13}"
+    )
+    print("-" * 96)
+
+    for _, row in df_active.iterrows():
+        ratio = row["intra_dtw_mean"] / row["inter_dtw_mean"] if row["inter_dtw_mean"] > 0 else 0.0
+        print(
+            f"C{int(row['community_id']):<11} | "
+            f"{int(row['count']):<8} | "
+            f"{row['percentage']:>8.2f}%  | "
+            f"{row['intra_dtw_mean']:>19.2f} | "
+            f"{row['inter_dtw_mean']:>19.2f} | "
+            f"{ratio:>13.3f}"
+        )
+    if len(df_orphans) > 0:
+        print(
+            f"[Órfãos]     | {len(df_orphans):<8} | "
+            f"{(len(df_orphans) / topo_info['n_nodes']) * 100.0:>8.2f}%  | "
+            f"{'0.00 (1 nó cada)':>19} | "
+            f"{df_orphans['inter_dtw_mean'].mean():>19.2f} | "
+            f"{'N/A (Isolado)':>13}"
+        )
+
+    print("\n" + "=" * 96)
+    print("   ETAPA 3A — PARTE 3: MÉDIAS FÍSICAS OBSERVADAS A POSTERIORI NAS COMUNIDADES PRINCIPAIS")
+    print("=" * 96)
+    print(
+        f"{'Comunidade':<12} | {'Janelas':<8} | {'v_méd (km/h)':<12} | {'std_v (km/h)':<12} | "
+        f"{'v_max (km/h)':<12} | {'a_méd (m/s²)':<12} | {'Fren/min':<9} | {'Acel/min':<9}"
+    )
+    print("-" * 96)
+
+    for _, row in df_active.iterrows():
+        c_id = int(row["community_id"])
+        sub = df_features[df_features["p25_direct_louvain_community"] == c_id]
+        print(
+            f"C{c_id:<11} | "
+            f"{len(sub):<8} | "
+            f"{sub['mean_speed_kmh'].mean():>12.2f} | "
+            f"{sub['std_speed_kmh'].mean():>12.2f} | "
+            f"{sub['max_speed_kmh'].mean():>12.2f} | "
+            f"{sub['mean_pos_accel_ms2'].mean():>12.2f} | "
+            f"{sub['hard_braking_rate_min'].mean():>9.2f} | "
+            f"{sub['rapid_accel_rate_min'].mean():>9.2f}"
+        )
+    if len(df_orphans) > 0:
+        orphan_ids = df_orphans["community_id"].astype(int).tolist()
+        sub_orph = df_features[df_features["p25_direct_louvain_community"].isin(orphan_ids)]
+        print(
+            f"[Órfãos]     | "
+            f"{len(sub_orph):<8} | "
+            f"{sub_orph['mean_speed_kmh'].mean():>12.2f} | "
+            f"{sub_orph['std_speed_kmh'].mean():>12.2f} | "
+            f"{sub_orph['max_speed_kmh'].mean():>12.2f} | "
+            f"{sub_orph['mean_pos_accel_ms2'].mean():>12.2f} | "
+            f"{sub_orph['hard_braking_rate_min'].mean():>9.2f} | "
+            f"{sub_orph['rapid_accel_rate_min'].mean():>9.2f}"
+        )
+    print("=" * 96 + "\n")
+
+
+def run_stage_3a_direct_percentile(
+    is_pilot: bool = False,
+    resolution: float = 1.0,
+) -> tuple[pd.DataFrame, dict]:
+    """
+    Executa a Etapa 3A: Filtragem direta pelo Percentil 25 de distância DTW e Louvain Puro.
+    """
+    ensure_directories()
+    mode_str = f"PILOTO ({DTW_PILOT_SIZE}x{DTW_PILOT_SIZE})" if is_pilot else "COMPLETO (1700x1700)"
+    print("=" * 96)
+    print(f"INICIANDO ETAPA 3A: PERCENTIL 25 DIRETO (TOP 25% CONEXÕES) + LOUVAIN PURO - MODO {mode_str}")
+    print("=" * 96)
+
+    dtw_npy_path = DTW_PILOT_MATRIX_NPY if is_pilot else DTW_SPEED_MATRIX_NPY
+    if not dtw_npy_path.exists():
+        raise FileNotFoundError(f"Matriz DTW não encontrada em {dtw_npy_path}.")
+
+    dist_matrix = np.load(dtw_npy_path)
+    n_windows = dist_matrix.shape[0]
+
+    df_features = pd.read_parquet(PROCESSED_TRAIN_FEATURES_PARQUET)
+    if is_pilot:
+        df_features = df_features.iloc[:n_windows].copy().reset_index(drop=True)
+    else:
+        df_features = df_features.copy().reset_index(drop=True)
+
+    window_files = df_features["window_file"].astype(str).tolist()
+
+    # 1. Constrói o grafo filtrado direto pelo Percentil 25 (D_ij <= P25)
+    start_t = time.time()
+    G_p25, topo_info = build_direct_percentile_graph(
+        dist_matrix=dist_matrix,
+        percentile=DTW_PERCENTILE_CUTOFF,
+        window_files=window_files,
+    )
+
+    # 2. Executa o Algoritmo de Louvain 100% puro sobre G_p25
+    communities, modularity_q = detect_louvain_communities(
+        G_p25, resolution=resolution, seed=LOUVAIN_RANDOM_SEED
+    )
+    elapsed_s = time.time() - start_t
+
+    # Reordena para colocar as comunidades reais (>=2 nós) primeiro e os nós órfãos (1 nó) agrupados ao final
+    active_communities = [c for c in communities if len(c) > 1]
+    orphan_communities = [c for c in communities if len(c) == 1]
+    ordered_communities = active_communities + orphan_communities
+
+    reordered_dist, ordered_indices, boundary_indices, node_to_comm = reorder_dtw_matrix(
+        dist_matrix, ordered_communities
+    )
+
+    df_dtw_metrics = compute_pure_dtw_community_metrics(dist_matrix, ordered_communities)
+
+    df_features["p25_direct_louvain_community"] = [node_to_comm[i] for i in range(n_windows)]
+    df_features["p25_direct_degree"] = [int(G_p25.degree(i)) for i in range(n_windows)]
+    df_features["p25_direct_is_isolated"] = df_features["p25_direct_degree"] == 0
+
+    # 3. Gera Heatmap reordenado
+    heatmap_path = FIG_P25_DIRECT_PILOT_HEATMAP if is_pilot else FIG_P25_DIRECT_FULL_HEATMAP
+    plot_p25_direct_heatmap(
+        matrix_reordered=reordered_dist,
+        boundary_indices=boundary_indices,
+        communities=ordered_communities,
+        output_png=heatmap_path,
+        n_windows=n_windows,
+        dtw_threshold=topo_info["dtw_p25_threshold_kmh"],
+        modularity_q=modularity_q,
+        n_isolated=topo_info["isolated_orphan_nodes_count"],
+    )
+
+    # 4. Imprime relatório completo da Etapa 3A
+    print_stage_3a_report(
+        topo_info=topo_info,
+        df_dtw_metrics=df_dtw_metrics,
+        df_features=df_features,
+        modularity_q=modularity_q,
+        resolution=resolution,
+    )
+
+    # 5. Salva artefatos em disco
+    out_csv = P25_DIRECT_PILOT_CLUSTERS_CSV if is_pilot else P25_DIRECT_FULL_CLUSTERS_CSV
+    out_pq = P25_DIRECT_PILOT_CLUSTERS_PARQUET if is_pilot else P25_DIRECT_FULL_CLUSTERS_PARQUET
+    df_features.to_csv(out_csv, index=False, encoding="utf-8")
+    df_features.to_parquet(out_pq, index=False)
+
+    # Calcula médias ponderadas das comunidades reais (>= 2 nós)
+    df_active = df_dtw_metrics[df_dtw_metrics["count"] > 1]
+    n_active_nodes = int(df_active["count"].sum())
+    w_intra = float(np.sum(df_active["intra_dtw_mean"] * df_active["count"]) / max(n_active_nodes, 1))
+    w_inter = float(np.sum(df_active["inter_dtw_mean"] * df_active["count"]) / max(n_active_nodes, 1))
+
+    result_payload = {
+        **topo_info,
+        "louvain_execution_time_s": float(elapsed_s),
+        "modularity_q": float(modularity_q),
+        "total_partitions_returned": int(len(ordered_communities)),
+        "active_communities_count": int(len(active_communities)),
+        "orphan_singletons_count": int(len(orphan_communities)),
+        "active_weighted_intra_dtw_mean": w_intra,
+        "active_weighted_inter_dtw_mean": w_inter,
+        "active_intra_inter_ratio": float(w_intra / w_inter) if w_inter > 0 else 0.0,
+    }
+
+    mode_key = "pilot_100x100" if is_pilot else "train_1700x1700"
+    P25_DIRECT_METRICS_JSON.parent.mkdir(parents=True, exist_ok=True)
+    json_data = {}
+    if P25_DIRECT_METRICS_JSON.exists():
+        try:
+            json_data = json.loads(P25_DIRECT_METRICS_JSON.read_text(encoding="utf-8"))
+        except Exception:
+            json_data = {}
+    json_data[mode_key] = result_payload
+    P25_DIRECT_METRICS_JSON.write_text(
+        json.dumps(json_data, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+
+    if not is_pilot:
+        kinematic_means = (
+            df_features.groupby("p25_direct_louvain_community")[
+                [
+                    "mean_speed_kmh",
+                    "std_speed_kmh",
+                    "max_speed_kmh",
+                    "mean_pos_accel_ms2",
+                    "hard_braking_rate_min",
+                    "rapid_accel_rate_min",
+                    "mean_power_kw",
+                ]
+            ]
+            .mean()
+            .reset_index()
+            .rename(columns={"p25_direct_louvain_community": "community_id"})
+        )
+        df_summary = df_dtw_metrics.merge(kinematic_means, on="community_id", how="left")
+        df_summary.to_csv(P25_DIRECT_SUMMARY_CSV, index=False, encoding="utf-8")
+
+    print("-> Artefatos da Etapa 3A (Percentil 25 Direto) salvos com sucesso:")
+    print(f"   Clusters CSV:     {out_csv.name}")
+    print(f"   Clusters Parquet: {out_pq.name}")
+    print(f"   Métricas JSON:    {P25_DIRECT_METRICS_JSON.name}")
+    if not is_pilot:
+        print(f"   Resumo CSV:       {P25_DIRECT_SUMMARY_CSV.name}")
+    print("=" * 96)
+    print("ETAPA 3A (PERCENTIL 25 DIRETO + LOUVAIN PURO) CONCLUÍDA COM SUCESSO!")
+    print("=" * 96 + "\n")
+
+    return df_features, result_payload
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Etapa 3A: Filtragem direta pelo Percentil 25 da Matriz DTW e Louvain Puro."
+    )
+    parser.add_argument(
+        "--pilot",
+        action="store_true",
+        help="Executa no modo piloto 100x100.",
+    )
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Executa no modo treino completo 1700x1700.",
+    )
+    parser.add_argument(
+        "--resolution",
+        type=float,
+        default=1.0,
+        help="Parâmetro de resolução do Louvain (padrão puro: 1.0).",
+    )
+
+    args = parser.parse_args()
+    is_pilot_mode = True if (args.pilot and not args.full) else False
+    run_stage_3a_direct_percentile(is_pilot=is_pilot_mode, resolution=args.resolution)

@@ -215,7 +215,12 @@ def plot_mst_louvain_topology(
     intra_edges = [(u, v) for u, v in T_mst.edges() if node_to_comm[u] == node_to_comm[v]]
     inter_edges = [(u, v) for u, v in T_mst.edges() if node_to_comm[u] != node_to_comm[v]]
 
-    comm_ids = np.array([node_to_comm[i] for i in range(n)], dtype=np.int64)
+    # Cores perceptualmente ricas e distintas para cada comunidade
+    import matplotlib as mpl
+    turbo_cmap = mpl.colormaps["turbo"]
+    comm_colors = turbo_cmap(np.linspace(0.02, 0.98, n_communities))
+    node_colors = [comm_colors[node_to_comm[i]] for i in range(n)]
+
     speeds = df_features["mean_speed_kmh"].to_numpy(dtype=np.float64)
 
     # Painel A: Comunidades de Louvain na MST
@@ -247,17 +252,51 @@ def plot_mst_louvain_topology(
         pos=pos,
         ax=ax_comm,
         node_size=node_size,
-        node_color=comm_ids,
-        cmap="tab20",
+        node_color=node_colors,
         alpha=0.92,
         linewidths=0.3,
         edgecolors="black",
     )
 
+    # Adiciona rótulos identificadores (C0, C1, ...) no centro de massa (medoide) de cada comunidade
+    for c_id in range(n_communities):
+        nodes_in_c = [i for i in range(n) if node_to_comm[i] == c_id]
+        if not nodes_in_c:
+            continue
+        xs = np.array([pos[i][0] for i in nodes_in_c])
+        ys = np.array([pos[i][1] for i in nodes_in_c])
+        # Encontra o nó da comunidade mais próximo do centro geométrico para ancorar o rótulo
+        mean_x, mean_y = np.mean(xs), np.mean(ys)
+        dists = (xs - mean_x) ** 2 + (ys - mean_y) ** 2
+        best_node = nodes_in_c[int(np.argmin(dists))]
+        lbl_x, lbl_y = pos[best_node][0], pos[best_node][1]
+
+        badge_fontsize = 6.0 if n_communities > 15 else 8.5
+        ax_comm.text(
+            lbl_x,
+            lbl_y,
+            f"C{c_id}",
+            fontsize=badge_fontsize,
+            fontweight="bold",
+            color="#111111",
+            ha="center",
+            va="center",
+            bbox=dict(
+                boxstyle="round,pad=0.2",
+                facecolor="white",
+                edgecolor=comm_colors[c_id],
+                alpha=0.95,
+                linewidth=1.2,
+            ),
+            zorder=15,
+        )
+
+    ax_comm.legend(loc="lower left", fontsize=8, frameon=True)
+
     ax_comm.set_title(
         f"Partição de Comunidades de Louvain sobre a MST\n"
-        f"{n_communities} Comunidades Naturais | Modularidade Q = {modularity_q:.4f} | "
-        f"{len(inter_edges)} Arestas de Corte",
+        f"{n_communities} Comunidades Naturais Identificadas (C0 a C{n_communities - 1}) | "
+        f"Modularidade Q = {modularity_q:.4f}",
         fontsize=11,
         fontweight="bold",
     )
