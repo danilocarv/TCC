@@ -1,0 +1,5 @@
+cenario,arestas,pct_arestas,nos_orfaos,is_conexo,modularidade_q,comunidades_total,dtw_intra_medio,dtw_inter_medio,razao_intra_inter
+1. Grafo Completo (Sem Filtro),1444150,100.0,0,True,0.1035,3,1274.69,2133.72,0.597
+2. Árvore Geradora Mínima (MST Pura),1699,0.12,0,True,0.9492,41,714.75,1869.24,0.382
+3A. Percentil 25 Direto (Sem MST),361038,25.0,1,False,0.3185,6,1078.31,2087.36,0.517
+3B. Rede Otimizada (MST ∪ P25),361039,25.0,0,True,0.3185,5,1079.7,2089.86,0.517

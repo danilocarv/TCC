@@ -159,6 +159,12 @@ P25_MST_SUMMARY_CSV = RESULTS_DIR / "dtw_p25_mst_summary.csv"
 DTW_ALL_STAGES_COMPARISON_JSON = RESULTS_DIR / "dtw_all_stages_comparison.json"
 DTW_ALL_STAGES_COMPARISON_CSV = RESULTS_DIR / "dtw_all_stages_comparison.csv"
 
+# Comparativo Mestre Final: K-Means vs. Redes Complexas (Grafo Completo, MST, P25, MST ∪ P25)
+MASTER_COMPARISON_CSV = RESULTS_DIR / "master_methodology_comparison.csv"
+MASTER_COMPARISON_JSON = RESULTS_DIR / "master_methodology_comparison.json"
+KMEANS_LOUVAIN_CONTINGENCY_CSV = RESULTS_DIR / "contingency_kmeans_vs_louvain.csv"
+FIG_FINAL_COMPARISON_SYNTHESIS = FIGURES_DIR / "14_methodology_comparison_synthesis.png"
+
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
 PROCESSED_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_clusters.parquet"
