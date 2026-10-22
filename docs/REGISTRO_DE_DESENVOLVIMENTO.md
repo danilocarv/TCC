@@ -93,3 +93,10 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
   * **Agressivo / Dinâmico:** 414 trechos (16,7%)
 * **Próxima Ação:** Desenvolvimento da aplicação visual interativa (Streamlit / Dashboard) para exploração das viagens, dos gráficos e classificação em tempo real de novos perfis.
 
+### [Marco 4: Execução das Etapas 1, 2, 3A e 3B - Redes Complexas na Matriz DTW] - 20/10/2026 a 22/10/2026
+* **Ações Realizadas:**
+  * Implementação da Árvore Geradora Mínima pura (`src/mst_builder.py`) com Algoritmo de Kruskal sobre $1.444.150$ pares, reduzindo arestas para $1.699$ ($0{,}12\%$).
+  * Execução do Algoritmo de Louvain 100% puro (`src/mst_louvain.py`) sobre a MST, elevando a modularidade de $Q = 0{,}1035$ para $Q = 0{,}9492$ (41 micro-comunidades homogêneas).
+  * Implementação da filtragem direta pelo Percentil 25 (`src/percentile_clustering.py`, Etapa 3A), identificando o corte exato em $1.013{,}57\text{ km/h}$, retendo $361.038$ arestas e diagnosticando 1 nó órfão isolado (Nó 1650, pico de $132\text{ km/h}$).
+  * Implementação da rede unificada $\text{MST} \cup P_{25}$ (Etapa 3B), na qual a MST adicionou 1 aresta de resgate ($361.039$ arestas), garantindo 100% de conectividade (0 nós órfãos) e particionando as $1.700$ janelas em 5 comunidades coesas ($Q = 0{,}3185$).
+  * Construção de suíte de testes de regressão automatizada (`test_mst.py` e `test_percentile.py`) com 100% de aprovação.

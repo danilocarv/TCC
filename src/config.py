@@ -144,6 +144,21 @@ FIG_P25_DIRECT_FULL_HEATMAP = FIGURES_DIR / "12_dtw_p25_direct_heatmap_train_170
 P25_DIRECT_METRICS_JSON = RESULTS_DIR / "dtw_p25_direct_metrics.json"
 P25_DIRECT_SUMMARY_CSV = RESULTS_DIR / "dtw_p25_direct_summary.csv"
 
+# Caminhos dos artefatos da Rede Otimizada: União da MST com o Percentil 25 (MST ∪ P25) + Louvain Puro (Etapa 3B)
+P25_MST_PILOT_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_p25_mst_clusters_pilot_100x100.csv"
+P25_MST_PILOT_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_p25_mst_clusters_pilot_100x100.parquet"
+FIG_P25_MST_PILOT_HEATMAP = FIGURES_DIR / "13_dtw_p25_mst_heatmap_pilot_100x100.png"
+
+P25_MST_FULL_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_p25_mst_clusters_train_1700x1700.csv"
+P25_MST_FULL_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_p25_mst_clusters_train_1700x1700.parquet"
+FIG_P25_MST_FULL_HEATMAP = FIGURES_DIR / "13_dtw_p25_mst_heatmap_train_1700x1700.png"
+P25_MST_METRICS_JSON = RESULTS_DIR / "dtw_p25_mst_metrics.json"
+P25_MST_SUMMARY_CSV = RESULTS_DIR / "dtw_p25_mst_summary.csv"
+
+# Relatório e Tabela Comparativa Geral de Todos os Cenários (Grafo Completo, MST Pura, P25 Direto, MST ∪ P25)
+DTW_ALL_STAGES_COMPARISON_JSON = RESULTS_DIR / "dtw_all_stages_comparison.json"
+DTW_ALL_STAGES_COMPARISON_CSV = RESULTS_DIR / "dtw_all_stages_comparison.csv"
+
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
 PROCESSED_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_clusters.parquet"

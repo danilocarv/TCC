@@ -290,6 +290,22 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 19: Filtragem Topológica pelo Percentil 25 ($P_{25}$) e Rede Otimizada Conexa ($\text{MST} \cup P_{25}$) para Louvain Puro
+* **Data:** 22/10/2026
+* **Arquivos Afetados:** `src/percentile_clustering.py`, `src/config.py`, `test_percentile.py`, `outputs/results/dtw_all_stages_comparison.*`
+* **Motivação Acadêmica (Orientação TCC):**
+  Atendendo à orientação do orientador de investigar a filtragem das 25% conexões mais fortes da matriz DTW ($D_{ij} \le P_{25}$), avaliou-se tanto o corte direto quanto a união com a Árvore Geradora Mínima para manter a conectividade global:
+  1. **Etapa 3A — Percentil 25 Direto:** Avaliar o impacto de reter estritamente $D_{ij} \le P_{25}$ ($1.013{,}57\text{ km/h}$ no treino completo, retendo $361.038$ arestas = $25{,}00\%$). Constatou-se a formação de **1 nó órfão isolado** (Nó 1650, janela rodoviária de velocidade de pico até $132\text{ km/h}$), resultando em `is_conexo = False` e 6 partições (5 comunidades reais + 1 órfão singleton), com Modularidade $Q = 0{,}3185$.
+  2. **Etapa 3B — Rede Otimizada ($\text{MST} \cup P_{25}$):** Adicionar à rede do $P_{25}$ as arestas estruturais da MST. A MST injetou exatamente **1 aresta essencial de resgate** ($361.039$ arestas no total), garantindo **100% de conectividade** (`is_conexo = True`, zero nós órfãos) e integrando perfeitamente o Nó 1650 à comunidade $C_4$ (Rodovia rápida, $\bar{v} = 87{,}40\text{ km/h}$), com $Q = 0{,}3185$ e 5 comunidades altamente coesas.
+* **Solução Matemática e Computacional:**
+  - Extração rigorosa do limiar $P_{25}$ sobre os pares estritos fora da diagonal ($i < j$).
+  - Mapeamento transparente de graus (`p25_direct_degree`, `p25_direct_is_isolated`).
+  - Fusão de grafos em $O(|E|)$ preservando pesos de similaridade exponencial $W_{ij} = \exp(-D_{ij}/\sigma)$.
+  - Execução pura do algoritmo de Louvain (`resolution=1.0`) e geração dos mapas de calor reordenados (`12_dtw_p25_direct_heatmap_*` e `13_dtw_p25_mst_heatmap_*`).
+  - Consolidação da matriz comparativa transversal entre Grafo Completo, MST Pura, P25 Direto e $\text{MST} \cup P_{25}$.
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |
@@ -309,6 +325,8 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Ausência de métricas espaciais de sinuosidade da rota | Coordenadas GPS não eram sintetizadas na janela | `src/feature_engineering.py` | Cálculo de Distância Total, Haversine e Tortuosidade por janela | ✅ Resolvido |
 | Análise de similaridade temporal entre curvas de velocidade | Comparação restrita a estatísticas agregadas da janela | `src/dtw_analysis.py` | Matriz DTW 1700x1700 sobre `speed_kmh` acelerada por Numba + Heatmap | ✅ Resolvido |
 | Dependência de fixação arbitrária de $k=3$ no K-Means | K-Means requer $k$ fixado a priori | `src/louvain_clustering.py` | Detecção de comunidades de Louvain puro direto na matriz DTW (3 grupos) | ✅ Resolvido |
+| Ruído de fundo limitando Modularidade do Louvain ($Q=0{,}10$) | Grafo completo com $1{,}44\text{ milhão}$ de conexões fracas | `src/mst_builder.py`, `src/mst_louvain.py` | Árvore Geradora Mínima (Kruskal) elevando $Q$ para $0{,}9492$ (41 comunidades) | ✅ Resolvido |
+| Risco de nós órfãos na filtragem por corte fixo $P_{25}$ | Janelas atípicas (ex: Nó 1650 a $132\text{ km/h}$) sem aresta $\le P_{25}$ | `src/percentile_clustering.py` | Rede unificada $\text{MST} \cup P_{25}$ garantindo 100% dos nós conexos (5 comunidades coesas) | ✅ Resolvido |
 
 ---
 
