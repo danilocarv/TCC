@@ -274,6 +274,22 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 18: Construção da Árvore Geradora Mínima (MST Pura via Kruskal) e Detecção de Comunidades de Louvain sobre a MST
+* **Data:** 20/10/2026
+* **Arquivos Afetados:** `src/mst_builder.py`, `src/mst_louvain.py`, `src/config.py`, `test_mst.py`
+* **Motivação Acadêmica (Orientação TCC):**
+  No grafo completo DTW ($1.444.150$ arestas), todas as janelas conectam-se entre si com afinidade $W_{ij} > 0$, gerando ruído de fundo que limitava a Modularidade de Newman a $Q = 0{,}1035$. Na reunião de orientação, definiu-se avançar em duas etapas estritamente separadas e livres de qualquer indução artificial:
+  1. **Etapa 1 (`src/mst_builder.py`):** Construir a **Árvore Geradora Mínima (MST)** pura diretamente sobre a matriz DTW inteira, onde cada distância $D_{ij}$ ($i \neq j$) é o peso da aresta;
+  2. **Etapa 2 (`src/mst_louvain.py`):** Executar o algoritmo de **Louvain 100% puro** (`resolution=1.0`, sem induzir $k$) em cima da MST gerada.
+* **Solução Matemática e Computacional:**
+  1. **Garantia de Exclusão da Diagonal Principal ($D_{ii} = 0$):** O grafo completo de entrada é construído exclusivamente sobre o triângulo superior estrito ($i < j$), assegurando zero auto-laços (`nx.number_of_selfloops == 0`).
+  2. **Extração da MST via Algoritmo de Kruskal (Etapa 1):** O algoritmo de Kruskal ordena os $1.444.150$ pares por distância DTW crescente e seleciona as $N - 1 = 1.699$ arestas ($99$ no piloto) de menor soma DTW que conectam 100% dos nós sem formar ciclos (`is_connected=True`, `is_tree=True`). A distância DTW média cai de $1.839{,}99\text{ km/h}$ (matriz inteira) para **$206{,}30\text{ km/h}$** nas arestas da MST.
+  3. **Louvain 100% Puro sobre a MST (Etapa 2):** Ao aplicar o Louvain livremente sobre a MST ponderada por afinidade ($W_{ij} = \exp(-D_{ij}/\sigma)$):
+     * No **Piloto ($100$ nós, $99$ arestas):** O algoritmo identificou espontaneamente **$11$ comunidades naturais**, elevando a Modularidade de $Q = 0{,}1063$ para **$Q = 0{,}7976$** ($7{,}5\times$ maior).
+     * No **Treino Completo ($1.700$ nós, $1.699$ arestas):** O algoritmo identificou espontaneamente **$41$ comunidades naturais** (subárvores conexas delimitadas por $40$ arestas de corte, em concordância teórica com a escala $\sim \sqrt{N}$ de árvores esparsas), elevando a Modularidade de $Q = 0{,}1035$ para **$Q = 0{,}9492$** ($9{,}2\times$ maior) e reduzindo a distância DTW interna média ponderada para **$714{,}75\text{ km/h}$** contra **$1.869{,}24\text{ km/h}$** externa.
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |

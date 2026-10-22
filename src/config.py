@@ -107,6 +107,31 @@ FIG_LOUVAIN_FULL_HEATMAP = FIGURES_DIR / "08_dtw_louvain_heatmap_train_1700x1700
 LOUVAIN_KNN_NEIGHBORS = 15      # Número de vizinhos mais próximos no grafo de afinidade DTW (k-NN)
 LOUVAIN_RANDOM_SEED = 42        # Semente pseudoaleatória para reprodutibilidade do Louvain
 
+# Caminhos dos artefatos da Árvore Geradora Mínima (MST Pura sobre Matriz DTW - Etapa 1)
+MST_PILOT_EDGES_CSV = PROCESSED_DATA_DIR / "dtw_mst_edges_pilot_100x100.csv"
+MST_PILOT_EDGES_PARQUET = PROCESSED_DATA_DIR / "dtw_mst_edges_pilot_100x100.parquet"
+MST_PILOT_MATRIX_NPY = PROCESSED_DATA_DIR / "dtw_mst_matrix_pilot_100x100.npy"
+FIG_MST_PURE_PILOT = FIGURES_DIR / "09_dtw_mst_pure_tree_pilot_100x100.png"
+
+MST_FULL_EDGES_CSV = PROCESSED_DATA_DIR / "dtw_mst_edges_train_1700x1700.csv"
+MST_FULL_EDGES_PARQUET = PROCESSED_DATA_DIR / "dtw_mst_edges_train_1700x1700.parquet"
+MST_FULL_MATRIX_NPY = PROCESSED_DATA_DIR / "dtw_mst_matrix_train_1700x1700.npy"
+FIG_MST_PURE_FULL = FIGURES_DIR / "09_dtw_mst_pure_tree_train_1700x1700.png"
+MST_STRUCTURAL_METRICS_JSON = RESULTS_DIR / "mst_structural_metrics.json"
+
+# Caminhos dos artefatos do Algoritmo de Louvain Puro sobre a MST (Etapa 2)
+LOUVAIN_MST_PILOT_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_mst_louvain_clusters_pilot_100x100.csv"
+LOUVAIN_MST_PILOT_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_mst_louvain_clusters_pilot_100x100.parquet"
+FIG_LOUVAIN_MST_PILOT_HEATMAP = FIGURES_DIR / "10_dtw_mst_louvain_heatmap_pilot_100x100.png"
+FIG_LOUVAIN_MST_TOPOLOGY_PILOT = FIGURES_DIR / "11_dtw_mst_louvain_topology_pilot_100x100.png"
+
+LOUVAIN_MST_FULL_CLUSTERS_CSV = PROCESSED_DATA_DIR / "dtw_mst_louvain_clusters_train_1700x1700.csv"
+LOUVAIN_MST_FULL_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "dtw_mst_louvain_clusters_train_1700x1700.parquet"
+FIG_LOUVAIN_MST_FULL_HEATMAP = FIGURES_DIR / "10_dtw_mst_louvain_heatmap_train_1700x1700.png"
+FIG_LOUVAIN_MST_TOPOLOGY_FULL = FIGURES_DIR / "11_dtw_mst_louvain_topology_train_1700x1700.png"
+LOUVAIN_MST_COMPARISON_JSON = RESULTS_DIR / "mst_vs_full_louvain_comparison.json"
+LOUVAIN_MST_COMPARISON_CSV = RESULTS_DIR / "mst_vs_full_louvain_comparison.csv"
+
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
 PROCESSED_CLUSTERS_PARQUET = PROCESSED_DATA_DIR / "driving_behavior_clusters.parquet"
