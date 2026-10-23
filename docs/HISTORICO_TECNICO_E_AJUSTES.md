@@ -306,6 +306,24 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 20: Treinamento Estrito do K-Means na Partição de Treino (1.700) e Validação Out-of-Sample no Teste (534)
+* **Data:** 22/10/2026
+* **Arquivos Afetados:** `src/train_test_clustering.py`, `src/config.py`, `test_train_test_clustering.py`, `outputs/results/kmeans_train_test_validation.*`, `outputs/figures/15_*`, `outputs/figures/16_*`
+* **Motivação Acadêmica (Orientações TCC e Eliminação de Data Leakage):**
+  No início do projeto (Etapa 1.3), o K-Means foi treinado sobre a base única consolidada. Com a divisão física do dataset em $1.700$ janelas de Treino e $534$ janelas de Teste (após embaralhamento reproduzível), fez-se mandatório comprovar a capacidade de generalização *out-of-sample* do modelo sem qualquer vazamento de dados (*zero data leakage*):
+  1. **Ajuste Exclusivo no Treino ($1.700$ janelas):** O `StandardScaler`, o `PCA` (2D) e o `KMeans(n_clusters=3, random_state=42)` foram ajustados estritamente sobre as $1.700$ janelas de treino, salvando os modelos congelados em `models/*_train_1700.joblib`.
+  2. **Predição Pura no Teste ($534$ janelas inéditas):** O conjunto de teste foi avaliado exclusivamente via `scaler.transform()` e `kmeans.predict()`, sem qualquer re-ajuste de centroides ou parâmetros.
+* **Resultados e Comprovação de Generalização:**
+  - **Preservação Quase Perfeita da Silhueta:** Treino = $0{,}2432$ | Teste = $0{,}2421$ ($\Delta = 0{,}0011$, degradação praticamente nula).
+  - **Inércia Média por Amostra:** Treino = $3{,}7396$ | Teste = $3{,}6279$ (menor no teste, comprovando que os novos pontos se situam próximos aos centroides).
+  - **Estabilidade Populacional dos Perfis:**
+    * *Econômico / Suave:* Treino = $22{,}76\%$ ($387$ janelas) vs. Teste = $23{,}22\%$ ($124$ janelas) [$\Delta = +0{,}46\%$];
+    * *Moderado / Regular:* Treino = $58{,}53\%$ ($995$ janelas) vs. Teste = $61{,}61\%$ ($329$ janelas) [$\Delta = +3{,}08\%$];
+    * *Agressivo / Dinâmico:* Treino = $18{,}71\%$ ($318$ janelas) vs. Teste = $15{,}17\%$ ($81$ janelas) [$\Delta = -3{,}54\%$].
+  - **Consistência Física:** Os veículos rotulados como *Agressivos* no teste mantiveram maior consumo elétrico médio ($6{,}84\text{ kW}$) e maior pico de aceleração ($1{,}70\text{ m/s}^2$) em relação aos *Econômicos* ($6{,}69\text{ kW}$ e $1{,}17\text{ m/s}^2$).
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |
@@ -327,6 +345,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Dependência de fixação arbitrária de $k=3$ no K-Means | K-Means requer $k$ fixado a priori | `src/louvain_clustering.py` | Detecção de comunidades de Louvain puro direto na matriz DTW (3 grupos) | ✅ Resolvido |
 | Ruído de fundo limitando Modularidade do Louvain ($Q=0{,}10$) | Grafo completo com $1{,}44\text{ milhão}$ de conexões fracas | `src/mst_builder.py`, `src/mst_louvain.py` | Árvore Geradora Mínima (Kruskal) elevando $Q$ para $0{,}9492$ (41 comunidades) | ✅ Resolvido |
 | Risco de nós órfãos na filtragem por corte fixo $P_{25}$ | Janelas atípicas (ex: Nó 1650 a $132\text{ km/h}$) sem aresta $\le P_{25}$ | `src/percentile_clustering.py` | Rede unificada $\text{MST} \cup P_{25}$ garantindo 100% dos nós conexos (5 comunidades coesas) | ✅ Resolvido |
+| Risco de Data Leakage na avaliação de generalização | Ajuste conjunto em base unificada sem separação física | `src/train_test_clustering.py` | Treinamento estrito nas 1.700 janelas de treino e predição pura nas 534 de teste | ✅ Resolvido |
 
 ---
 

@@ -100,3 +100,12 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
   * Implementação da filtragem direta pelo Percentil 25 (`src/percentile_clustering.py`, Etapa 3A), identificando o corte exato em $1.013{,}57\text{ km/h}$, retendo $361.038$ arestas e diagnosticando 1 nó órfão isolado (Nó 1650, pico de $132\text{ km/h}$).
   * Implementação da rede unificada $\text{MST} \cup P_{25}$ (Etapa 3B), na qual a MST adicionou 1 aresta de resgate ($361.039$ arestas), garantindo 100% de conectividade (0 nós órfãos) e particionando as $1.700$ janelas em 5 comunidades coesas ($Q = 0{,}3185$).
   * Construção de suíte de testes de regressão automatizada (`test_mst.py` e `test_percentile.py`) com 100% de aprovação.
+
+### [Marco 5: Treinamento Estrito do K-Means (1.700 Treino) e Validação Out-of-Sample (534 Teste)] - 22/10/2026
+* **Ações Realizadas:**
+  * Implementação do módulo `src/train_test_clustering.py` com ajuste exclusivo (`.fit()`) do `StandardScaler`, `KMeans (k=3)` e `PCA (2D)` nas 1.700 janelas de treino.
+  * Validação *out-of-sample* determinística nas 534 janelas de teste inéditas via `.transform()` e `.predict()`.
+  * Preservação comprovada do Coeficiente de Silhueta ($0{,}2432$ no treino vs. $0{,}2421$ no teste) e estabilidade de distribuição percentual ($\Delta < 3{,}6\%$).
+  * Geração dos datasets rotulados finais `driving_windows_train_labeled.*` e `driving_windows_test_labeled.*`.
+  * Criação das Figuras 15 (PCA 2D lado a lado) e 16 (Perfis comparativos) em 300 DPI.
+  * Implementação da suíte de testes automatizados `test_train_test_clustering.py` com 100% de aprovação.

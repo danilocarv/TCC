@@ -178,6 +178,15 @@ SCALER_MODEL_PATH = MODELS_DIR / "scaler_driver_profile.joblib"
 PCA_MODEL_PATH = MODELS_DIR / "pca_driver_profile.joblib"
 CLUSTERING_METRICS_JSON = RESULTS_DIR / "clustering_metrics.json"
 
+# Modelos e validação out-of-sample do K-Means no split Treino (1.700) e Teste (534)
+KMEANS_TRAIN_MODEL_PATH = MODELS_DIR / "kmeans_train_1700.joblib"
+SCALER_TRAIN_MODEL_PATH = MODELS_DIR / "scaler_train_1700.joblib"
+PCA_TRAIN_MODEL_PATH = MODELS_DIR / "pca_train_1700.joblib"
+KMEANS_TRAIN_TEST_VALIDATION_JSON = RESULTS_DIR / "kmeans_train_test_validation.json"
+KMEANS_TRAIN_TEST_VALIDATION_CSV = RESULTS_DIR / "kmeans_train_test_validation.csv"
+FIG_KMEANS_TRAIN_TEST_PCA = FIGURES_DIR / "15_kmeans_train_test_pca_comparison.png"
+FIG_KMEANS_TRAIN_TEST_PROFILES = FIGURES_DIR / "16_kmeans_train_test_profiles_comparison.png"
+
 # Figuras geradas para a monografia / artigo
 FIG_ELBOW_SILHOUETTE = FIGURES_DIR / "elbow_and_silhouette_analysis.png"
 FIG_CLUSTERS_PCA_2D = FIGURES_DIR / "driving_clusters_pca_2d.png"
