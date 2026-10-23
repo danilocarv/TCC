@@ -20,6 +20,7 @@ Orientador: Douglas Donizeti de Castilho Braz
 
 import sys
 import json
+import argparse
 from pathlib import Path
 
 # Configura stdout para UTF-8 no Windows
@@ -40,25 +41,35 @@ from src.config import (
     MASTER_COMPARISON_CSV,
     MASTER_COMPARISON_JSON,
     FIG_FINAL_COMPARISON_SYNTHESIS,
+    FEATURE_REGISTRY,
+    get_feature_paths,
     ensure_directories,
 )
 
 
-def run_pure_topological_comparison() -> pd.DataFrame:
+def run_pure_topological_comparison(feature: str = "speed_kmh") -> pd.DataFrame:
     """
     Consolida o comparativo estritamente topológico dos 4 cenários de rede DTW
     e gera a figura de síntese gráfica sem rótulos comportamentais externos.
     """
     ensure_directories()
+    fcfg = get_feature_paths(feature)
     print("=" * 100)
-    print("INICIANDO COMPARAÇÃO TOPOLÓGICA PURA DOS CENÁRIOS DE REDES COMPLEXAS NA MATRIZ DTW")
+    print(
+        f"INICIANDO COMPARAÇÃO TOPOLÓGICA PURA DOS CENÁRIOS NA MATRIZ DTW ({fcfg['name_pt'].upper()})"
+    )
     print("=" * 100)
+
+    comp_csv = fcfg["dtw_all_stages_comparison_csv"]
+    master_csv = fcfg["master_comparison_csv"]
+    master_json = fcfg["master_comparison_json"]
+    fig_path = fcfg["fig_final_comparison_synthesis"]
 
     # Carrega a tabela consolidada das 4 etapas de rede DTW
-    if not DTW_ALL_STAGES_COMPARISON_CSV.exists():
-        raise FileNotFoundError(f"Tabela comparativa não encontrada em {DTW_ALL_STAGES_COMPARISON_CSV}!")
+    if not comp_csv.exists():
+        raise FileNotFoundError(f"Tabela comparativa não encontrada em {comp_csv}!")
 
-    df_stages = pd.read_csv(DTW_ALL_STAGES_COMPARISON_CSV)
+    df_stages = pd.read_csv(comp_csv)
 
     # Renomeia colunas para apresentação formal e limpa
     df_stages["modularidade_q"] = df_stages["modularidade_q"].round(4)
@@ -68,27 +79,34 @@ def run_pure_topological_comparison() -> pd.DataFrame:
     df_stages["razao_intra_inter"] = df_stages["razao_intra_inter"].round(3)
 
     # Salva versões finais mestre sem rótulos
-    df_stages.to_csv(MASTER_COMPARISON_CSV, index=False, encoding="utf-8")
-    with open(MASTER_COMPARISON_JSON, "w", encoding="utf-8") as f:
+    df_stages.to_csv(master_csv, index=False, encoding="utf-8")
+    with open(master_json, "w", encoding="utf-8") as f:
         json.dump(df_stages.to_dict(orient="records"), f, indent=2, ensure_ascii=False)
 
-    print("\nTABELA COMPARATIVA DOS 4 CENÁRIOS TOPOLÓGICOS (LOUVAIN PURO NA MATRIZ DTW):")
+    print(
+        f"\nTABELA COMPARATIVA DOS 4 CENÁRIOS TOPOLÓGICOS ({fcfg['name_pt'].upper()} - LOUVAIN PURO NA MATRIZ DTW):"
+    )
     print("=" * 100)
     print(df_stages.to_string(index=False))
 
     # Gera Figura de Síntese Gráfica Acadêmica em 300 DPI
-    plot_pure_topological_synthesis(df_stages, FIG_FINAL_COMPARISON_SYNTHESIS)
+    plot_pure_topological_synthesis(df_stages, fig_path, feature=feature)
 
     return df_stages
 
 
-def plot_pure_topological_synthesis(df: pd.DataFrame, output_png: Path):
+def plot_pure_topological_synthesis(
+    df: pd.DataFrame,
+    output_png: Path,
+    feature: str = "speed_kmh",
+):
     """
     Gera figura em 300 DPI com 3 subplots focados exclusivamente na estrutura da rede:
     1. Densidade de Arestas e Diagnóstico de Conectividade / Nós Órfãos;
     2. Salto da Modularidade de Newman (Q) pelo Louvain Puro;
     3. Coesão na Matriz DTW: Distância Intra vs. Inter e Razão Intra/Inter.
     """
+    fcfg = get_feature_paths(feature)
     output_png.parent.mkdir(parents=True, exist_ok=True)
     fig, axes = plt.subplots(1, 3, figsize=(18, 5.5), dpi=300)
 
@@ -127,7 +145,7 @@ def plot_pure_topological_synthesis(df: pd.DataFrame, output_png: Path):
     ax2.set_ylabel("Razão DTW Intra / Inter (Menor = Mais Coeso)", fontsize=11, fontweight="bold")
     ax2.set_title("Coesão Interna na Matriz DTW (Razão Intra / Inter)", fontsize=12, fontweight="bold", pad=10)
     ax2.grid(axis="y", linestyle="--", alpha=0.5)
-    ax2.set_ylim(0, 0.75)
+    ax2.set_ylim(0, max(0.75, float(ratios.max()) * 1.18))
 
     for bar, val in zip(bars2, ratios):
         ax2.text(
@@ -142,9 +160,19 @@ def plot_pure_topological_synthesis(df: pd.DataFrame, output_png: Path):
 
     # Subplot 3: Conectividade e Arestas
     ax3 = axes[2]
-    edges_str = [f"{int(e):,} arestas\n({p:.1f}%)\n[0 órfãos - Conexo]" for e, p in zip(df["arestas"], df["pct_arestas"])]
-    # Ajusta o P25 Direto com o alerta do órfão
-    edges_str[2] = f"{int(df.loc[2, 'arestas']):,} arestas\n({df.loc[2, 'pct_arestas']:.1f}%)\n[⚠️ 1 Órfão - Desconexo]"
+    edges_str = []
+    for idx, row in df.iterrows():
+        n_orph = int(row["nos_orfaos"])
+        is_conn = bool(row["is_conexo"])
+        if n_orph == 0 and is_conn:
+            conn_tag = "[0 órfãos - Conexo]"
+        elif n_orph == 1:
+            conn_tag = "[⚠️ 1 Órfão - Desconexo]"
+        else:
+            conn_tag = f"[⚠️ {n_orph} Órfãos - Desconexo]"
+        edges_str.append(
+            f"{int(row['arestas']):,} arestas\n({row['pct_arestas']:.1f}%)\n{conn_tag}"
+        )
 
     bars3 = ax3.bar(scenarios, df["arestas"].values, color=colors, width=0.55, edgecolor="black", linewidth=1.1, alpha=0.9)
     ax3.set_yscale("log")
@@ -164,7 +192,7 @@ def plot_pure_topological_synthesis(df: pd.DataFrame, output_png: Path):
         )
 
     plt.suptitle(
-        "COMPARAÇÃO ESTRUTURAL DAS ABORDAGENS DE REDES COMPLEXAS NA MATRIZ DTW (1.700 JANELAS DE TREINO)",
+        f"COMPARAÇÃO ESTRUTURAL DAS ABORDAGENS DE REDES COMPLEXAS NA MATRIZ DTW — {fcfg['name_pt'].upper()} ({fcfg['unit']})",
         fontsize=13.5,
         fontweight="bold",
         y=1.02,
@@ -176,4 +204,15 @@ def plot_pure_topological_synthesis(df: pd.DataFrame, output_png: Path):
 
 
 if __name__ == "__main__":
-    run_pure_topological_comparison()
+    parser = argparse.ArgumentParser(
+        description="Consolida a comparação topológica dos 4 cenários sobre a Matriz DTW."
+    )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="speed_kmh",
+        choices=list(FEATURE_REGISTRY.keys()),
+        help="Feature temporal a analisar (padrão: speed_kmh).",
+    )
+    args = parser.parse_args()
+    run_pure_topological_comparison(feature=args.feature)

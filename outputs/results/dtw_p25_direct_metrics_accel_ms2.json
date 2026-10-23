@@ -1,0 +1,152 @@
+{
+  "pilot_100x100": {
+    "n_nodes": 100,
+    "percentile_dtw": 25.0,
+    "equivalent_affinity_percentile": 75.0,
+    "sigma_median_dtw_kmh": 36.756663900282646,
+    "dtw_p25_threshold_kmh": 29.500980757425225,
+    "affinity_p75_threshold": 0.44816122263579744,
+    "dtw_min_kmh": 7.630962344507372,
+    "dtw_p50_median_kmh": 36.756663900282646,
+    "dtw_p75_kmh": 45.549606373906116,
+    "dtw_max_kmh": 104.7638611462381,
+    "full_graph_edges": 4950,
+    "retained_edges": 1238,
+    "retained_edges_pct": 25.01010101010101,
+    "is_connected": false,
+    "total_connected_components": 6,
+    "non_trivial_components_count": 1,
+    "largest_component_nodes": 95,
+    "largest_component_pct": 95.0,
+    "connected_nodes_count": 95,
+    "isolated_orphan_nodes_count": 5,
+    "isolated_orphan_nodes_pct": 5.0,
+    "isolated_orphan_nodes_sample": [
+      {
+        "node_id": 10,
+        "window_file": "train_0010_veh455_trip2021_w001"
+      },
+      {
+        "node_id": 14,
+        "window_file": "train_0014_veh10_trip2019_w003"
+      },
+      {
+        "node_id": 71,
+        "window_file": "train_0071_veh10_trip2019_w002"
+      },
+      {
+        "node_id": 80,
+        "window_file": "train_0080_veh10_trip2919_w001"
+      },
+      {
+        "node_id": 82,
+        "window_file": "train_0082_veh10_trip2402_w002"
+      }
+    ],
+    "mean_degree": 24.76,
+    "max_degree": 57,
+    "louvain_execution_time_s": 0.012219429016113281,
+    "modularity_q": 0.22716538342497464,
+    "total_partitions_returned": 9,
+    "active_communities_count": 4,
+    "orphan_singletons_count": 5,
+    "active_weighted_intra_dtw_mean": 30.531455172556306,
+    "active_weighted_inter_dtw_mean": 39.99842575455054,
+    "active_intra_inter_ratio": 0.7633164204989444
+  },
+  "train_1700x1700": {
+    "n_nodes": 1700,
+    "percentile_dtw": 25.0,
+    "equivalent_affinity_percentile": 75.0,
+    "sigma_median_dtw_kmh": 36.57443258166312,
+    "dtw_p25_threshold_kmh": 29.756631031632423,
+    "affinity_p75_threshold": 0.4432634233033243,
+    "dtw_min_kmh": 2.5235325892766407,
+    "dtw_p50_median_kmh": 36.57443258166312,
+    "dtw_p75_kmh": 44.38115263730292,
+    "dtw_max_kmh": 120.45563548803328,
+    "full_graph_edges": 1444150,
+    "retained_edges": 361038,
+    "retained_edges_pct": 25.000034622442268,
+    "is_connected": false,
+    "total_connected_components": 28,
+    "non_trivial_components_count": 1,
+    "largest_component_nodes": 1673,
+    "largest_component_pct": 98.41176470588235,
+    "connected_nodes_count": 1673,
+    "isolated_orphan_nodes_count": 27,
+    "isolated_orphan_nodes_pct": 1.588235294117647,
+    "isolated_orphan_nodes_sample": [
+      {
+        "node_id": 14,
+        "window_file": "train_0014_veh10_trip2019_w003"
+      },
+      {
+        "node_id": 71,
+        "window_file": "train_0071_veh10_trip2019_w002"
+      },
+      {
+        "node_id": 104,
+        "window_file": "train_0104_veh10_trip1920_w001"
+      },
+      {
+        "node_id": 126,
+        "window_file": "train_0126_veh10_trip1996_w002"
+      },
+      {
+        "node_id": 429,
+        "window_file": "train_0429_veh455_trip1339_w000"
+      },
+      {
+        "node_id": 507,
+        "window_file": "train_0507_veh455_trip2007_w003"
+      },
+      {
+        "node_id": 568,
+        "window_file": "train_0568_veh10_trip2150_w000"
+      },
+      {
+        "node_id": 604,
+        "window_file": "train_0604_veh455_trip2092_w014"
+      },
+      {
+        "node_id": 680,
+        "window_file": "train_0680_veh455_trip2280_w000"
+      },
+      {
+        "node_id": 697,
+        "window_file": "train_0697_veh455_trip1969_w000"
+      },
+      {
+        "node_id": 716,
+        "window_file": "train_0716_veh10_trip2919_w000"
+      },
+      {
+        "node_id": 766,
+        "window_file": "train_0766_veh455_trip1418_w001"
+      },
+      {
+        "node_id": 804,
+        "window_file": "train_0804_veh10_trip1572_w002"
+      },
+      {
+        "node_id": 818,
+        "window_file": "train_0818_veh455_trip2360_w014"
+      },
+      {
+        "node_id": 891,
+        "window_file": "train_0891_veh455_trip2021_w003"
+      }
+    ],
+    "mean_degree": 424.7505882352941,
+    "max_degree": 1252,
+    "louvain_execution_time_s": 5.876811265945435,
+    "modularity_q": 0.18025238492457718,
+    "total_partitions_returned": 30,
+    "active_communities_count": 3,
+    "orphan_singletons_count": 27,
+    "active_weighted_intra_dtw_mean": 32.875630211259576,
+    "active_weighted_inter_dtw_mean": 39.62561481642877,
+    "active_intra_inter_ratio": 0.8296560283937688
+  }
+}

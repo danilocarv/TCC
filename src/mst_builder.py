@@ -49,6 +49,8 @@ from src.config import (
     MST_FULL_MATRIX_NPY,
     FIG_MST_PURE_FULL,
     MST_STRUCTURAL_METRICS_JSON,
+    FEATURE_REGISTRY,
+    get_feature_paths,
     ensure_directories,
 )
 
@@ -352,39 +354,49 @@ def print_mst_report(metrics: dict, df_edges: pd.DataFrame):
     print("=" * 88 + "\n")
 
 
-def update_structural_metrics_json(mode_key: str, metrics: dict):
+def update_structural_metrics_json(
+    mode_key: str,
+    metrics: dict,
+    json_path: Path = MST_STRUCTURAL_METRICS_JSON,
+):
     """Atualiza o arquivo JSON consolidado com as métricas estruturais da MST."""
-    MST_STRUCTURAL_METRICS_JSON.parent.mkdir(parents=True, exist_ok=True)
+    json_path.parent.mkdir(parents=True, exist_ok=True)
     payload = {}
-    if MST_STRUCTURAL_METRICS_JSON.exists():
+    if json_path.exists():
         try:
-            payload = json.loads(MST_STRUCTURAL_METRICS_JSON.read_text(encoding="utf-8"))
+            payload = json.loads(json_path.read_text(encoding="utf-8"))
         except Exception:
             payload = {}
     payload[mode_key] = metrics
-    MST_STRUCTURAL_METRICS_JSON.write_text(
+    json_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
 
-def run_mst_builder(is_pilot: bool = True) -> tuple[nx.Graph, pd.DataFrame, dict]:
+def run_mst_builder(
+    is_pilot: bool = True,
+    feature: str = "speed_kmh",
+) -> tuple[nx.Graph, pd.DataFrame, dict]:
     """Executa a Etapa 1 completa: construção, auditoria e salvamento da MST pura."""
     ensure_directories()
+    fcfg = get_feature_paths(feature)
     mode_str = f"PILOTO ({DTW_PILOT_SIZE}x{DTW_PILOT_SIZE})" if is_pilot else "COMPLETO (1700x1700)"
     print("=" * 88)
-    print(f"INICIANDO ETAPA 1: CONSTRUÇÃO DA ÁRVORE GERADORA MÍNIMA (MST PURA) - MODO {mode_str}")
+    print(
+        f"INICIANDO ETAPA 1: CONSTRUÇÃO DA ÁRVORE GERADORA MÍNIMA (MST PURA) [{fcfg['name_pt'].upper()}] - MODO {mode_str}"
+    )
     print("=" * 88)
 
-    dtw_npy_path = DTW_PILOT_MATRIX_NPY if is_pilot else DTW_SPEED_MATRIX_NPY
+    dtw_npy_path = fcfg["dtw_pilot_npy"] if is_pilot else fcfg["dtw_full_npy"]
     if not dtw_npy_path.exists():
         raise FileNotFoundError(
             f"Matriz DTW não encontrada em {dtw_npy_path}. "
-            f"Execute primeiro 'python src/dtw_analysis.py {'--pilot' if is_pilot else '--full'}'."
+            f"Execute primeiro 'python src/dtw_analysis.py --feature {feature} {'--pilot' if is_pilot else '--full'}'."
         )
 
     dist_matrix = np.load(dtw_npy_path)
     n_windows = dist_matrix.shape[0]
-    print(f"-> Matriz DTW carregada: {n_windows} x {n_windows} elementos.")
+    print(f"-> Matriz DTW carregada ({fcfg['name_pt']}): {n_windows} x {n_windows} elementos.")
 
     df_features = pd.read_parquet(PROCESSED_TRAIN_FEATURES_PARQUET)
     if is_pilot:
@@ -413,17 +425,18 @@ def run_mst_builder(is_pilot: bool = True) -> tuple[nx.Graph, pd.DataFrame, dict
     print_mst_report(metrics, df_edges)
 
     # Salva os artefatos da Etapa 1
-    edges_csv = MST_PILOT_EDGES_CSV if is_pilot else MST_FULL_EDGES_CSV
-    edges_parquet = MST_PILOT_EDGES_PARQUET if is_pilot else MST_FULL_EDGES_PARQUET
-    mst_npy = MST_PILOT_MATRIX_NPY if is_pilot else MST_FULL_MATRIX_NPY
-    fig_path = FIG_MST_PURE_PILOT if is_pilot else FIG_MST_PURE_FULL
+    edges_csv = fcfg["mst_pilot_edges_csv"] if is_pilot else fcfg["mst_full_edges_csv"]
+    edges_parquet = fcfg["mst_pilot_edges_parquet"] if is_pilot else fcfg["mst_full_edges_parquet"]
+    mst_npy = fcfg["mst_pilot_matrix_npy"] if is_pilot else fcfg["mst_full_matrix_npy"]
+    fig_path = fcfg["fig_mst_pure_pilot"] if is_pilot else fcfg["fig_mst_pure_full"]
+    json_path = fcfg["mst_structural_metrics_json"]
 
     df_edges.to_csv(edges_csv, index=False, encoding="utf-8")
     df_edges.to_parquet(edges_parquet, index=False)
     np.save(mst_npy, mst_matrix)
 
     mode_key = "pilot_100x100" if is_pilot else "train_1700x1700"
-    update_structural_metrics_json(mode_key, metrics)
+    update_structural_metrics_json(mode_key, metrics, json_path=json_path)
 
     plot_pure_mst_figure(
         T_mst=T_mst,
@@ -438,7 +451,7 @@ def run_mst_builder(is_pilot: bool = True) -> tuple[nx.Graph, pd.DataFrame, dict
     print(f"   Arestas CSV:     {edges_csv.name}")
     print(f"   Arestas Parquet: {edges_parquet.name}")
     print(f"   Matriz MST NPY:  {mst_npy.name}")
-    print(f"   Métricas JSON:   {MST_STRUCTURAL_METRICS_JSON.name}")
+    print(f"   Métricas JSON:   {json_path.name}")
     print("=" * 88)
     print("ETAPA 1 (ÁRVORE GERADORA MÍNIMA PURA) CONCLUÍDA COM SUCESSO!")
     print("=" * 88 + "\n")
@@ -461,7 +474,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Executa no modo treino completo 1700x1700.",
     )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="speed_kmh",
+        choices=list(FEATURE_REGISTRY.keys()),
+        help="Feature temporal a analisar (padrão: speed_kmh).",
+    )
 
     args = parser.parse_args()
     is_pilot_mode = not args.full
-    run_mst_builder(is_pilot=is_pilot_mode)
+    run_mst_builder(is_pilot=is_pilot_mode, feature=args.feature)

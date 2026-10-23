@@ -49,6 +49,8 @@ from src.config import (
     LOUVAIN_FULL_CLUSTERS_PARQUET,
     FIG_LOUVAIN_FULL_HEATMAP,
     LOUVAIN_RANDOM_SEED,
+    FEATURE_REGISTRY,
+    get_feature_paths,
     ensure_directories,
 )
 
@@ -303,34 +305,38 @@ def print_pure_community_report(
 def run_louvain_analysis(
     is_pilot: bool = True,
     resolution: float = 1.0,
+    feature: str = "speed_kmh",
 ) -> tuple[pd.DataFrame, float]:
     """
     Executa a análise de Louvain 100% pura sobre a matriz DTW.
     """
     ensure_directories()
+    fcfg = get_feature_paths(feature)
     mode_str = f"PILOTO ({DTW_PILOT_SIZE}x{DTW_PILOT_SIZE})" if is_pilot else "COMPLETO (1700x1700)"
     print("=" * 80)
-    print(f"INICIANDO ALGORITMO DE LOUVAIN PURO SOBRE MATRIZ DTW - MODO {mode_str}")
+    print(
+        f"INICIANDO ALGORITMO DE LOUVAIN PURO SOBRE MATRIZ DTW ({fcfg['name_pt'].upper()}) - MODO {mode_str}"
+    )
     print("=" * 80)
 
     # 1. Carrega exclusivamente a matriz DTW
-    dtw_npy_path = DTW_PILOT_MATRIX_NPY if is_pilot else DTW_SPEED_MATRIX_NPY
+    dtw_npy_path = fcfg["dtw_pilot_npy"] if is_pilot else fcfg["dtw_full_npy"]
     if not dtw_npy_path.exists():
         raise FileNotFoundError(
             f"Matriz DTW não encontrada em {dtw_npy_path}. "
-            f"Execute primeiro 'python src/dtw_analysis.py {'--pilot' if is_pilot else '--full'}'."
+            f"Execute primeiro 'python src/dtw_analysis.py --feature {feature} {'--pilot' if is_pilot else '--full'}'."
         )
 
     dist_matrix = np.load(dtw_npy_path)
     n_windows = dist_matrix.shape[0]
-    print(f"-> Matriz DTW carregada: {n_windows} x {n_windows} elementos.")
+    print(f"-> Matriz DTW carregada ({fcfg['name_pt']}): {n_windows} x {n_windows} elementos.")
 
     # 2. Constrói grafo de afinidade ponderado completo (sem k-NN)
     print("-> Construindo grafo de afinidade completo (W_ij = exp(-D_ij / sigma))...")
     start_t = time.time()
     G, sigma, _ = build_dtw_affinity_graph(dist_matrix)
     print(f"   Grafo construído: {G.number_of_nodes()} nós e {G.number_of_edges()} arestas.")
-    print(f"   Largura de banda sigma (mediana DTW): {sigma:.2f} km/h.")
+    print(f"   Largura de banda sigma (mediana DTW): {sigma:.2f} {fcfg['unit']}.")
 
     # 3. Executa partição de Louvain (100% cega a variáveis externas)
     print(f"-> Executando otimização de Modularidade de Louvain (resolução={resolution})...")
@@ -342,7 +348,6 @@ def run_louvain_analysis(
     print(f"   Modularidade Q = {modularity_q:.4f}")
 
     # 4. Reordena a matriz DTW apenas agrupando os nós de cada comunidade
-    #    (mantendo a ordem original dos índices dentro de cada bloco, sem ordenar por velocidade!)
     reordered_dist, ordered_indices, boundary_indices, node_to_comm = reorder_dtw_matrix(
         dist_matrix, communities
     )
@@ -355,16 +360,16 @@ def run_louvain_analysis(
         f"C{int(row['community_id'])}\n(N={int(row['count'])})"
         for _, row in df_dtw_metrics.iterrows()
     ]
-    heatmap_path = FIG_LOUVAIN_PILOT_HEATMAP if is_pilot else FIG_LOUVAIN_FULL_HEATMAP
+    heatmap_path = fcfg["fig_louvain_pilot_heatmap"] if is_pilot else fcfg["fig_louvain_full_heatmap"]
     plot_louvain_heatmap(
         matrix_reordered=reordered_dist,
         boundary_indices=boundary_indices,
         community_labels=comm_labels_plot,
         output_png=heatmap_path,
-        title=f"Matriz DTW Reordenada pelas Comunidades de Louvain ({n_windows}x{n_windows})",
+        title=f"Matriz DTW ({fcfg['name_pt']}) Reordenada pelas Comunidades de Louvain ({n_windows}x{n_windows})",
         subtitle=(
             f"Louvain Puro (Sem k-NN, Sem Ordenação por Features) | "
-            f"sigma={sigma:.1f} km/h | Modularidade Q = {modularity_q:.4f}"
+            f"sigma={sigma:.2f} {fcfg['unit']} | Modularidade Q = {modularity_q:.4f}"
         ),
     )
 
@@ -379,8 +384,8 @@ def run_louvain_analysis(
 
     print_pure_community_report(df_dtw_metrics, df_features, modularity_q, sigma, resolution)
 
-    out_csv = LOUVAIN_PILOT_CLUSTERS_CSV if is_pilot else LOUVAIN_FULL_CLUSTERS_CSV
-    out_parquet = LOUVAIN_PILOT_CLUSTERS_PARQUET if is_pilot else LOUVAIN_FULL_CLUSTERS_PARQUET
+    out_csv = fcfg["louvain_pilot_csv"] if is_pilot else fcfg["louvain_full_csv"]
+    out_parquet = fcfg["louvain_pilot_parquet"] if is_pilot else fcfg["louvain_full_parquet"]
 
     df_features.to_csv(out_csv, index=False, encoding="utf-8")
     df_features.to_parquet(out_parquet, index=False)
@@ -415,6 +420,13 @@ if __name__ == "__main__":
         default=1.0,
         help="Parâmetro de resolução da modularidade no Louvain (padrão: 1.0).",
     )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="speed_kmh",
+        choices=list(FEATURE_REGISTRY.keys()),
+        help="Feature temporal a analisar (padrão: speed_kmh).",
+    )
 
     args = parser.parse_args()
     is_pilot_mode = not args.full
@@ -422,4 +434,5 @@ if __name__ == "__main__":
     run_louvain_analysis(
         is_pilot=is_pilot_mode,
         resolution=args.resolution,
+        feature=args.feature,
     )

@@ -66,6 +66,8 @@ from src.config import (
     LOUVAIN_FULL_CLUSTERS_PARQUET,
     MST_STRUCTURAL_METRICS_JSON,
     LOUVAIN_MST_COMPARISON_JSON,
+    FEATURE_REGISTRY,
+    get_feature_paths,
     ensure_directories,
 )
 from src.louvain_clustering import (
@@ -344,17 +346,21 @@ def print_stage_3a_report(
 def run_stage_3a_direct_percentile(
     is_pilot: bool = False,
     resolution: float = 1.0,
+    feature: str = "speed_kmh",
 ) -> tuple[pd.DataFrame, dict]:
     """
     Executa a Etapa 3A: Filtragem direta pelo Percentil 25 de distância DTW e Louvain Puro.
     """
     ensure_directories()
+    fcfg = get_feature_paths(feature)
     mode_str = f"PILOTO ({DTW_PILOT_SIZE}x{DTW_PILOT_SIZE})" if is_pilot else "COMPLETO (1700x1700)"
     print("=" * 96)
-    print(f"INICIANDO ETAPA 3A: PERCENTIL 25 DIRETO (TOP 25% CONEXÕES) + LOUVAIN PURO - MODO {mode_str}")
+    print(
+        f"INICIANDO ETAPA 3A: PERCENTIL 25 DIRETO [{fcfg['name_pt'].upper()}] + LOUVAIN PURO - MODO {mode_str}"
+    )
     print("=" * 96)
 
-    dtw_npy_path = DTW_PILOT_MATRIX_NPY if is_pilot else DTW_SPEED_MATRIX_NPY
+    dtw_npy_path = fcfg["dtw_pilot_npy"] if is_pilot else fcfg["dtw_full_npy"]
     if not dtw_npy_path.exists():
         raise FileNotFoundError(f"Matriz DTW não encontrada em {dtw_npy_path}.")
 
@@ -399,7 +405,9 @@ def run_stage_3a_direct_percentile(
     df_features["p25_direct_is_isolated"] = df_features["p25_direct_degree"] == 0
 
     # 3. Gera Heatmap reordenado
-    heatmap_path = FIG_P25_DIRECT_PILOT_HEATMAP if is_pilot else FIG_P25_DIRECT_FULL_HEATMAP
+    heatmap_path = (
+        fcfg["fig_p25_direct_pilot_heatmap"] if is_pilot else fcfg["fig_p25_direct_full_heatmap"]
+    )
     plot_p25_direct_heatmap(
         matrix_reordered=reordered_dist,
         boundary_indices=boundary_indices,
@@ -421,8 +429,11 @@ def run_stage_3a_direct_percentile(
     )
 
     # 5. Salva artefatos em disco
-    out_csv = P25_DIRECT_PILOT_CLUSTERS_CSV if is_pilot else P25_DIRECT_FULL_CLUSTERS_CSV
-    out_pq = P25_DIRECT_PILOT_CLUSTERS_PARQUET if is_pilot else P25_DIRECT_FULL_CLUSTERS_PARQUET
+    out_csv = fcfg["p25_direct_pilot_csv"] if is_pilot else fcfg["p25_direct_full_csv"]
+    out_pq = fcfg["p25_direct_pilot_parquet"] if is_pilot else fcfg["p25_direct_full_parquet"]
+    metrics_json = fcfg["p25_direct_metrics_json"]
+    summary_csv = fcfg["p25_direct_summary_csv"]
+
     df_features.to_csv(out_csv, index=False, encoding="utf-8")
     df_features.to_parquet(out_pq, index=False)
 
@@ -445,15 +456,15 @@ def run_stage_3a_direct_percentile(
     }
 
     mode_key = "pilot_100x100" if is_pilot else "train_1700x1700"
-    P25_DIRECT_METRICS_JSON.parent.mkdir(parents=True, exist_ok=True)
+    metrics_json.parent.mkdir(parents=True, exist_ok=True)
     json_data = {}
-    if P25_DIRECT_METRICS_JSON.exists():
+    if metrics_json.exists():
         try:
-            json_data = json.loads(P25_DIRECT_METRICS_JSON.read_text(encoding="utf-8"))
+            json_data = json.loads(metrics_json.read_text(encoding="utf-8"))
         except Exception:
             json_data = {}
     json_data[mode_key] = result_payload
-    P25_DIRECT_METRICS_JSON.write_text(
+    metrics_json.write_text(
         json.dumps(json_data, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
@@ -475,14 +486,14 @@ def run_stage_3a_direct_percentile(
             .rename(columns={"p25_direct_louvain_community": "community_id"})
         )
         df_summary = df_dtw_metrics.merge(kinematic_means, on="community_id", how="left")
-        df_summary.to_csv(P25_DIRECT_SUMMARY_CSV, index=False, encoding="utf-8")
+        df_summary.to_csv(summary_csv, index=False, encoding="utf-8")
 
     print("-> Artefatos da Etapa 3A (Percentil 25 Direto) salvos com sucesso:")
     print(f"   Clusters CSV:     {out_csv.name}")
     print(f"   Clusters Parquet: {out_pq.name}")
-    print(f"   Métricas JSON:    {P25_DIRECT_METRICS_JSON.name}")
+    print(f"   Métricas JSON:    {metrics_json.name}")
     if not is_pilot:
-        print(f"   Resumo CSV:       {P25_DIRECT_SUMMARY_CSV.name}")
+        print(f"   Resumo CSV:       {summary_csv.name}")
     print("=" * 96)
     print("ETAPA 3A (PERCENTIL 25 DIRETO + LOUVAIN PURO) CONCLUÍDA COM SUCESSO!")
     print("=" * 96 + "\n")
@@ -589,16 +600,30 @@ def plot_p25_mst_heatmap(
     dtw_threshold: float,
     modularity_q: float,
     rescue_edges_count: int,
+    feature: str = "speed_kmh",
 ):
     """
     Plota o Heatmap em 300 DPI da matriz DTW reordenada pelas comunidades descobertas
     pelo Louvain Puro sobre a rede unificada MST ∪ P25 (100% conexa, 0 órfãos).
+    Quando existem micro-comunidades periféricas (< 1.5% dos nós, ex: C3 e C4),
+    evita sobreposição de rótulos nos eixos e adiciona um painel de zoom ampliado.
     """
+    fcfg = get_feature_paths(feature)
     output_png.parent.mkdir(parents=True, exist_ok=True)
-    n_comm = len(communities)
 
-    plt.figure(figsize=(11, 9), dpi=300)
-    ax = plt.gca()
+    # Identifica se há micro-comunidades pequenas (< 1.5% de n_windows) no final
+    comm_sizes = [len(c) for c in communities]
+    micro_comm_ids = [cid for cid, sz in enumerate(comm_sizes) if sz < max(3, int(0.015 * n_windows))]
+    has_micro_zoom = len(micro_comm_ids) >= 1 and n_windows >= 100
+
+    if has_micro_zoom:
+        fig = plt.figure(figsize=(17, 8.5), dpi=300)
+        gs = fig.add_gridspec(1, 2, width_ratios=[1.25, 1.0], wspace=0.32)
+        ax = fig.add_subplot(gs[0, 0])
+        ax_zoom = fig.add_subplot(gs[0, 1])
+    else:
+        fig, ax = plt.subplots(figsize=(11, 9), dpi=300)
+        ax_zoom = None
 
     im = ax.imshow(
         matrix_reordered,
@@ -608,40 +633,157 @@ def plot_p25_mst_heatmap(
         interpolation="nearest",
     )
 
-    cbar = plt.colorbar(im, pad=0.02)
-    cbar.set_label("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=11, labelpad=10)
+    if ax_zoom is None:
+        cbar = plt.colorbar(im, ax=ax, pad=0.02, fraction=0.046)
+        cbar.set_label(
+            f"Distância DTW sobre {fcfg['name_pt']} ({fcfg['unit']})",
+            fontsize=10.5,
+            labelpad=8,
+        )
 
     for b in boundary_indices[:-1]:
         ax.axvline(b - 0.5, color="red", linestyle="--", linewidth=1.4, alpha=0.88)
         ax.axhline(b - 0.5, color="red", linestyle="--", linewidth=1.4, alpha=0.88)
 
-    midpoints = []
-    labels = []
+    # Constrói pontos médios e agrupa rótulos muito próximos (< 4.5% da matriz) para evitar colisão visual
+    raw_ticks = []
     prev_b = 0
     for comm_id, b in enumerate(boundary_indices):
         size = b - prev_b
         mid = (prev_b + b - 1) / 2.0
-        midpoints.append(mid)
-        labels.append(f"C{comm_id}\n(N={size})")
+        raw_ticks.append({"ids": [comm_id], "sizes": [size], "mid": mid, "start": prev_b, "end": b})
         prev_b = b
 
-    ax.set_xticks(midpoints)
-    ax.set_xticklabels(labels, fontsize=9, fontweight="bold")
-    ax.set_yticks(midpoints)
-    ax.set_yticklabels(labels, fontsize=9, fontweight="bold")
+    min_gap = 0.045 * n_windows
+    merged_ticks = []
+    for item in raw_ticks:
+        if merged_ticks and (item["mid"] - merged_ticks[-1]["mid"]) < min_gap:
+            prev_item = merged_ticks[-1]
+            prev_item["ids"].extend(item["ids"])
+            prev_item["sizes"].extend(item["sizes"])
+            prev_item["end"] = item["end"]
+            prev_item["mid"] = (prev_item["start"] + prev_item["end"] - 1) / 2.0
+        else:
+            merged_ticks.append(item)
 
-    plt.title(
-        f"Matriz DTW Reordenada — Louvain Puro sobre Rede Otimizada MST ∪ P25 ({n_windows}x{n_windows})\n"
-        f"Top 25% Conexões (D_ij <= {dtw_threshold:.1f} km/h) + {rescue_edges_count} Arestas de Resgate da MST | "
-        f"100% Conexo (0 Órfãos) | Modularidade Q = {modularity_q:.4f}",
+    midpoints = [t["mid"] for t in merged_ticks]
+    x_labels = []
+    y_labels = []
+    for t in merged_ticks:
+        if len(t["ids"]) == 1:
+            cid, sz = t["ids"][0], t["sizes"][0]
+            x_labels.append(f"C{cid}\n(N={sz})")
+            y_labels.append(f"C{cid}\n(N={sz})")
+        else:
+            parts = [f"C{cid} (N={sz})" for cid, sz in zip(t["ids"], t["sizes"])]
+            x_labels.append("\n".join(parts))
+            y_labels.append(" | ".join(parts))
+
+    ax.set_xticks(midpoints)
+    ax.set_xticklabels(x_labels, fontsize=9, fontweight="bold")
+    ax.set_yticks(midpoints)
+    ax.set_yticklabels(y_labels, fontsize=9, fontweight="bold")
+    ax.set_title(
+        f"Matriz DTW Global ({n_windows}x{n_windows}) — {len(communities)} Comunidades",
         fontsize=11,
         fontweight="bold",
-        pad=14,
+        pad=10,
     )
-    plt.xlabel("Comunidades de Louvain em MST ∪ P25 (Ordem Original Interna Preservada)", fontsize=10.5, labelpad=8)
-    plt.ylabel("Comunidades de Louvain em MST ∪ P25 (Ordem Original Interna Preservada)", fontsize=10.5, labelpad=8)
+    ax.set_xlabel("Comunidades de Louvain em MST ∪ P25 (Ordem Interna Preservada)", fontsize=10, labelpad=8)
+    ax.set_ylabel("Comunidades de Louvain em MST ∪ P25 (Ordem Interna Preservada)", fontsize=10, labelpad=8)
 
-    plt.tight_layout()
+    # Painel de Zoom dedicado para visualizar claramente as micro-comunidades (ex: C3 e C4)
+    if ax_zoom is not None:
+        first_micro_id = micro_comm_ids[0]
+        first_micro_start = 0 if first_micro_id == 0 else boundary_indices[first_micro_id - 1]
+        total_micro_nodes = n_windows - first_micro_start
+        # Inclui um contexto da comunidade imediatamente anterior (ex: últimas 8 janelas de C2)
+        context_nodes = max(6, min(10, total_micro_nodes * 2))
+        zoom_start = max(0, first_micro_start - context_nodes)
+        sub_mat = matrix_reordered[zoom_start:, zoom_start:]
+        sub_n = sub_mat.shape[0]
+
+        im_z = ax_zoom.imshow(
+            sub_mat,
+            cmap="viridis",
+            aspect="equal",
+            origin="upper",
+            interpolation="nearest",
+            vmin=float(matrix_reordered.min()),
+            vmax=float(matrix_reordered.max()),
+        )
+
+        # Desenha linhas divisórias e calcula centros dentro do recorte de zoom
+        z_mids = []
+        z_labels = []
+        prev_zb = zoom_start
+        for comm_id, b in enumerate(boundary_indices):
+            if b <= zoom_start:
+                continue
+            start_in_z = max(zoom_start, 0 if comm_id == 0 else boundary_indices[comm_id - 1]) - zoom_start
+            end_in_z = b - zoom_start
+            if end_in_z < sub_n:
+                ax_zoom.axvline(end_in_z - 0.5, color="red", linestyle="--", linewidth=2.0, alpha=0.95)
+                ax_zoom.axhline(end_in_z - 0.5, color="red", linestyle="--", linewidth=2.0, alpha=0.95)
+
+            mid_in_z = (start_in_z + end_in_z - 1) / 2.0
+            full_size = comm_sizes[comm_id]
+            if comm_id < first_micro_id:
+                z_labels.append(f"Final de C{comm_id}\n({end_in_z - start_in_z} de {full_size})")
+            else:
+                z_labels.append(f"C{comm_id}\n(N={full_size})")
+            z_mids.append(mid_in_z)
+
+        # Anota valores DTW dentro dos blocos de C3 e C4 no zoom
+        for i_z in range(sub_n):
+            for j_z in range(sub_n):
+                global_i = zoom_start + i_z
+                global_j = zoom_start + j_z
+                if global_i >= first_micro_start and global_j >= first_micro_start:
+                    val = sub_mat[i_z, j_z]
+                    txt_color = "black" if val > (matrix_reordered.max() * 0.55) else "white"
+                    ax_zoom.text(
+                        j_z,
+                        i_z,
+                        f"{val:.0f}",
+                        ha="center",
+                        va="center",
+                        color=txt_color,
+                        fontsize=7.5,
+                        fontweight="bold",
+                    )
+
+        ax_zoom.set_xticks(z_mids)
+        ax_zoom.set_xticklabels(z_labels, fontsize=9.5, fontweight="bold")
+        ax_zoom.set_yticks(z_mids)
+        ax_zoom.set_yticklabels(z_labels, fontsize=9.5, fontweight="bold")
+        micro_names = ", ".join([f"C{cid} (N={comm_sizes[cid]})" for cid in micro_comm_ids])
+        ax_zoom.set_title(
+            f"Zoom de Ampliação no Canto Inferior Direito\nDetalhe das Micro-Comunidades: {micro_names}",
+            fontsize=11,
+            fontweight="bold",
+            pad=10,
+        )
+        ax_zoom.set_xlabel(f"Últimas {sub_n} Janelas da Matriz Reordenada (Índices {zoom_start} a {n_windows - 1})", fontsize=9.5, labelpad=8)
+        ax_zoom.set_ylabel(f"Últimas {sub_n} Janelas da Matriz Reordenada", fontsize=9.5, labelpad=8)
+
+        cbar = plt.colorbar(im_z, ax=ax_zoom, pad=0.03, fraction=0.046)
+        cbar.set_label(
+            f"Distância DTW sobre {fcfg['name_pt']} ({fcfg['unit']})",
+            fontsize=10.5,
+            labelpad=8,
+        )
+
+    fig.suptitle(
+        f"Matriz DTW Reordenada ({fcfg['name_pt']}) — Louvain Puro sobre Rede Otimizada MST ∪ P25 ({n_windows}x{n_windows})\n"
+        f"Top 25% Conexões (D_ij <= {dtw_threshold:.1f} {fcfg['unit']}) + {rescue_edges_count} Arestas de Resgate da MST | "
+        f"100% Conexo (0 Órfãos) | Modularidade Q = {modularity_q:.4f}",
+        fontsize=11.5,
+        fontweight="bold",
+        y=0.98,
+    )
+
+    plt.tight_layout(rect=[0, 0, 1, 0.92])
     plt.savefig(output_png, bbox_inches="tight")
     plt.close()
     print(f"   Heatmap MST ∪ P25 salvo em: {output_png.name} ({output_png})")
@@ -721,7 +863,11 @@ def print_stage_3b_report(
     print("=" * 96 + "\n")
 
 
-def save_all_stages_comparison(is_pilot: bool, mode_key: str):
+def save_all_stages_comparison(
+    is_pilot: bool,
+    mode_key: str,
+    feature: str = "speed_kmh",
+):
     """
     Consolida o comparativo rigoroso de todos os 4 cenários:
     1. Grafo Completo (1.444.150 arestas, sem filtro);
@@ -729,11 +875,33 @@ def save_all_stages_comparison(is_pilot: bool, mode_key: str):
     3. Percentil 25 Direto (361.038 arestas, com nó órfão);
     4. MST ∪ P25 (361.038 arestas + resgate da MST, 100% conexo).
     """
+    fcfg = get_feature_paths(feature)
     # Carrega métricas das etapas
-    p25_dir_data = json.loads(P25_DIRECT_METRICS_JSON.read_text(encoding="utf-8")).get(mode_key, {})
-    p25_mst_data = json.loads(P25_MST_METRICS_JSON.read_text(encoding="utf-8")).get(mode_key, {})
-    mst_struct_data = json.loads(MST_STRUCTURAL_METRICS_JSON.read_text(encoding="utf-8")).get(mode_key, {})
-    louvain_mst_comp = json.loads(LOUVAIN_MST_COMPARISON_JSON.read_text(encoding="utf-8")).get(mode_key, {})
+    p25_dir_path = fcfg["p25_direct_metrics_json"]
+    p25_mst_path = fcfg["p25_mst_metrics_json"]
+    mst_struct_path = fcfg["mst_structural_metrics_json"]
+    louvain_mst_path = fcfg["louvain_mst_comparison_json"]
+
+    p25_dir_data = (
+        json.loads(p25_dir_path.read_text(encoding="utf-8")).get(mode_key, {})
+        if p25_dir_path.exists()
+        else {}
+    )
+    p25_mst_data = (
+        json.loads(p25_mst_path.read_text(encoding="utf-8")).get(mode_key, {})
+        if p25_mst_path.exists()
+        else {}
+    )
+    mst_struct_data = (
+        json.loads(mst_struct_path.read_text(encoding="utf-8")).get(mode_key, {})
+        if mst_struct_path.exists()
+        else {}
+    )
+    louvain_mst_comp = (
+        json.loads(louvain_mst_path.read_text(encoding="utf-8")).get(mode_key, {})
+        if louvain_mst_path.exists()
+        else {}
+    )
 
     full_info = louvain_mst_comp.get("full_graph_louvain", {})
     mst_info = louvain_mst_comp.get("mst_pure_louvain", {})
@@ -754,7 +922,7 @@ def save_all_stages_comparison(is_pilot: bool, mode_key: str):
         {
             "cenario": "2. Árvore Geradora Mínima (MST Pura)",
             "arestas": mst_info.get("n_edges", 1699 if not is_pilot else 99),
-            "pct_arestas": float((mst_info.get("n_edges", 1699) / (1444150 if not is_pilot else 4950)) * 100.0),
+            "pct_arestas": float((mst_info.get("n_edges", 1699 if not is_pilot else 99) / (1444150 if not is_pilot else 4950)) * 100.0),
             "nos_orfaos": 0,
             "is_conexo": True,
             "modularidade_q": mst_info.get("modularity_q", 0.9492),
@@ -790,14 +958,17 @@ def save_all_stages_comparison(is_pilot: bool, mode_key: str):
     ]
 
     df_comp = pd.DataFrame(rows)
-    if not is_pilot:
-        DTW_ALL_STAGES_COMPARISON_JSON.parent.mkdir(parents=True, exist_ok=True)
-        DTW_ALL_STAGES_COMPARISON_JSON.write_text(
+    comp_json = fcfg["dtw_all_stages_comparison_json"]
+    comp_csv = fcfg["dtw_all_stages_comparison_csv"]
+
+    if not is_pilot or not comp_csv.exists():
+        comp_json.parent.mkdir(parents=True, exist_ok=True)
+        comp_json.write_text(
             json.dumps(rows, indent=2, ensure_ascii=False), encoding="utf-8"
         )
-        df_comp.to_csv(DTW_ALL_STAGES_COMPARISON_CSV, index=False, encoding="utf-8")
+        df_comp.to_csv(comp_csv, index=False, encoding="utf-8")
         print("\n" + "=" * 96)
-        print("   TABELA COMPARATIVA CONSOLIDADA DE TODOS OS CENÁRIOS")
+        print(f"   TABELA COMPARATIVA CONSOLIDADA DE TODOS OS CENÁRIOS ({fcfg['name_pt'].upper()})")
         print("=" * 96)
         print(df_comp.to_string(index=False))
         print("=" * 96 + "\n")
@@ -806,18 +977,22 @@ def save_all_stages_comparison(is_pilot: bool, mode_key: str):
 def run_stage_3b_mst_percentile(
     is_pilot: bool = False,
     resolution: float = 1.0,
+    feature: str = "speed_kmh",
 ) -> tuple[pd.DataFrame, dict]:
     """
     Executa a Etapa 3B: Construção da rede unificada MST ∪ P25 e Louvain 100% Puro.
     """
     ensure_directories()
+    fcfg = get_feature_paths(feature)
     mode_str = f"PILOTO ({DTW_PILOT_SIZE}x{DTW_PILOT_SIZE})" if is_pilot else "COMPLETO (1700x1700)"
     print("=" * 96)
-    print(f"INICIANDO ETAPA 3B: REDE OTIMIZADA (MST ∪ P25) + LOUVAIN PURO - MODO {mode_str}")
+    print(
+        f"INICIANDO ETAPA 3B: REDE OTIMIZADA (MST ∪ P25) [{fcfg['name_pt'].upper()}] + LOUVAIN PURO - MODO {mode_str}"
+    )
     print("=" * 96)
 
-    dtw_npy_path = DTW_PILOT_MATRIX_NPY if is_pilot else DTW_SPEED_MATRIX_NPY
-    mst_edges_pq = MST_PILOT_EDGES_PARQUET if is_pilot else MST_FULL_EDGES_PARQUET
+    dtw_npy_path = fcfg["dtw_pilot_npy"] if is_pilot else fcfg["dtw_full_npy"]
+    mst_edges_pq = fcfg["mst_pilot_edges_parquet"] if is_pilot else fcfg["mst_full_edges_parquet"]
 
     dist_matrix = np.load(dtw_npy_path)
     n_windows = dist_matrix.shape[0]
@@ -853,7 +1028,9 @@ def run_stage_3b_mst_percentile(
     df_features["p25_mst_degree"] = [int(G_union.degree(i)) for i in range(n_windows)]
 
     # 3. Gera Heatmap em 300 DPI
-    heatmap_path = FIG_P25_MST_PILOT_HEATMAP if is_pilot else FIG_P25_MST_FULL_HEATMAP
+    heatmap_path = (
+        fcfg["fig_p25_mst_pilot_heatmap"] if is_pilot else fcfg["fig_p25_mst_full_heatmap"]
+    )
     plot_p25_mst_heatmap(
         matrix_reordered=reordered_dist,
         boundary_indices=boundary_indices,
@@ -863,6 +1040,7 @@ def run_stage_3b_mst_percentile(
         dtw_threshold=topo_info["dtw_p25_threshold_kmh"],
         modularity_q=modularity_q,
         rescue_edges_count=topo_info["mst_rescue_edges_added"],
+        feature=feature,
     )
 
     # 4. Imprime relatório detalhado da Etapa 3B
@@ -875,8 +1053,11 @@ def run_stage_3b_mst_percentile(
     )
 
     # 5. Salva artefatos da Etapa 3B
-    out_csv = P25_MST_PILOT_CLUSTERS_CSV if is_pilot else P25_MST_FULL_CLUSTERS_CSV
-    out_pq = P25_MST_PILOT_CLUSTERS_PARQUET if is_pilot else P25_MST_FULL_CLUSTERS_PARQUET
+    out_csv = fcfg["p25_mst_pilot_csv"] if is_pilot else fcfg["p25_mst_full_csv"]
+    out_pq = fcfg["p25_mst_pilot_parquet"] if is_pilot else fcfg["p25_mst_full_parquet"]
+    metrics_json = fcfg["p25_mst_metrics_json"]
+    summary_csv = fcfg["p25_mst_summary_csv"]
+
     df_features.to_csv(out_csv, index=False, encoding="utf-8")
     df_features.to_parquet(out_pq, index=False)
 
@@ -894,15 +1075,15 @@ def run_stage_3b_mst_percentile(
     }
 
     mode_key = "pilot_100x100" if is_pilot else "train_1700x1700"
-    P25_MST_METRICS_JSON.parent.mkdir(parents=True, exist_ok=True)
+    metrics_json.parent.mkdir(parents=True, exist_ok=True)
     json_data = {}
-    if P25_MST_METRICS_JSON.exists():
+    if metrics_json.exists():
         try:
-            json_data = json.loads(P25_MST_METRICS_JSON.read_text(encoding="utf-8"))
+            json_data = json.loads(metrics_json.read_text(encoding="utf-8"))
         except Exception:
             json_data = {}
     json_data[mode_key] = result_payload
-    P25_MST_METRICS_JSON.write_text(
+    metrics_json.write_text(
         json.dumps(json_data, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
@@ -924,18 +1105,18 @@ def run_stage_3b_mst_percentile(
             .rename(columns={"p25_mst_louvain_community": "community_id"})
         )
         df_summary = df_dtw_metrics.merge(kinematic_means, on="community_id", how="left")
-        df_summary.to_csv(P25_MST_SUMMARY_CSV, index=False, encoding="utf-8")
+        df_summary.to_csv(summary_csv, index=False, encoding="utf-8")
 
     # Atualiza a tabela comparativa geral de todos os cenários
-    save_all_stages_comparison(is_pilot=is_pilot, mode_key=mode_key)
+    save_all_stages_comparison(is_pilot=is_pilot, mode_key=mode_key, feature=feature)
 
     print("-> Artefatos da Etapa 3B (MST ∪ P25) salvos com sucesso:")
     print(f"   Clusters CSV:     {out_csv.name}")
     print(f"   Clusters Parquet: {out_pq.name}")
-    print(f"   Métricas JSON:    {P25_MST_METRICS_JSON.name}")
+    print(f"   Métricas JSON:    {metrics_json.name}")
     if not is_pilot:
-        print(f"   Resumo CSV:       {P25_MST_SUMMARY_CSV.name}")
-        print(f"   Tabela Geral CSV: {DTW_ALL_STAGES_COMPARISON_CSV.name}")
+        print(f"   Resumo CSV:       {summary_csv.name}")
+        print(f"   Tabela Geral CSV: {fcfg['dtw_all_stages_comparison_csv'].name}")
     print("=" * 96)
     print("ETAPA 3B (REDE OTIMIZADA MST ∪ P25 + LOUVAIN PURO) CONCLUÍDA COM SUCESSO!")
     print("=" * 96 + "\n")
@@ -970,11 +1151,22 @@ if __name__ == "__main__":
         default=1.0,
         help="Parâmetro de resolução do Louvain (padrão puro: 1.0).",
     )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="speed_kmh",
+        choices=list(FEATURE_REGISTRY.keys()),
+        help="Feature temporal a analisar (padrão: speed_kmh).",
+    )
 
     args = parser.parse_args()
     is_pilot_mode = True if (args.pilot and not args.full) else False
 
     if args.stage in ("3a", "all"):
-        run_stage_3a_direct_percentile(is_pilot=is_pilot_mode, resolution=args.resolution)
+        run_stage_3a_direct_percentile(
+            is_pilot=is_pilot_mode, resolution=args.resolution, feature=args.feature
+        )
     if args.stage in ("3b", "all"):
-        run_stage_3b_mst_percentile(is_pilot=is_pilot_mode, resolution=args.resolution)
+        run_stage_3b_mst_percentile(
+            is_pilot=is_pilot_mode, resolution=args.resolution, feature=args.feature
+        )

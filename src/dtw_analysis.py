@@ -40,6 +40,8 @@ from src.config import (
     DTW_SPEED_MATRIX_NPY,
     DTW_SPEED_MATRIX_PARQUET,
     FIG_DTW_SPEED_HEATMAP,
+    FEATURE_REGISTRY,
+    get_feature_paths,
     ensure_directories,
 )
 
@@ -95,12 +97,18 @@ def compute_dtw_matrix_numba(data_matrix: np.ndarray, lengths: np.ndarray) -> np
     return dist_matrix
 
 
-def load_training_speed_series(n_windows: int | None = None) -> tuple[np.ndarray, np.ndarray, list[str]]:
+def load_training_series(
+    n_windows: int | None = None,
+    feature: str = "speed_kmh",
+) -> tuple[np.ndarray, np.ndarray, list[str]]:
     """
-    Carrega as séries temporais de velocidade (Vehicle Speed[km/h]) dos arquivos
-    de treino em data/windows/train/parquet/.
+    Carrega as séries temporais da feature especificada (ex: Vehicle Speed[km/h], accel_ms2)
+    dos arquivos de treino em data/windows/train/parquet/.
     Retorna a matriz de dados (K, 120), o vetor de comprimentos e os nomes dos arquivos.
     """
+    fcfg = get_feature_paths(feature)
+    col_name = fcfg["column"]
+
     train_files = sorted(WINDOWS_TRAIN_PARQUET_DIR.glob("*.parquet"))
     if not train_files:
         raise FileNotFoundError(
@@ -118,14 +126,19 @@ def load_training_speed_series(n_windows: int | None = None) -> tuple[np.ndarray
     file_stems = []
 
     for idx, fpath in enumerate(train_files):
-        df_win = pd.read_parquet(fpath, columns=["Vehicle Speed[km/h]"])
-        speeds = df_win["Vehicle Speed[km/h]"].to_numpy(dtype=np.float64)
-        length = len(speeds)
-        data_matrix[idx, :length] = speeds
+        df_win = pd.read_parquet(fpath, columns=[col_name])
+        vals = df_win[col_name].to_numpy(dtype=np.float64)
+        length = len(vals)
+        data_matrix[idx, :length] = vals
         lengths[idx] = length
         file_stems.append(fpath.stem)
 
     return data_matrix, lengths, file_stems
+
+
+def load_training_speed_series(n_windows: int | None = None) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    """Alias retrocompatível para carregamento das séries de velocidade."""
+    return load_training_series(n_windows=n_windows, feature="speed_kmh")
 
 
 def plot_dtw_heatmap(
@@ -133,11 +146,13 @@ def plot_dtw_heatmap(
     output_png: Path,
     title: str,
     subtitle: str | None = None,
+    feature: str = "speed_kmh",
 ):
     """
     Gera e salva o gráfico de calor (Heatmap) em alta resolução (300 DPI)
-    representando a matriz de similaridade DTW sobre a velocidade.
+    representando a matriz de similaridade DTW sobre a feature escolhida.
     """
+    fcfg = get_feature_paths(feature)
     output_png.parent.mkdir(parents=True, exist_ok=True)
     k = matrix.shape[0]
 
@@ -145,7 +160,11 @@ def plot_dtw_heatmap(
     plt.imshow(matrix, cmap="viridis", aspect="auto", origin="upper", interpolation="nearest")
 
     cbar = plt.colorbar(pad=0.02)
-    cbar.set_label("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=11, labelpad=10)
+    cbar.set_label(
+        f"Distância DTW Acumulada sobre {fcfg['name_pt']} ({fcfg['unit']})",
+        fontsize=11,
+        labelpad=10,
+    )
 
     full_title = title
     if subtitle:
@@ -160,16 +179,22 @@ def plot_dtw_heatmap(
     print(f"   Heatmap salvo em: {output_png.name} ({output_png})")
 
 
-def run_pilot_dtw(pilot_size: int = DTW_PILOT_SIZE) -> np.ndarray:
+def run_pilot_dtw(
+    pilot_size: int = DTW_PILOT_SIZE,
+    feature: str = "speed_kmh",
+) -> np.ndarray:
     """Executa o teste piloto DTW com as primeiras 100 janelas de treino."""
+    fcfg = get_feature_paths(feature)
     print("=" * 72)
-    print(f"INICIANDO EXECUÇÃO PILOTO DTW ({pilot_size}x{pilot_size}) SOBRE VELOCIDADE")
+    print(
+        f"INICIANDO EXECUÇÃO PILOTO DTW ({pilot_size}x{pilot_size}) SOBRE {fcfg['name_pt'].upper()} ({fcfg['unit']})"
+    )
     print("=" * 72)
     ensure_directories()
 
     start_t = time.time()
-    data_matrix, lengths, file_stems = load_training_speed_series(n_windows=pilot_size)
-    print(f"-> Carregadas {len(file_stems)} janelas de treino para o teste piloto.")
+    data_matrix, lengths, file_stems = load_training_series(n_windows=pilot_size, feature=feature)
+    print(f"-> Carregadas {len(file_stems)} janelas de treino para o teste piloto ({fcfg['column']}).")
 
     num_pairs = (pilot_size * (pilot_size - 1)) // 2
     print(f"-> Calculando matriz simétrica de {pilot_size}x{pilot_size} ({num_pairs:,d} pares) com Numba JIT...")
@@ -187,43 +212,51 @@ def run_pilot_dtw(pilot_size: int = DTW_PILOT_SIZE) -> np.ndarray:
     assert (matrix >= 0.0).all(), "Existem distâncias negativas!"
 
     print("   [OK] Validação matemática: diagonal nula, simetria M = M^T e distâncias não-negativas.")
-    print(f"   Estatísticas DTW do Piloto:")
-    print(f"     • Distância Mínima (fora diagonal): {matrix[matrix > 0].min():.2f}")
-    print(f"     • Distância Média:                 {matrix[matrix > 0].mean():.2f}")
-    print(f"     • Distância Máxima:                {matrix.max():.2f}")
+    print(f"   Estatísticas DTW do Piloto ({fcfg['name_pt']}):")
+    print(f"     • Distância Mínima (fora diagonal): {matrix[matrix > 0].min():.2f} {fcfg['unit']}")
+    print(f"     • Distância Média:                 {matrix[matrix > 0].mean():.2f} {fcfg['unit']}")
+    print(f"     • Distância Máxima:                {matrix.max():.2f} {fcfg['unit']}")
 
     # Salvar matriz em disco (.npy e .parquet)
-    np.save(DTW_PILOT_MATRIX_NPY, matrix)
+    npy_path = fcfg["dtw_pilot_npy"]
+    pq_path = fcfg["dtw_pilot_parquet"]
+    fig_path = fcfg["fig_dtw_pilot_heatmap"]
+
+    np.save(npy_path, matrix)
     df_matrix = pd.DataFrame(matrix, index=file_stems, columns=file_stems)
-    df_matrix.to_parquet(DTW_PILOT_MATRIX_PARQUET, engine="pyarrow", compression="snappy")
-    print(f"   Matriz piloto salva em: {DTW_PILOT_MATRIX_NPY.name} e {DTW_PILOT_MATRIX_PARQUET.name}")
+    df_matrix.to_parquet(pq_path, engine="pyarrow", compression="snappy")
+    print(f"   Matriz piloto salva em: {npy_path.name} e {pq_path.name}")
 
     # Gerar o Heatmap piloto
     plot_dtw_heatmap(
         matrix=matrix,
-        output_png=FIG_DTW_PILOT_HEATMAP,
-        title=f"Mapa de Calor DTW sobre Velocidade (Piloto {pilot_size}x{pilot_size})",
+        output_png=fig_path,
+        title=f"Mapa de Calor DTW sobre {fcfg['name_pt']} (Piloto {pilot_size}x{pilot_size})",
         subtitle=f"Matriz de Similaridade Temporal de Treino ({num_pairs:,d} pares) | Diagonal Zero",
+        feature=feature,
     )
 
     print("\n" + "=" * 72)
-    print(f"[SUCESSO] PILOTO {pilot_size}x{pilot_size} CONCLUÍDO E PRONTO PARA AVALIAÇÃO!")
+    print(f"[SUCESSO] PILOTO {pilot_size}x{pilot_size} ({fcfg['name_pt']}) CONCLUÍDO E PRONTO PARA AVALIAÇÃO!")
     print("=" * 72)
     return matrix
 
 
-def run_full_dtw() -> np.ndarray:
+def run_full_dtw(feature: str = "speed_kmh") -> np.ndarray:
     """Executa a matriz completa DTW 1700x1700 sobre as 1.700 janelas de treino."""
+    fcfg = get_feature_paths(feature)
     print("=" * 72)
-    print("INICIANDO EXECUÇÃO COMPLETA DTW (1.700x1.700) SOBRE VELOCIDADE")
+    print(
+        f"INICIANDO EXECUÇÃO COMPLETA DTW (1.700x1.700) SOBRE {fcfg['name_pt'].upper()} ({fcfg['unit']})"
+    )
     print("=" * 72)
     ensure_directories()
 
     start_t = time.time()
-    data_matrix, lengths, file_stems = load_training_speed_series(n_windows=None)
+    data_matrix, lengths, file_stems = load_training_series(n_windows=None, feature=feature)
     k = len(file_stems)
     num_pairs = (k * (k - 1)) // 2
-    print(f"-> Carregadas todas as {k:,d} janelas de treino ({num_pairs:,d} pares únicos).")
+    print(f"-> Carregadas todas as {k:,d} janelas de treino ({num_pairs:,d} pares únicos) [{fcfg['column']}].")
 
     print(f"-> Executando cálculo paralelizado com Numba em múltiplos núcleos...")
     matrix = compute_dtw_matrix_numba(data_matrix, lengths)
@@ -237,32 +270,44 @@ def run_full_dtw() -> np.ndarray:
     assert not np.isnan(matrix).any(), "Existem valores NaN na matriz final!"
 
     # Salvar matriz em disco (.npy e .parquet)
-    np.save(DTW_SPEED_MATRIX_NPY, matrix)
+    npy_path = fcfg["dtw_full_npy"]
+    pq_path = fcfg["dtw_full_parquet"]
+    fig_path = fcfg["fig_dtw_full_heatmap"]
+
+    np.save(npy_path, matrix)
     df_matrix = pd.DataFrame(matrix, index=file_stems, columns=file_stems)
-    df_matrix.to_parquet(DTW_SPEED_MATRIX_PARQUET, engine="pyarrow", compression="snappy")
-    print(f"   Matriz 1700x1700 salva em: {DTW_SPEED_MATRIX_NPY.name} e {DTW_SPEED_MATRIX_PARQUET.name}")
+    df_matrix.to_parquet(pq_path, engine="pyarrow", compression="snappy")
+    print(f"   Matriz 1700x1700 salva em: {npy_path.name} e {pq_path.name}")
 
     # Gerar o Heatmap final
     plot_dtw_heatmap(
         matrix=matrix,
-        output_png=FIG_DTW_SPEED_HEATMAP,
-        title=f"Mapa de Calor DTW sobre Velocidade (Treino {k}x{k})",
+        output_png=fig_path,
+        title=f"Mapa de Calor DTW sobre {fcfg['name_pt']} (Treino {k}x{k})",
         subtitle=f"Matriz Simétrica de Alinhamento Temporal ({num_pairs:,d} pares) | Semente Shuffle 42",
+        feature=feature,
     )
 
     print("\n" + "=" * 72)
-    print(f"[SUCESSO] MATRIZ DTW {k}x{k} CALCULADA E HEATMAP GERADO!")
+    print(f"[SUCESSO] MATRIZ DTW {k}x{k} ({fcfg['name_pt']}) CALCULADA E HEATMAP GERADO!")
     print("=" * 72)
     return matrix
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Cálculo da Matriz DTW sobre Velocidade")
+    parser = argparse.ArgumentParser(description="Cálculo da Matriz DTW sobre Séries Temporais")
     parser.add_argument("--full", action="store_true", help="Executa a matriz completa 1700x1700")
     parser.add_argument("--pilot", action="store_true", help="Executa o teste piloto 100x100")
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="speed_kmh",
+        choices=list(FEATURE_REGISTRY.keys()),
+        help="Feature temporal a analisar (padrão: speed_kmh)",
+    )
     args = parser.parse_args()
 
     if args.full:
-        run_full_dtw()
+        run_full_dtw(feature=args.feature)
     else:
-        run_pilot_dtw()
+        run_pilot_dtw(feature=args.feature)

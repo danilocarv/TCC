@@ -56,6 +56,8 @@ from src.config import (
     FIG_LOUVAIN_MST_TOPOLOGY_FULL,
     LOUVAIN_MST_COMPARISON_JSON,
     LOUVAIN_MST_COMPARISON_CSV,
+    FEATURE_REGISTRY,
+    get_feature_paths,
     ensure_directories,
 )
 from src.louvain_clustering import (
@@ -422,6 +424,7 @@ def save_comparison_metrics(
     df_mst_metrics: pd.DataFrame,
     df_features: pd.DataFrame,
     dist_matrix: np.ndarray,
+    feature: str = "speed_kmh",
 ):
     """
     Consolida e salva a comparação direta entre:
@@ -429,6 +432,7 @@ def save_comparison_metrics(
     2. Louvain na Árvore Geradora Mínima Pura (N-1 arestas);
     3. Cruzamento estatístico com os clusters prévios (Louvain Completo e K-Means).
     """
+    fcfg = get_feature_paths(feature)
     full_edges = (n_windows * (n_windows - 1)) // 2
     weighted_intra_mst = float(
         np.sum(df_mst_metrics["intra_dtw_mean"] * df_mst_metrics["count"]) / n_windows
@@ -438,7 +442,7 @@ def save_comparison_metrics(
     )
 
     # Carrega o resultado do Louvain no Grafo Completo para comparação "Antes vs. Depois"
-    full_louvain_pq = LOUVAIN_PILOT_CLUSTERS_PARQUET if is_pilot else LOUVAIN_FULL_CLUSTERS_PARQUET
+    full_louvain_pq = fcfg["louvain_pilot_parquet"] if is_pilot else fcfg["louvain_full_parquet"]
     full_info = {}
     if full_louvain_pq.exists():
         df_full_louvain = pd.read_parquet(full_louvain_pq)
@@ -478,11 +482,13 @@ def save_comparison_metrics(
     }
 
     mode_key = "pilot_100x100" if is_pilot else "train_1700x1700"
-    LOUVAIN_MST_COMPARISON_JSON.parent.mkdir(parents=True, exist_ok=True)
+    comp_json = fcfg["louvain_mst_comparison_json"]
+    comp_csv = fcfg["louvain_mst_comparison_csv"]
+    comp_json.parent.mkdir(parents=True, exist_ok=True)
     payload = {}
-    if LOUVAIN_MST_COMPARISON_JSON.exists():
+    if comp_json.exists():
         try:
-            payload = json.loads(LOUVAIN_MST_COMPARISON_JSON.read_text(encoding="utf-8"))
+            payload = json.loads(comp_json.read_text(encoding="utf-8"))
         except Exception:
             payload = {}
 
@@ -497,7 +503,7 @@ def save_comparison_metrics(
             else None
         ),
     }
-    LOUVAIN_MST_COMPARISON_JSON.write_text(
+    comp_json.write_text(
         json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
@@ -521,24 +527,28 @@ def save_comparison_metrics(
     )
     df_summary = df_summary.merge(kinematic_means, on="community_id", how="left")
     if not is_pilot:
-        df_summary.to_csv(LOUVAIN_MST_COMPARISON_CSV, index=False, encoding="utf-8")
+        df_summary.to_csv(comp_csv, index=False, encoding="utf-8")
 
 
 def run_mst_louvain(
     is_pilot: bool = True,
     resolution: float = 1.0,
+    feature: str = "speed_kmh",
 ) -> tuple[pd.DataFrame, float]:
     """
     Executa a Etapa 2: Algoritmo de Louvain 100% puro sobre a Árvore Geradora Mínima (MST).
     """
     ensure_directories()
+    fcfg = get_feature_paths(feature)
     mode_str = f"PILOTO ({DTW_PILOT_SIZE}x{DTW_PILOT_SIZE})" if is_pilot else "COMPLETO (1700x1700)"
     print("=" * 88)
-    print(f"INICIANDO ETAPA 2: LOUVAIN 100% PURO SOBRE A MST - MODO {mode_str}")
+    print(
+        f"INICIANDO ETAPA 2: LOUVAIN 100% PURO SOBRE A MST [{fcfg['name_pt'].upper()}] - MODO {mode_str}"
+    )
     print("=" * 88)
 
-    dtw_npy_path = DTW_PILOT_MATRIX_NPY if is_pilot else DTW_SPEED_MATRIX_NPY
-    mst_edges_pq = MST_PILOT_EDGES_PARQUET if is_pilot else MST_FULL_EDGES_PARQUET
+    dtw_npy_path = fcfg["dtw_pilot_npy"] if is_pilot else fcfg["dtw_full_npy"]
+    mst_edges_pq = fcfg["mst_pilot_edges_parquet"] if is_pilot else fcfg["mst_full_edges_parquet"]
 
     dist_matrix = np.load(dtw_npy_path)
     n_windows = dist_matrix.shape[0]
@@ -548,7 +558,7 @@ def run_mst_louvain(
     T_mst, sigma, df_edges = load_mst_affinity_graph(mst_edges_pq, dist_matrix)
     print(
         f"   MST carregada: {T_mst.number_of_nodes()} nós e {T_mst.number_of_edges()} arestas "
-        f"(sigma = {sigma:.2f} km/h)."
+        f"(sigma = {sigma:.2f} {fcfg['unit']})."
     )
 
     print(f"-> Executando Algoritmo de Louvain 100% puro na MST (resolução={resolution}, sem indução de k)...")
@@ -580,7 +590,9 @@ def run_mst_louvain(
     df_features["mst_louvain_community"] = [node_to_comm[i] for i in range(n_windows)]
 
     # Gera Heatmap reordenado pelas comunidades da MST
-    heatmap_path = FIG_LOUVAIN_MST_PILOT_HEATMAP if is_pilot else FIG_LOUVAIN_MST_FULL_HEATMAP
+    heatmap_path = (
+        fcfg["fig_louvain_mst_pilot_heatmap"] if is_pilot else fcfg["fig_louvain_mst_full_heatmap"]
+    )
     plot_mst_louvain_heatmap(
         matrix_reordered=reordered_dist,
         boundary_indices=boundary_indices,
@@ -592,7 +604,9 @@ def run_mst_louvain(
     )
 
     # Gera visualização topológica da MST colorida pelas comunidades de Louvain
-    topology_path = FIG_LOUVAIN_MST_TOPOLOGY_PILOT if is_pilot else FIG_LOUVAIN_MST_TOPOLOGY_FULL
+    topology_path = (
+        fcfg["fig_louvain_mst_topology_pilot"] if is_pilot else fcfg["fig_louvain_mst_topology_full"]
+    )
     plot_mst_louvain_topology(
         T_mst=T_mst,
         node_to_comm=node_to_comm,
@@ -613,8 +627,8 @@ def run_mst_louvain(
     )
 
     # Salva datasets de comunidades da MST e métricas comparativas
-    out_csv = LOUVAIN_MST_PILOT_CLUSTERS_CSV if is_pilot else LOUVAIN_MST_FULL_CLUSTERS_CSV
-    out_pq = LOUVAIN_MST_PILOT_CLUSTERS_PARQUET if is_pilot else LOUVAIN_MST_FULL_CLUSTERS_PARQUET
+    out_csv = fcfg["louvain_mst_pilot_csv"] if is_pilot else fcfg["louvain_mst_full_csv"]
+    out_pq = fcfg["louvain_mst_pilot_parquet"] if is_pilot else fcfg["louvain_mst_full_parquet"]
     df_features.to_csv(out_csv, index=False, encoding="utf-8")
     df_features.to_parquet(out_pq, index=False)
 
@@ -627,14 +641,15 @@ def run_mst_louvain(
         df_mst_metrics=df_dtw_metrics,
         df_features=df_features,
         dist_matrix=dist_matrix,
+        feature=feature,
     )
 
     print("-> Artefatos da Etapa 2 (Louvain Puro na MST) salvos com sucesso:")
     print(f"   Clusters CSV:     {out_csv.name}")
     print(f"   Clusters Parquet: {out_pq.name}")
-    print(f"   Comparativo JSON: {LOUVAIN_MST_COMPARISON_JSON.name}")
+    print(f"   Comparativo JSON: {fcfg['louvain_mst_comparison_json'].name}")
     if not is_pilot:
-        print(f"   Comparativo CSV:  {LOUVAIN_MST_COMPARISON_CSV.name}")
+        print(f"   Comparativo CSV:  {fcfg['louvain_mst_comparison_csv'].name}")
     print("=" * 88)
     print("ETAPA 2 (LOUVAIN 100% PURO SOBRE A MST) CONCLUÍDA COM SUCESSO!")
     print("=" * 88 + "\n")
@@ -663,7 +678,14 @@ if __name__ == "__main__":
         default=1.0,
         help="Parâmetro de resolução da modularidade no Louvain (padrão puro: 1.0).",
     )
+    parser.add_argument(
+        "--feature",
+        type=str,
+        default="speed_kmh",
+        choices=list(FEATURE_REGISTRY.keys()),
+        help="Feature temporal a analisar (padrão: speed_kmh).",
+    )
 
     args = parser.parse_args()
     is_pilot_mode = not args.full
-    run_mst_louvain(is_pilot=is_pilot_mode, resolution=args.resolution)
+    run_mst_louvain(is_pilot=is_pilot_mode, resolution=args.resolution, feature=args.feature)

@@ -244,6 +244,157 @@ def ensure_directories():
         directory.mkdir(parents=True, exist_ok=True)
 
 
+# Registro centralizado de metadados de séries temporais suportadas pelo pipeline de grafos/DTW
+FEATURE_REGISTRY = {
+    "speed_kmh": {
+        "key": "speed_kmh",
+        "column": "Vehicle Speed[km/h]",
+        "name_pt": "Velocidade",
+        "unit": "km/h",
+    },
+    "accel_ms2": {
+        "key": "accel_ms2",
+        "column": "accel_ms2",
+        "name_pt": "Aceleração Longitudinal",
+        "unit": "m/s²",
+    },
+    "power_kw": {
+        "key": "power_kw",
+        "column": "power_kw",
+        "name_pt": "Potência Elétrica",
+        "unit": "kW",
+    },
+}
+
+
+def get_feature_paths(feature: str = "speed_kmh") -> dict:
+    """
+    Retorna os metadados e todos os caminhos de artefatos (matrizes, grafos, figuras e resultados)
+    para a feature informada. Para 'speed_kmh', preserva estritamente todos os caminhos originais.
+    """
+    if feature not in FEATURE_REGISTRY:
+        raise ValueError(
+            f"Feature '{feature}' não reconhecida. Opções válidas: {list(FEATURE_REGISTRY.keys())}"
+        )
+
+    meta = FEATURE_REGISTRY[feature]
+    if feature == "speed_kmh":
+        return {
+            **meta,
+            "dtw_pilot_npy": DTW_PILOT_MATRIX_NPY,
+            "dtw_pilot_parquet": DTW_PILOT_MATRIX_PARQUET,
+            "fig_dtw_pilot_heatmap": FIG_DTW_PILOT_HEATMAP,
+            "dtw_full_npy": DTW_SPEED_MATRIX_NPY,
+            "dtw_full_parquet": DTW_SPEED_MATRIX_PARQUET,
+            "fig_dtw_full_heatmap": FIG_DTW_SPEED_HEATMAP,
+            "louvain_pilot_csv": LOUVAIN_PILOT_CLUSTERS_CSV,
+            "louvain_pilot_parquet": LOUVAIN_PILOT_CLUSTERS_PARQUET,
+            "fig_louvain_pilot_heatmap": FIG_LOUVAIN_PILOT_HEATMAP,
+            "louvain_full_csv": LOUVAIN_FULL_CLUSTERS_CSV,
+            "louvain_full_parquet": LOUVAIN_FULL_CLUSTERS_PARQUET,
+            "fig_louvain_full_heatmap": FIG_LOUVAIN_FULL_HEATMAP,
+            "mst_pilot_edges_csv": MST_PILOT_EDGES_CSV,
+            "mst_pilot_edges_parquet": MST_PILOT_EDGES_PARQUET,
+            "mst_pilot_matrix_npy": MST_PILOT_MATRIX_NPY,
+            "fig_mst_pure_pilot": FIG_MST_PURE_PILOT,
+            "mst_full_edges_csv": MST_FULL_EDGES_CSV,
+            "mst_full_edges_parquet": MST_FULL_EDGES_PARQUET,
+            "mst_full_matrix_npy": MST_FULL_MATRIX_NPY,
+            "fig_mst_pure_full": FIG_MST_PURE_FULL,
+            "mst_structural_metrics_json": MST_STRUCTURAL_METRICS_JSON,
+            "louvain_mst_pilot_csv": LOUVAIN_MST_PILOT_CLUSTERS_CSV,
+            "louvain_mst_pilot_parquet": LOUVAIN_MST_PILOT_CLUSTERS_PARQUET,
+            "fig_louvain_mst_pilot_heatmap": FIG_LOUVAIN_MST_PILOT_HEATMAP,
+            "fig_louvain_mst_topology_pilot": FIG_LOUVAIN_MST_TOPOLOGY_PILOT,
+            "louvain_mst_full_csv": LOUVAIN_MST_FULL_CLUSTERS_CSV,
+            "louvain_mst_full_parquet": LOUVAIN_MST_FULL_CLUSTERS_PARQUET,
+            "fig_louvain_mst_full_heatmap": FIG_LOUVAIN_MST_FULL_HEATMAP,
+            "fig_louvain_mst_topology_full": FIG_LOUVAIN_MST_TOPOLOGY_FULL,
+            "louvain_mst_comparison_json": LOUVAIN_MST_COMPARISON_JSON,
+            "louvain_mst_comparison_csv": LOUVAIN_MST_COMPARISON_CSV,
+            "p25_direct_pilot_csv": P25_DIRECT_PILOT_CLUSTERS_CSV,
+            "p25_direct_pilot_parquet": P25_DIRECT_PILOT_CLUSTERS_PARQUET,
+            "fig_p25_direct_pilot_heatmap": FIG_P25_DIRECT_PILOT_HEATMAP,
+            "p25_direct_full_csv": P25_DIRECT_FULL_CLUSTERS_CSV,
+            "p25_direct_full_parquet": P25_DIRECT_FULL_CLUSTERS_PARQUET,
+            "fig_p25_direct_full_heatmap": FIG_P25_DIRECT_FULL_HEATMAP,
+            "p25_direct_metrics_json": P25_DIRECT_METRICS_JSON,
+            "p25_direct_summary_csv": P25_DIRECT_SUMMARY_CSV,
+            "p25_mst_pilot_csv": P25_MST_PILOT_CLUSTERS_CSV,
+            "p25_mst_pilot_parquet": P25_MST_PILOT_CLUSTERS_PARQUET,
+            "fig_p25_mst_pilot_heatmap": FIG_P25_MST_PILOT_HEATMAP,
+            "p25_mst_full_csv": P25_MST_FULL_CLUSTERS_CSV,
+            "p25_mst_full_parquet": P25_MST_FULL_CLUSTERS_PARQUET,
+            "fig_p25_mst_full_heatmap": FIG_P25_MST_FULL_HEATMAP,
+            "p25_mst_metrics_json": P25_MST_METRICS_JSON,
+            "p25_mst_summary_csv": P25_MST_SUMMARY_CSV,
+            "dtw_all_stages_comparison_json": DTW_ALL_STAGES_COMPARISON_JSON,
+            "dtw_all_stages_comparison_csv": DTW_ALL_STAGES_COMPARISON_CSV,
+            "master_comparison_csv": MASTER_COMPARISON_CSV,
+            "master_comparison_json": MASTER_COMPARISON_JSON,
+            "fig_final_comparison_synthesis": FIG_FINAL_COMPARISON_SYNTHESIS,
+        }
+
+    fig_sub = FIGURES_DIR / feature
+    fig_sub.mkdir(parents=True, exist_ok=True)
+
+    return {
+        **meta,
+        "dtw_pilot_npy": PROCESSED_DATA_DIR / f"dtw_{feature}_matrix_pilot_100x100.npy",
+        "dtw_pilot_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_matrix_pilot_100x100.parquet",
+        "fig_dtw_pilot_heatmap": fig_sub / f"07_dtw_{feature}_heatmap_pilot_100x100.png",
+        "dtw_full_npy": PROCESSED_DATA_DIR / f"dtw_{feature}_matrix_train_1700x1700.npy",
+        "dtw_full_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_matrix_train_1700x1700.parquet",
+        "fig_dtw_full_heatmap": fig_sub / f"07_dtw_{feature}_heatmap_1700x1700.png",
+        "louvain_pilot_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_louvain_clusters_pilot_100x100.csv",
+        "louvain_pilot_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_louvain_clusters_pilot_100x100.parquet",
+        "fig_louvain_pilot_heatmap": fig_sub / f"08_dtw_{feature}_louvain_heatmap_pilot_100x100.png",
+        "louvain_full_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_louvain_clusters_train_1700x1700.csv",
+        "louvain_full_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_louvain_clusters_train_1700x1700.parquet",
+        "fig_louvain_full_heatmap": fig_sub / f"08_dtw_{feature}_louvain_heatmap_train_1700x1700.png",
+        "mst_pilot_edges_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_edges_pilot_100x100.csv",
+        "mst_pilot_edges_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_edges_pilot_100x100.parquet",
+        "mst_pilot_matrix_npy": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_matrix_pilot_100x100.npy",
+        "fig_mst_pure_pilot": fig_sub / f"09_dtw_{feature}_mst_pure_tree_pilot_100x100.png",
+        "mst_full_edges_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_edges_train_1700x1700.csv",
+        "mst_full_edges_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_edges_train_1700x1700.parquet",
+        "mst_full_matrix_npy": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_matrix_train_1700x1700.npy",
+        "fig_mst_pure_full": fig_sub / f"09_dtw_{feature}_mst_pure_tree_train_1700x1700.png",
+        "mst_structural_metrics_json": RESULTS_DIR / f"mst_structural_metrics_{feature}.json",
+        "louvain_mst_pilot_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_louvain_clusters_pilot_100x100.csv",
+        "louvain_mst_pilot_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_louvain_clusters_pilot_100x100.parquet",
+        "fig_louvain_mst_pilot_heatmap": fig_sub / f"10_dtw_{feature}_mst_louvain_heatmap_pilot_100x100.png",
+        "fig_louvain_mst_topology_pilot": fig_sub / f"11_dtw_{feature}_mst_louvain_topology_pilot_100x100.png",
+        "louvain_mst_full_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_louvain_clusters_train_1700x1700.csv",
+        "louvain_mst_full_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_mst_louvain_clusters_train_1700x1700.parquet",
+        "fig_louvain_mst_full_heatmap": fig_sub / f"10_dtw_{feature}_mst_louvain_heatmap_train_1700x1700.png",
+        "fig_louvain_mst_topology_full": fig_sub / f"11_dtw_{feature}_mst_louvain_topology_train_1700x1700.png",
+        "louvain_mst_comparison_json": RESULTS_DIR / f"mst_vs_full_louvain_comparison_{feature}.json",
+        "louvain_mst_comparison_csv": RESULTS_DIR / f"mst_vs_full_louvain_comparison_{feature}.csv",
+        "p25_direct_pilot_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_direct_clusters_pilot_100x100.csv",
+        "p25_direct_pilot_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_direct_clusters_pilot_100x100.parquet",
+        "fig_p25_direct_pilot_heatmap": fig_sub / f"12_dtw_{feature}_p25_direct_heatmap_pilot_100x100.png",
+        "p25_direct_full_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_direct_clusters_train_1700x1700.csv",
+        "p25_direct_full_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_direct_clusters_train_1700x1700.parquet",
+        "fig_p25_direct_full_heatmap": fig_sub / f"12_dtw_{feature}_p25_direct_heatmap_train_1700x1700.png",
+        "p25_direct_metrics_json": RESULTS_DIR / f"dtw_p25_direct_metrics_{feature}.json",
+        "p25_direct_summary_csv": RESULTS_DIR / f"dtw_p25_direct_summary_{feature}.csv",
+        "p25_mst_pilot_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_mst_clusters_pilot_100x100.csv",
+        "p25_mst_pilot_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_mst_clusters_pilot_100x100.parquet",
+        "fig_p25_mst_pilot_heatmap": fig_sub / f"13_dtw_{feature}_p25_mst_heatmap_pilot_100x100.png",
+        "p25_mst_full_csv": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_mst_clusters_train_1700x1700.csv",
+        "p25_mst_full_parquet": PROCESSED_DATA_DIR / f"dtw_{feature}_p25_mst_clusters_train_1700x1700.parquet",
+        "fig_p25_mst_full_heatmap": fig_sub / f"13_dtw_{feature}_p25_mst_heatmap_train_1700x1700.png",
+        "p25_mst_metrics_json": RESULTS_DIR / f"dtw_p25_mst_metrics_{feature}.json",
+        "p25_mst_summary_csv": RESULTS_DIR / f"dtw_p25_mst_summary_{feature}.csv",
+        "dtw_all_stages_comparison_json": RESULTS_DIR / f"dtw_all_stages_comparison_{feature}.json",
+        "dtw_all_stages_comparison_csv": RESULTS_DIR / f"dtw_all_stages_comparison_{feature}.csv",
+        "master_comparison_csv": RESULTS_DIR / f"master_methodology_comparison_{feature}.csv",
+        "master_comparison_json": RESULTS_DIR / f"master_methodology_comparison_{feature}.json",
+        "fig_final_comparison_synthesis": fig_sub / f"14_methodology_comparison_synthesis_{feature}.png",
+    }
+
+
 if __name__ == "__main__":
     ensure_directories()
     print("Pastas do projeto estruturadas com sucesso!")

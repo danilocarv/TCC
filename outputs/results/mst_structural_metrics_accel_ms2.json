@@ -1,0 +1,104 @@
+{
+  "pilot_100x100": {
+    "n_nodes": 100,
+    "full_graph_edges": 4950,
+    "mst_edges": 99,
+    "edge_reduction_pct": 98.0,
+    "is_connected": true,
+    "is_tree": true,
+    "self_loops": 0,
+    "kruskal_execution_time_s": 0.009342432022094727,
+    "full_graph_dtw_sum": 190190.22642611264,
+    "mst_dtw_total_cost": 1850.8287660241126,
+    "full_graph_dtw_mean": 38.42226796487124,
+    "full_graph_dtw_median": 36.756663900282646,
+    "mst_dtw_min": 7.630962344507372,
+    "mst_dtw_mean": 18.695240060849624,
+    "mst_dtw_median": 18.039591135581315,
+    "mst_dtw_std": 7.08416793200404,
+    "mst_dtw_max": 47.41195952892299,
+    "mean_degree": 1.98,
+    "max_degree": 6,
+    "leaf_nodes_count": 53,
+    "leaf_nodes_pct": 53.0,
+    "tree_diameter_hops": 17,
+    "top_hubs": [
+      {
+        "node_id": 0,
+        "window_file": "train_0000_veh455_trip2176_w004",
+        "degree": 6
+      },
+      {
+        "node_id": 39,
+        "window_file": "train_0039_veh455_trip1913_w002",
+        "degree": 6
+      },
+      {
+        "node_id": 72,
+        "window_file": "train_0072_veh455_trip1735_w001",
+        "degree": 6
+      },
+      {
+        "node_id": 1,
+        "window_file": "train_0001_veh455_trip1243_w013",
+        "degree": 5
+      },
+      {
+        "node_id": 13,
+        "window_file": "train_0013_veh10_trip2949_w011",
+        "degree": 5
+      }
+    ]
+  },
+  "train_1700x1700": {
+    "n_nodes": 1700,
+    "full_graph_edges": 1444150,
+    "mst_edges": 1699,
+    "edge_reduction_pct": 99.88235294117646,
+    "is_connected": true,
+    "is_tree": true,
+    "self_loops": 0,
+    "kruskal_execution_time_s": 3.729053020477295,
+    "full_graph_dtw_sum": 54504976.87296891,
+    "mst_dtw_total_cost": 25033.741836700916,
+    "full_graph_dtw_mean": 37.74190830105523,
+    "full_graph_dtw_median": 36.57443258166312,
+    "mst_dtw_min": 2.5235325892766407,
+    "mst_dtw_mean": 14.73439778499171,
+    "mst_dtw_median": 13.989679386218391,
+    "mst_dtw_std": 5.96467887915655,
+    "mst_dtw_max": 46.043935570451936,
+    "mean_degree": 1.9988235294117647,
+    "max_degree": 17,
+    "leaf_nodes_count": 890,
+    "leaf_nodes_pct": 52.352941176470594,
+    "tree_diameter_hops": 49,
+    "top_hubs": [
+      {
+        "node_id": 51,
+        "window_file": "train_0051_veh455_trip2273_w004",
+        "degree": 17
+      },
+      {
+        "node_id": 1652,
+        "window_file": "train_1652_veh10_trip2591_w004",
+        "degree": 17
+      },
+      {
+        "node_id": 850,
+        "window_file": "train_0850_veh455_trip1212_w004",
+        "degree": 15
+      },
+      {
+        "node_id": 539,
+        "window_file": "train_0539_veh10_trip3065_w000",
+        "degree": 14
+      },
+      {
+        "node_id": 599,
+        "window_file": "train_0599_veh455_trip825_w002",
+        "degree": 12
+      }
+    ]
+  }
+}
