@@ -116,12 +116,14 @@ def plot_mst_louvain_heatmap(
     n_windows: int,
     sigma: float,
     modularity_q: float,
+    feature: str = "speed_kmh",
 ):
     """
     Plota o mapa de calor (Heatmap) da matriz DTW reordenada estritamente pelas
     comunidades descobertas pelo Louvain Puro sobre a Árvore Geradora Mínima (MST).
     """
     output_png.parent.mkdir(parents=True, exist_ok=True)
+    fcfg = get_feature_paths(feature)
     n_comm = len(communities)
 
     plt.figure(figsize=(11, 9), dpi=300)
@@ -136,7 +138,7 @@ def plot_mst_louvain_heatmap(
     )
 
     cbar = plt.colorbar(im, pad=0.02)
-    cbar.set_label("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=11, labelpad=10)
+    cbar.set_label(f"Distância DTW Acumulada sobre {fcfg['name_pt']} ({fcfg['unit']})", fontsize=11, labelpad=10)
 
     # Desenha as linhas divisórias entre comunidades
     line_alpha = 0.85 if n_comm <= 15 else 0.45
@@ -190,14 +192,16 @@ def plot_mst_louvain_topology(
     modularity_q: float,
     output_png: Path,
     is_pilot: bool,
+    feature: str = "speed_kmh",
 ):
     """
     Plota painel duplo (300 DPI) da topologia da Árvore Geradora Mínima (MST):
     - Painel A: Nós coloridos pelas Comunidades Naturais de Louvain na MST (destacando arestas
       intra-comunidade vs. arestas de corte entre comunidades);
-    - Painel B: Nós coloridos pelo gradiente físico de Velocidade Média (mean_speed_kmh).
+    - Painel B: Nós coloridos pelo gradiente físico correspondente à feature analisada.
     """
     output_png.parent.mkdir(parents=True, exist_ok=True)
+    fcfg = get_feature_paths(feature)
     n = T_mst.number_of_nodes()
 
     fig, (ax_comm, ax_speed) = plt.subplots(1, 2, figsize=(16.5, 7.8), dpi=300)
@@ -223,7 +227,18 @@ def plot_mst_louvain_topology(
     comm_colors = turbo_cmap(np.linspace(0.02, 0.98, n_communities))
     node_colors = [comm_colors[node_to_comm[i]] for i in range(n)]
 
-    speeds = df_features["mean_speed_kmh"].to_numpy(dtype=np.float64)
+    if feature == "accel_ms2":
+        grad_values = df_features["mean_pos_accel_ms2"].to_numpy(dtype=np.float64)
+        cbar_title = "Aceleração Média Positiva (m/s²)"
+        panel_feat_name = "Aceleração"
+    elif feature in ["power_kw", "power_pos_kw"]:
+        grad_values = df_features["mean_power_kw"].to_numpy(dtype=np.float64)
+        cbar_title = "Potência Média da Janela (kW)"
+        panel_feat_name = "Potência Elétrica"
+    else:
+        grad_values = df_features["mean_speed_kmh"].to_numpy(dtype=np.float64)
+        cbar_title = "Velocidade Média da Janela (km/h)"
+        panel_feat_name = "Velocidade"
 
     # Painel A: Comunidades de Louvain na MST
     nx.draw_networkx_edges(
@@ -304,7 +319,7 @@ def plot_mst_louvain_topology(
     )
     ax_comm.axis("off")
 
-    # Painel B: Gradiente de Velocidade Média (Observado a Posteriori)
+    # Painel B: Gradiente Físico Observado a Posteriori
     nx.draw_networkx_edges(
         T_mst,
         pos=pos,
@@ -313,22 +328,22 @@ def plot_mst_louvain_topology(
         width=intra_width * 0.85,
         alpha=0.35 if is_pilot else 0.22,
     )
-    sc_speed = nx.draw_networkx_nodes(
+    sc_grad = nx.draw_networkx_nodes(
         T_mst,
         pos=pos,
         ax=ax_speed,
         node_size=node_size,
-        node_color=speeds,
+        node_color=grad_values,
         cmap="plasma",
         alpha=0.92,
         linewidths=0.3,
         edgecolors="black",
     )
-    cbar = plt.colorbar(sc_speed, ax=ax_speed, fraction=0.046, pad=0.03)
-    cbar.set_label("Velocidade Média da Janela (km/h)", fontsize=10)
+    cbar = plt.colorbar(sc_grad, ax=ax_speed, fraction=0.046, pad=0.03)
+    cbar.set_label(cbar_title, fontsize=10)
 
     ax_speed.set_title(
-        "Distribuição Física de Velocidade ao Longo dos Ramos da MST\n"
+        f"Distribuição Física de {panel_feat_name} ao Longo dos Ramos da MST\n"
         "(Gradiente Contínuo Observado a Posteriori sem Indução no Algoritmo)",
         fontsize=11,
         fontweight="bold",
@@ -601,6 +616,7 @@ def run_mst_louvain(
         n_windows=n_windows,
         sigma=sigma,
         modularity_q=modularity_q,
+        feature=feature,
     )
 
     # Gera visualização topológica da MST colorida pelas comunidades de Louvain
@@ -615,6 +631,7 @@ def run_mst_louvain(
         modularity_q=modularity_q,
         output_png=topology_path,
         is_pilot=is_pilot,
+        feature=feature,
     )
 
     print_mst_louvain_report(

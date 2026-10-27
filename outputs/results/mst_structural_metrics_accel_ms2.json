@@ -58,7 +58,7 @@
     "is_connected": true,
     "is_tree": true,
     "self_loops": 0,
-    "kruskal_execution_time_s": 3.729053020477295,
+    "kruskal_execution_time_s": 4.00113320350647,
     "full_graph_dtw_sum": 54504976.87296891,
     "mst_dtw_total_cost": 25033.741836700916,
     "full_graph_dtw_mean": 37.74190830105523,

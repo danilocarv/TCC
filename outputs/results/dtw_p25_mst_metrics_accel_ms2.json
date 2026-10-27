@@ -42,7 +42,7 @@
     "mean_degree": 424.7823529411765,
     "min_degree": 1,
     "max_degree": 1252,
-    "louvain_execution_time_s": 6.515601396560669,
+    "louvain_execution_time_s": 6.566765785217285,
     "modularity_q": 0.18028304906889445,
     "comunidades_count": 5,
     "weighted_intra_dtw_mean": 33.38775833658226,

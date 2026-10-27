@@ -125,9 +125,13 @@ def load_training_series(
     lengths = np.zeros(k, dtype=np.int64)
     file_stems = []
 
+    clip_positive = fcfg.get("clip_positive", False)
+
     for idx, fpath in enumerate(train_files):
         df_win = pd.read_parquet(fpath, columns=[col_name])
         vals = df_win[col_name].to_numpy(dtype=np.float64)
+        if clip_positive:
+            vals = np.maximum(0.0, vals)
         length = len(vals)
         data_matrix[idx, :length] = vals
         lengths[idx] = length

@@ -261,8 +261,16 @@ FEATURE_REGISTRY = {
     "power_kw": {
         "key": "power_kw",
         "column": "power_kw",
-        "name_pt": "Potência Elétrica",
+        "name_pt": "Potência Elétrica Líquida",
         "unit": "kW",
+        "clip_positive": False,
+    },
+    "power_pos_kw": {
+        "key": "power_pos_kw",
+        "column": "power_kw",
+        "name_pt": "Consumo Positivo de Potência",
+        "unit": "kW",
+        "clip_positive": True,
     },
 }
 

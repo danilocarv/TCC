@@ -190,6 +190,7 @@ def plot_pure_mst_figure(
     metrics: dict,
     output_png: Path,
     is_pilot: bool,
+    feature: str = "speed_kmh",
 ):
     """
     Plota um painel duplo de alta resolução (300 DPI) da Etapa 1 (MST Pura):
@@ -210,7 +211,16 @@ def plot_pure_mst_figure(
     else:
         pos = nx.spring_layout(T_mst, k=1.8 / np.sqrt(n), iterations=120, seed=42, weight=None)
 
-    speeds = df_features["mean_speed_kmh"].to_numpy(dtype=np.float64)
+    fcfg = get_feature_paths(feature)
+    if feature == "accel_ms2":
+        grad_values = df_features["mean_pos_accel_ms2"].to_numpy(dtype=np.float64)
+        cbar_title = "Aceleração Média Positiva (m/s²) [Observada a Posteriori]"
+    elif feature in ["power_kw", "power_pos_kw"]:
+        grad_values = df_features["mean_power_kw"].to_numpy(dtype=np.float64)
+        cbar_title = "Potência Média da Janela (kW) [Observada a Posteriori]"
+    else:
+        grad_values = df_features["mean_speed_kmh"].to_numpy(dtype=np.float64)
+        cbar_title = "Velocidade Média da Janela (km/h) [Observada a Posteriori]" 
     degrees = np.array([T_mst.degree(i) for i in range(n)], dtype=np.float64)
 
     #Tamanho dos nós destaca sutilmente os hubs da árvore
@@ -237,7 +247,7 @@ def plot_pure_mst_figure(
         pos=pos,
         ax=ax_tree,
         node_size=node_sizes,
-        node_color=speeds,
+        node_color=grad_values,
         cmap="plasma",
         alpha=0.92,
          linewidths=0.3,
@@ -245,7 +255,7 @@ def plot_pure_mst_figure(
     )
 
     cbar = plt.colorbar(nodes_scatter, ax=ax_tree, fraction=0.046, pad=0.03)
-    cbar.set_label("Velocidade Média da Janela (km/h) [Observada a Posteriori]", fontsize=10)
+    cbar.set_label(cbar_title, fontsize=10)
 
     ax_tree.set_title(
         f"Topologia da Árvore Geradora Mínima Pura (Algoritmo de Kruskal)\n"
@@ -267,7 +277,7 @@ def plot_pure_mst_figure(
         color="#6c757d",
         edgecolor="black",
         linewidth=0.4,
-        label=f"Matriz DTW Inteira ({len(off_diag):,d} pares)\nMédia = {off_diag.mean():.1f} km/h",
+        label=f"Matriz DTW Inteira ({len(off_diag):,d} pares)\nMédia = {off_diag.mean():.1f} {fcfg['unit']}",
     )
     ax_hist.hist(
         mst_weights,
@@ -277,7 +287,7 @@ def plot_pure_mst_figure(
         color="#0077b6",
         edgecolor="black",
         linewidth=0.5,
-        label=f"Arestas Selecionadas na MST ({len(mst_weights):,d} arestas)\nMédia = {mst_weights.mean():.1f} km/h",
+        label=f"Arestas Selecionadas na MST ({len(mst_weights):,d} arestas)\nMédia = {mst_weights.mean():.1f} {fcfg['unit']}",
     )
 
     ax_hist.axvline(
@@ -285,14 +295,14 @@ def plot_pure_mst_figure(
         color="#03045e",
         linestyle="--",
         linewidth=1.8,
-        label=f"Média MST ({mst_weights.mean():.1f} km/h)",
+        label=f"Média MST ({mst_weights.mean():.1f} {fcfg['unit']})",
     )
     ax_hist.axvline(
         off_diag.mean(),
         color="#343a40",
         linestyle=":",
         linewidth=1.8,
-        label=f"Média Matriz Completa ({off_diag.mean():.1f} km/h)",
+        label=f"Média Matriz Completa ({off_diag.mean():.1f} {fcfg['unit']})",
     )
 
     ax_hist.set_title(
@@ -301,7 +311,7 @@ def plot_pure_mst_figure(
         fontsize=11,
         fontweight="bold",
     )
-    ax_hist.set_xlabel("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=10)
+    ax_hist.set_xlabel(f"Distância DTW Acumulada sobre {fcfg['name_pt']} ({fcfg['unit']})", fontsize=10)
     ax_hist.set_ylabel("Densidade de Probabilidade", fontsize=10)
     ax_hist.legend(loc="upper right", fontsize=9, frameon=True)
     ax_hist.grid(True, linestyle="--", alpha=0.3)
@@ -445,6 +455,7 @@ def run_mst_builder(
         metrics=metrics,
         output_png=fig_path,
         is_pilot=is_pilot,
+        feature=feature,
     )
 
     print("-> Artefatos da Etapa 1 (MST Pura) salvos com sucesso:")

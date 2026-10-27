@@ -140,7 +140,7 @@
     ],
     "mean_degree": 424.7505882352941,
     "max_degree": 1252,
-    "louvain_execution_time_s": 5.876811265945435,
+    "louvain_execution_time_s": 4.240703105926514,
     "modularity_q": 0.18025238492457718,
     "total_partitions_returned": 30,
     "active_communities_count": 3,

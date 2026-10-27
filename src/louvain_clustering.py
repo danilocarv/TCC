@@ -143,12 +143,14 @@ def plot_louvain_heatmap(
     output_png: Path,
     title: str,
     subtitle: str | None = None,
+    feature: str = "speed_kmh",
 ):
     """
     Plota e salva o mapa de calor da matriz DTW reordenada estritamente pelas
     comunidades do Louvain, sem ordenação secundária por variáveis externas.
     """
     output_png.parent.mkdir(parents=True, exist_ok=True)
+    fcfg = get_feature_paths(feature)
 
     plt.figure(figsize=(11, 9), dpi=300)
     ax = plt.gca()
@@ -162,7 +164,7 @@ def plot_louvain_heatmap(
     )
 
     cbar = plt.colorbar(im, pad=0.02)
-    cbar.set_label("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=11, labelpad=10)
+    cbar.set_label(f"Distância DTW Acumulada sobre {fcfg['name_pt']} ({fcfg['unit']})", fontsize=11, labelpad=10)
 
     # Linhas divisórias tracejadas entre as comunidades
     for b in boundary_indices[:-1]:
@@ -371,6 +373,7 @@ def run_louvain_analysis(
             f"Louvain Puro (Sem k-NN, Sem Ordenação por Features) | "
             f"sigma={sigma:.2f} {fcfg['unit']} | Modularidade Q = {modularity_q:.4f}"
         ),
+        feature=feature,
     )
 
     # 7. Anexa o ID numérico da comunidade (louvain_community) ao dataset para salvamento

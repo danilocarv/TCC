@@ -173,12 +173,14 @@ def plot_p25_direct_heatmap(
     dtw_threshold: float,
     modularity_q: float,
     n_isolated: int,
+    feature: str = "speed_kmh",
 ):
     """
     Plota o Heatmap em 300 DPI da matriz DTW reordenada pelas comunidades descobertas
     pelo Louvain Puro sobre o grafo do Percentil 25 Direto.
     """
     output_png.parent.mkdir(parents=True, exist_ok=True)
+    fcfg = get_feature_paths(feature)
     n_comm = len(communities)
     n_active_comm = sum(1 for c in communities if len(c) > 1)
 
@@ -194,7 +196,7 @@ def plot_p25_direct_heatmap(
     )
 
     cbar = plt.colorbar(im, pad=0.02)
-    cbar.set_label("Distância DTW Acumulada sobre Velocidade (km/h)", fontsize=11, labelpad=10)
+    cbar.set_label(f"Distância DTW Acumulada sobre {fcfg['name_pt']} ({fcfg['unit']})", fontsize=11, labelpad=10)
 
     # Desenha linhas divisórias para comunidades com >= 2 nós
     for idx, b in enumerate(boundary_indices[:-1]):
@@ -222,7 +224,7 @@ def plot_p25_direct_heatmap(
     isolated_str = f" | {n_isolated} Nós Órfãos" if n_isolated > 0 else " | 0 Nós Órfãos"
     plt.title(
         f"Matriz DTW Reordenada — Louvain Puro sobre Percentil 25 Direto ({n_windows}x{n_windows})\n"
-        f"Corte D_ij <= {dtw_threshold:.2f} km/h (Top 25% Conexões) | "
+        f"Corte D_ij <= {dtw_threshold:.2f} {fcfg['unit']} (Top 25% Conexões) | "
         f"{n_active_comm} Comunidades Principais{isolated_str} | Modularidade Q = {modularity_q:.4f}",
         fontsize=11,
         fontweight="bold",

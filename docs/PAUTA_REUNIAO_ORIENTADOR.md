@@ -11,7 +11,8 @@ flowchart LR
     A["1. MST Pura (Kruskal)<br/>(Velocidade)"] --> B["2. Percentil 25 Direto<br/>(Descoberta do Nó Órfão)"]
     B --> C["3. Rede Otimizada (MST ∪ P25)<br/>(Síntese dos 4 Grafos)"]
     C --> D["4. K-Means Treino vs. Teste<br/>(Generalização Out-of-Sample)"]
-    D --> E["5. Extensão para Aceleração<br/>(Validação Multi-Feature & Zoom)"]
+    D --> E["5. Aceleração Longitudinal<br/>(27 Nós Órfãos Resgatados)"]
+    E --> F["6. Consumo Positivo de Potência<br/>(66 Nós Órfãos Resgatados)"]
 ```
 
 ---
@@ -80,7 +81,7 @@ flowchart LR
   * [Figura 14 (Aceleração): Síntese dos 4 Cenários de Aceleração](file:///c:/Users/danil/Documents/VSCode/TCC/outputs/figures/accel_ms2/14_methodology_comparison_synthesis_accel_ms2.png)
   * [Figura 13 (Aceleração com Zoom Inset): Heatmap MST ∪ P25 com Zoom de C3 e C4](file:///c:/Users/danil/Documents/VSCode/TCC/outputs/figures/accel_ms2/13_dtw_accel_ms2_p25_mst_heatmap_train_1700x1700.png)
 * **O que falar:**
-  * *"Por fim, parametrizamos nosso pipeline completo para a **Aceleração Longitudinal (`accel_ms2` em $\text{m/s}^2$)** no conjunto de $1.700 \times 1.700$ janelas."*
+  * *"Parametrizamos nosso pipeline completo para a **Aceleração Longitudinal (`accel_ms2` em $\text{m/s}^2$)** no conjunto de $1.700 \times 1.700$ janelas."*
   * *"Na aceleração, o corte de 25% direto isolou nada menos que **27 nós órfãos** (manobras severas de frenagem com até $-4{,}56\text{ m/s}^2$ e arrancadas com $+3{,}39\text{ m/s}^2$)."*
   * *"A rede unificada $\text{MST} \cup P_{25}$ resgatou exatamente as **27 janelas órfãs** via arestas da MST, restaurando 100% de conectividade."*
   * *"O Louvain encontrou **5 comunidades coesas** com um salto de modularidade de **$0{,}0437 \to 0{,}1803$** (+412%):*
@@ -91,16 +92,30 @@ flowchart LR
 
 ---
 
+### 6. Extensão para Consumo Positivo de Potência Elétrica (`power_pos_kw`)
+> **Motivação:** Atendendo à recomendação de analisar o consumo de potência de tração pura ($P > 0$), eliminando o ruído das variações eletroquímicas do BMS da bateria durante a regeneração.
+
+* **O que abrir na tela:**
+  * [Figura 14 (Potência): Síntese dos 4 Cenários de Consumo de Potência](file:///c:/Users/danil/Documents/VSCode/TCC/outputs/figures/power_pos_kw/14_methodology_comparison_synthesis_power_pos_kw.png)
+  * [Figura 13 (Potência): Heatmap MST ∪ P25 de Potência Elétrica Positiva](file:///c:/Users/danil/Documents/VSCode/TCC/outputs/figures/power_pos_kw/13_dtw_power_pos_kw_p25_mst_heatmap_train_1700x1700.png)
+* **O que falar:**
+  * *"Professor, implementamos exatamente a sua sugestão: extraímos apenas o **Consumo Positivo de Potência ($P_{\text{pos}}(t) = \max(0, P(t))$ em $\text{kW}$)** no conjunto completo de $1.700 \times 1.700$."*
+  * *"Isso isolou $100\%$ a demanda voluntária de tração e torque do motorista, expurgando restrições eletroquímicas do BMS que limitam a regeneração quando a bateria está cheia ($\text{SOC} \ge 90\%$) ou fria."*
+  * *"O resultado validou a nossa tese com força máxima: no corte de 25% direto, surgiram nada menos que **66 nós órfãos** (janelas com picos severos de tração contínua entre $60\text{ e }92\text{ kW}$)."*
+  * *"A rede unificada $\text{MST} \cup P_{25}$ resgatou com sucesso **todos os 66 nós órfãos** através de 68 arestas de resgate da MST, alcançando **100% de conectividade** e convergindo em **6 comunidades coesas** (desde condução ultra-econômica de $26\text{ km/h}$ até regimes severos com $2{,}90$ arrancadas/min)."*
+
+---
+
 ## 🛡️ Guia Rápido de Respostas para Perguntas Prováveis do Orientador
 
 | Possível Pergunta do Orientador | Resposta Técnica Direta e Segura |
 | :--- | :--- |
 | **"O que significa a Razão Intra/Inter e por que ela diminui?"** | *"A distância Intra-cluster mede a dissimilaridade média entre janelas que pertencem à **mesma comunidade**. A Inter-cluster mede a distância entre janelas de **comunidades diferentes**. A razão $\frac{\text{Intra}}{\text{Inter}}$ mede a qualidade da separação: quanto menor que 1, mais parecidos são os membros de um mesmo cluster e mais distantes eles estão dos outros clusters. No grafo bruto era $0{,}597$, e com a MST $\cup$ P25 caiu para $0{,}517$, provando que o filtro purificou os grupos."* |
 | **"Por que não usou só o K-Means direto desde o início?"** | *"O K-Means opera sobre médias estáticas agregadas e força esfericidade Euclidiana pré-definindo $k=3$. O DTW com Redes Complexas é não-paramétrico e sensível ao formato temporal das curvas segundo a segundo. Ele serviu como **validação de verdade fundamental (ground truth)**, provando que os padrões de condução existem naturalmente nos dados reais sem imposição do pesquisador."* |
-| **"Por que o Percentil 25 gerou nós órfãos?"** | *"Porque janelas com manobras extremas (como rodovia a $132\text{ km/h}$ ou frenagens bruscas a $-4{,}5\text{ m/s}^2$) têm distâncias DTW altas em relação a quase toda a base. Ao aplicar um corte global rígido de 25%, todas as conexões dessas janelas foram cortadas. A união com a MST resolve isso de forma elegante, pois a MST conecta o grafo inteiro com custo global mínimo."* |
+| **"Por que o Percentil 25 gerou nós órfãos?"** | *"Porque janelas com manobras extremas (como rodovia a $132\text{ km/h}$, frenagens bruscas a $-4{,}5\text{ m/s}^2$ ou acelerações a fundo de $90\text{ kW}$) têm distâncias DTW altas em relação a quase toda a base. Ao aplicar um corte global rígido de 25%, todas as conexões dessas janelas foram cortadas. A união com a MST resolve isso de forma elegante, pois a MST conecta o grafo inteiro com custo global mínimo."* |
 | **"Como tudo isso se conecta com a LLM no final?"** | *"A cada 60 segundos de condução, o K-Means e os thresholds calibrados pelo DTW classificam a janela instantaneamente ($<1\text{ ms}$). Essa classificação, junto a variáveis contextuais de telemetria (potência em kW, velocidade, aceleração, tortuosidade de rota por Haversine), é enviada como um JSON estruturado para a LLM. A LLM atua como uma auditora e copiloto especialista, traduzindo números brutos em orientações comportamentais acionáveis para o motorista."* |
 
 ---
 
 ## 🎯 Pergunta de Fechamento Estratégica
-> *"Professor, com a metodologia formal de Ciência das Redes consolidada em velocidade e aceleração, e o classificador K-Means validado em treino/teste com zero data leakage, **podemos avançar para a implementação do módulo de inferência em tempo real integrado à LLM?**"*
+> *"Professor, com a metodologia formal de Ciência das Redes consolidada em velocidade, aceleração e potência, e o classificador K-Means validado em treino/teste com zero data leakage, **podemos avançar para a implementação do módulo de inferência em tempo real integrado à LLM?**"*
