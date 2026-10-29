@@ -1,0 +1,4 @@
+perfil,treino_count,treino_pct,teste_count,teste_pct,diff_pct,treino_vel_media_kmh,teste_vel_media_kmh,treino_acel_max_ms2,teste_acel_max_ms2,treino_freadas_min,teste_freadas_min,treino_potencia_kw,teste_potencia_kw
+Econômico / Suave,387,22.76,124,23.22,0.46,49.67,50.22,0.97,1.0,0.28,0.3,6.12,6.69
+Moderado / Regular,995,58.53,329,61.61,3.08,30.88,30.47,1.69,1.66,0.33,0.32,4.94,4.72
+Agressivo / Dinâmico,318,18.71,81,15.17,-3.54,39.54,40.99,2.29,2.27,1.29,1.21,6.5,6.84

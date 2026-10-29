@@ -16,7 +16,7 @@ import pandas as pd
 import json
 
 # Caminhos dos arquivos gerados
-ROOT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = Path(__file__).resolve().parent.parent
 PARQUET_FILE = ROOT_DIR / "data" / "raw" / "ev_telemetry.parquet"
 CSV_FILE = ROOT_DIR / "data" / "raw" / "ev_telemetry.csv"
 METADATA_FILE = ROOT_DIR / "data" / "raw" / "ev_dataset_metadata.json"

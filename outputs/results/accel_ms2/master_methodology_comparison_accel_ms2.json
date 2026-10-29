@@ -1,0 +1,50 @@
+[
+  {
+    "cenario": "1. Grafo Completo (Sem Filtro)",
+    "arestas": 1444150,
+    "pct_arestas": 100.0,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.0437,
+    "comunidades_total": 3,
+    "dtw_intra_medio": 33.1,
+    "dtw_inter_medio": 40.1,
+    "razao_intra_inter": 0.826
+  },
+  {
+    "cenario": "2. Árvore Geradora Mínima (MST Pura)",
+    "arestas": 1699,
+    "pct_arestas": 0.12,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.945,
+    "comunidades_total": 39,
+    "dtw_intra_medio": 29.49,
+    "dtw_inter_medio": 37.96,
+    "razao_intra_inter": 0.777
+  },
+  {
+    "cenario": "3A. Percentil 25 Direto (Sem MST)",
+    "arestas": 361038,
+    "pct_arestas": 25.0,
+    "nos_orfaos": 27,
+    "is_conexo": false,
+    "modularidade_q": 0.1803,
+    "comunidades_total": 30,
+    "dtw_intra_medio": 32.88,
+    "dtw_inter_medio": 39.63,
+    "razao_intra_inter": 0.83
+  },
+  {
+    "cenario": "3B. Rede Otimizada (MST ∪ P25)",
+    "arestas": 361065,
+    "pct_arestas": 25.0,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.1803,
+    "comunidades_total": 5,
+    "dtw_intra_medio": 33.39,
+    "dtw_inter_medio": 39.86,
+    "razao_intra_inter": 0.838
+  }
+]

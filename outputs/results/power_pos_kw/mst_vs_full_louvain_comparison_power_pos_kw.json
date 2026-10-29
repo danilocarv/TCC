@@ -1,0 +1,44 @@
+{
+  "pilot_100x100": {
+    "n_nodes": 100,
+    "sigma_kmh": 396.68028957396746,
+    "full_graph_louvain": {
+      "n_edges": 4950,
+      "n_communities": 3,
+      "modularity_q": 0.04184726831718941,
+      "weighted_intra_dtw_mean": 405.703349855381,
+      "weighted_inter_dtw_mean": 506.5568131292024,
+      "intra_inter_ratio": 0.8009039447109406
+    },
+    "mst_pure_louvain": {
+      "n_edges": 99,
+      "n_communities": 10,
+      "modularity_q": 0.7866247282032796,
+      "weighted_intra_dtw_mean": 381.13642495470043,
+      "weighted_inter_dtw_mean": 480.4394699591842,
+      "intra_inter_ratio": 0.7933078957627689
+    },
+    "modularity_gain_factor": 18.797516775549276
+  },
+  "train_1700x1700": {
+    "n_nodes": 1700,
+    "sigma_kmh": 420.6980023756623,
+    "full_graph_louvain": {
+      "n_edges": 1444150,
+      "n_communities": 3,
+      "modularity_q": 0.047094867807426485,
+      "weighted_intra_dtw_mean": 392.4295674362039,
+      "weighted_inter_dtw_mean": 491.7564685563563,
+      "intra_inter_ratio": 0.7980160761042041
+    },
+    "mst_pure_louvain": {
+      "n_edges": 1699,
+      "n_communities": 37,
+      "modularity_q": 0.9450642732365471,
+      "weighted_intra_dtw_mean": 361.7001068001343,
+      "weighted_inter_dtw_mean": 460.1073164057112,
+      "intra_inter_ratio": 0.7861211806534198
+    },
+    "modularity_gain_factor": 20.067245482054798
+  }
+}

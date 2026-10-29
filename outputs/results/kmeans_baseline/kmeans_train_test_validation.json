@@ -1,0 +1,84 @@
+{
+  "n_train": 1700,
+  "n_test": 534,
+  "features_used": [
+    "mean_speed_kmh",
+    "std_speed_kmh",
+    "mean_pos_accel_ms2",
+    "max_pos_accel_ms2",
+    "hard_braking_rate_min",
+    "rapid_accel_rate_min"
+  ],
+  "metrics": {
+    "silhouette_score": {
+      "train": 0.24323170999695415,
+      "test": 0.24210254167992834
+    },
+    "davies_bouldin": {
+      "train": 1.448124132304257,
+      "test": 1.4974190321688863
+    },
+    "calinski_harabasz": {
+      "train": 512.8910271237602,
+      "test": 141.84528400776912
+    },
+    "inertia_per_sample": {
+      "train": 3.739557480965526,
+      "test": 3.627876854412695
+    }
+  },
+  "pca_explained_variance_ratio": [
+    0.4268942093977043,
+    0.2073500869085115
+  ],
+  "distribution_summary": [
+    {
+      "perfil": "Econômico / Suave",
+      "treino_count": 387,
+      "treino_pct": 22.76,
+      "teste_count": 124,
+      "teste_pct": 23.22,
+      "diff_pct": 0.46,
+      "treino_vel_media_kmh": 49.67,
+      "teste_vel_media_kmh": 50.22,
+      "treino_acel_max_ms2": 0.97,
+      "teste_acel_max_ms2": 1.0,
+      "treino_freadas_min": 0.28,
+      "teste_freadas_min": 0.3,
+      "treino_potencia_kw": 6.12,
+      "teste_potencia_kw": 6.69
+    },
+    {
+      "perfil": "Moderado / Regular",
+      "treino_count": 995,
+      "treino_pct": 58.53,
+      "teste_count": 329,
+      "teste_pct": 61.61,
+      "diff_pct": 3.08,
+      "treino_vel_media_kmh": 30.88,
+      "teste_vel_media_kmh": 30.47,
+      "treino_acel_max_ms2": 1.69,
+      "teste_acel_max_ms2": 1.66,
+      "treino_freadas_min": 0.33,
+      "teste_freadas_min": 0.32,
+      "treino_potencia_kw": 4.94,
+      "teste_potencia_kw": 4.72
+    },
+    {
+      "perfil": "Agressivo / Dinâmico",
+      "treino_count": 318,
+      "treino_pct": 18.71,
+      "teste_count": 81,
+      "teste_pct": 15.17,
+      "diff_pct": -3.54,
+      "treino_vel_media_kmh": 39.54,
+      "teste_vel_media_kmh": 40.99,
+      "treino_acel_max_ms2": 2.29,
+      "teste_acel_max_ms2": 2.27,
+      "treino_freadas_min": 1.29,
+      "teste_freadas_min": 1.21,
+      "treino_potencia_kw": 6.5,
+      "teste_potencia_kw": 6.84
+    }
+  ]
+}

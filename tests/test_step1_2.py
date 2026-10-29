@@ -12,6 +12,10 @@ Execute no terminal com: python test_step1_2.py
 
 import sys
 from pathlib import Path
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 
 # Configura stdout para UTF-8 caso o terminal do Windows use cp1252
 if hasattr(sys.stdout, "reconfigure"):
