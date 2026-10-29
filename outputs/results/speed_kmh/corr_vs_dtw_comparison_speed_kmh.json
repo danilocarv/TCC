@@ -1,0 +1,102 @@
+{
+  "feature": "speed_kmh",
+  "is_pilot": false,
+  "n_windows": 1700,
+  "topology": {
+    "n_nodes": 1700,
+    "total_possible_pairs": 1444150,
+    "positive_edges_retained": 725058,
+    "pct_edges_retained": 50.20655749056539,
+    "isolated_nodes_count": 1,
+    "is_connected": false,
+    "mean_degree": 853.0094117647059,
+    "mean_positive_correlation": 0.3513748663481232
+  },
+  "louvain": {
+    "resolution": 1.0,
+    "modularity_q": 0.3307997856448498,
+    "n_total_communities": 4,
+    "n_active_communities": 3,
+    "community_sizes": [
+      669,
+      548,
+      482,
+      1
+    ]
+  },
+  "intra_inter_correlation": {
+    "mean_intra_correlation": 0.31698873647437104,
+    "mean_inter_correlation": -0.15073163013888485,
+    "diff_intra_inter": 0.4677203666132559
+  },
+  "comparisons": {
+    "kmeans_comparison": {
+      "ari": 0.02567833102046184,
+      "nmi": 0.016707450933440515,
+      "crosstab": {
+        "Agressivo / Dinâmico": {
+          "0": 119,
+          "1": 104,
+          "2": 95,
+          "3": 0,
+          "All": 318
+        },
+        "Econômico / Suave": {
+          "0": 103,
+          "1": 125,
+          "2": 158,
+          "3": 1,
+          "All": 387
+        },
+        "Moderado / Regular": {
+          "0": 447,
+          "1": 319,
+          "2": 229,
+          "3": 0,
+          "All": 995
+        },
+        "All": {
+          "0": 669,
+          "1": 548,
+          "2": 482,
+          "3": 1,
+          "All": 1700
+        }
+      }
+    },
+    "dtw_comparison": {
+      "ari": 0.08652651061959521,
+      "nmi": 0.11506366103105428,
+      "crosstab": {
+        "0": {
+          "0": 383,
+          "1": 206,
+          "2": 124,
+          "3": 1,
+          "All": 714
+        },
+        "1": {
+          "0": 284,
+          "1": 167,
+          "2": 178,
+          "3": 0,
+          "All": 629
+        },
+        "2": {
+          "0": 2,
+          "1": 175,
+          "2": 180,
+          "3": 0,
+          "All": 357
+        },
+        "All": {
+          "0": 669,
+          "1": 548,
+          "2": 482,
+          "3": 1,
+          "All": 1700
+        }
+      }
+    }
+  }
+}
