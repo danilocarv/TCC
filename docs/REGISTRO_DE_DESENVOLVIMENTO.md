@@ -69,7 +69,7 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
   * Implementação do módulo `src/feature_engineering.py`.
   * Regularização temporal a 1 Hz exato e correção de ruído de clock CAN do OBD-II.
   * Agrupamento estrito por chave composta `(VehId, Trip)` evitando contaminação entre carros.
-  * Segmentação em janelas operacionais de 120 segundos (Mobini Seraji et al., 2025).
+  * Segmentação em janelas operacionais de 120 segundos.
   * Extração de métricas cinemáticas normalizadas por minuto (freadas bruscas, arrancadas rápidas, oscilação de velocidade, potência em kW).
   * Validação completa via `test_step1_2.py` e criação de `inspect_trip.py`.
 

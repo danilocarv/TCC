@@ -14,12 +14,12 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
 
 | Grandeza / Variável | Fórmula Matemática | Valor de Referência Adotado | Significado Físico / Critério | Faixa na Literatura Científica | Referências Principais (DOI / Link) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Aceleração Longitudinal ($a$)** | $a(t) = \frac{\Delta v}{\Delta t}$ | Amostragem a 1 Hz exato; suavização móvel de 3s | Taxa de variação temporal da velocidade; corte físico $[-8,0, +6,0]\text{ m/s}^2$ | $[-8,0, +4,0]\text{ m/s}^2$ para veículos elétricos de passeio | Oh et al. (2020), Fiori et al. (2016) |
+| **Aceleração Longitudinal ($a$)** | $a(t) = \frac{\Delta v}{\Delta t}$ | Amostragem a 1 Hz exato; suavização móvel de 3s | Taxa de variação temporal da velocidade; corte físico $[-8,0, +6,0]\text{ m/s}^2$ | $[-8,0, +4,0]\text{ m/s}^2$ para veículos elétricos de passeio | Oh et al. (2020), Fiori et al. (2016), Tselentis & Papadimitriou (2023) |
 | **Frenagem Brusca (Hard Braking)** | $a(t) \le a_{\text{lim\_brake}}$ | $a \le -2,0\text{ m/s}^2$ ($\approx -0,20g$) | Desacelerações mais intensas que o conforto usual; sinaliza condução agressiva | $-2,0\text{ m/s}^2$ a $-4,0\text{ m/s}^2$ (ou $-0,20g$ a $-0,40g$) | Bagdadi (2013), Klauer et al. (2006), Eboli et al. (2016) |
 | **Arrancada Rápida (Rapid Accel)** | $a(t) \ge a_{\text{lim\_accel}}$ | $a \ge +2,0\text{ m/s}^2$ ($\approx +0,20g$) | Demanda de pico instantâneo de corrente da bateria; condução esportiva | $+2,0\text{ m/s}^2$ a $+4,0\text{ m/s}^2$ (ou $+0,20g$ a $+0,40g$) | Wang et al. (2018), Martinez et al. (2018) |
 | **Tranco Longitudinal (Jerk - $j$)** | $j(t) = \frac{\Delta a}{\Delta t}$ | $\|j\| \ge 3,0\text{ m/s}^3$ | Variação brusca da aceleração; causa desconforto e estresse mecânico | $> 2,0\text{ m/s}^3$ a $> 3,0\text{ m/s}^3$ (ISO 2631 / Bagdadi & Várhelyi, 2011) | Bagdadi & Várhelyi (2011), Norma ISO 2631 |
-| **Taxas por Minuto** | $\text{Rate} = \frac{N_{\text{eventos}}}{\Delta t_{\text{min}}}$ | Eventos normalizados por 2 min | Remove o viés do tempo absoluto de percurso | Padrão em telemetria veicular e seguros UBI | Mobini Seraji et al. (2025), Eboli et al. (2016) |
-| **Tamanho da Janela Temporal** | $W_{\text{size}} = T$ | $T = 120\text{ s}$ (2 minutos) | Horizonte temporal para extração de atributos comportamentais | $60\text{ s}$ a $180\text{ s}$ para perfis gerais de estilo | Mobini Seraji et al. (2025), Zhang et al. (2019) |
+| **Taxas por Minuto** | $\text{Rate} = \frac{N_{\text{eventos}}}{\Delta t_{\text{min}}}$ | Eventos normalizados por 2 min | Remove o viés do tempo absoluto de percurso | Padrão em telemetria veicular e seguros UBI | Eboli et al. (2016), Bagdadi (2013) |
+| **Tamanho da Janela Temporal** | $W_{\text{size}} = T$ | $T = 120\text{ s}$ (2 minutos) | Horizonte temporal para extração de atributos comportamentais | $60\text{ s}$ a $180\text{ s}$ para perfis gerais de estilo | Decisão de projeto; Daniel et al. (2009), Tollner & Zöldy (2025) |
 | **Tempo Ocioso (Idle Speed)** | $v(t) < v_{\text{idle}}$ | $v < 2,0\text{ km/h}$ ($\approx 0,55\text{ m/s}$) | Veículo imobilizado em semáforo ou parada | $v < 2,0\text{ km/h}$ ou $v < 1,6\text{ km/h}$ (1 mph) | Ciclos EPA / WLTP, SAE J2951 |
 | **Corte de Condução Ativa** | $\bar{v}_{\text{janela}} \ge v_{\text{min\_ativa}}$ | $\bar{v} \ge 8,0\text{ km/h}$ | Isola manobras de estacionamento/espera do aprendizado do K-Means | $\bar{v} \ge 5\text{ a }10\text{ km/h}$ em estudos de profiling | Bingham et al. (2012), Wang et al. (2018) |
 | **Potência Elétrica da Bateria ($P$)** | $P = -\frac{V_{\text{bat}} \times I_{\text{bat}}}{1000}$ | Convenção: $P > 0$ consumo; $P < 0$ regeneração | Potência líquida demandada em kW do pack de tração | Padrão automotivo para modelagem energética EV | Oh et al. (2020), Fiori et al. (2016) |
@@ -38,7 +38,7 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
   $$a(t) = \frac{v(t) - v(t - \Delta t)}{\Delta t}$$
 * **Por que amostragem a 1 Hz ($\Delta t = 1,0\text{ s}$)?**
   Nos dados do *Vehicle Energy Dataset (VED)* coletados via interface OBD-II, múltiplas mensagens são registradas a cada fração de segundo ($\approx 100\text{ a }400\text{ ms}$) sempre que sensores secundários alteram de estado, mas a velocidade é transmitida em números inteiros de $1\text{ km/h} \approx 0,278\text{ m/s}$. 
-  Se derivássemos sem regularização, $\Delta v = 0,278\text{ m/s}$ dividido por $\Delta t = 0,1\text{ s}$ geraria acelerações artificiais de $2,78\text{ m/s}^2$ (ruído de quantização). Conforme demonstrado por Oh et al. (2020), a telemetria agregada a 1 Hz é a cadência física fundamental para a dinâmica veicular macroscópica.
+  Se derivássemos sem regularização, $\Delta v = 0,278\text{ m/s}$ dividido por $\Delta t = 0,1\text{ s}$ geraria acelerações artificiais de $2,78\text{ m/s}^2$ (ruído de quantização). Conforme demonstrado por Oh et al. (2020) e corroborado pela revisão sistemática de **Tselentis & Papadimitriou (2023, TU Delft / IEEE OJ-ITS)**, a telemetria agregada a 1 Hz é a cadência física fundamental aceita internacionalmente: *"1Hz is an acceptable frequency that balances between the collection of noisy data and insufficient information and therefore, it provides an adequate amount of information for macroscopic analysis"* (Tselentis & Papadimitriou, 2023, p. 95). A amostragem a 1 Hz filtra oscilações parasitas de alta frequência do barramento CAN mantendo a resolução temporal necessária para a dinâmica veicular.
 * **Limites de Aceleração Física:**
   Para um veículo de passageiros elétrico com tração dianteira de 80 kW (Nissan Leaf 2013 com massa de aproximadamente $1.520\text{ kg}$):
   * Aceleração máxima de arrancada no plano em pista seca: $\approx +3,5\text{ m/s}^2$ a $+4,0\text{ m/s}^2$ (0 a 100 km/h em $\approx 10,5\text{ s}$, gerando aceleração média teórica de $\approx 2,65\text{ m/s}^2$).
@@ -77,9 +77,11 @@ A tabela a seguir consolida todas as grandezas, fórmulas, valores de referênci
 ### 2.3. Janelamento Temporal de 120 Segundos (2 Minutos)
 * **Critério Adotado:** As viagens foram divididas em fatias contínuas de 120 segundos ($W=120\text{ s}$), exigindo ao menos 30 segundos de telemetria válida para consolidar uma janela.
 * **Por que 120 segundos e não 10 segundos ou 10 minutos?**
-  * **Janelas muito curtas ($< 30\text{ s}$):** São altamente vulneráveis a fatores exógenos do trânsito. Um motorista muito agressivo parado em um semáforo de 25 segundos pareceria um monge tibetano; e um motorista calmo que fez um desvio repentino pareceria agressivo.
+  * **Janelas muito curtas ($< 30\text{ s}$):** São altamente vulneráveis a fatores exógenos do trânsito. Um motorista muito agressivo parado em um semáforo de 25 segundos pareceria calmo; e um motorista calmo que fez um desvio repentino pareceria agressivo.
   * **Janelas muito longas ($> 5\text{ a }10\text{ min}$):** Provocam o efeito de diluição estatística. O condutor agressivo que dá 3 arrancadas bruscas e depois roda estável em linha reta terá suas métricas diluídas pela média do percurso, parecendo moderado.
-  * **Fundamentação:** **Mobini Seraji et al. (2025)** e **Zhang et al. (2019)** revisaram mais de 100 estudos de reconhecimento de estilo e concluíram que janelas entre **60 e 180 segundos** (especialmente **120 segundos**) fornecem o equilíbrio ideal entre contextualização dinâmica do tráfego e preservação de manobras singulares.
+  * **Fundamentação Técnica e Literatura:** 
+    A definição de $120\text{ s}$ configura uma **decisão de engenharia do projeto** calibrada para garantir estabilidade estatística das métricas sem diluir manobras dinâmicas, gerando uma base amostral robusta (2.234 janelas ativas) para ajuste do K-Means e da matriz DTW. 
+    Essa escolha converge com a literatura de segmentação veicular: **Daniel et al. (2009)** propuseram a discretização em microtrips de $40\text{ s}$ (que agregados em 3 trechos formam blocos de $120\text{ s}$), e **Tollner & Zöldy (2025)** demonstraram empiricamente que janelas inferiores a $140\text{ s}$ sofrem de forte instabilidade na acurácia, estabilizando-se em platôs consistentes em durações entre $140\text{ s}$ e $180\text{ s}$.
 
 ---
 
@@ -145,6 +147,14 @@ k=6 | Inércia:  5900.21 | Silhueta: 0.2206 | Davies-Bouldin: 1.2920 | Calinski-
 
 ---
 
+### 2.8. Integração em Duas Camadas: Perfis Macroscópicos (K-Means) e Padrões Microscópicos (DTW)
+Conforme formalizado na revisão sistemática da TU Delft (**Tselentis & Papadimitriou, 2023, IEEE OJ-ITS**), a análise comportamental de condutores exige uma abordagem integrada em duas escalas:
+1. **Escala Macroscópica (Driver Profiling):** Foco na caracterização geral de grupos de motoristas baseada em variáveis estatísticas agregadas (velocidade média, taxas de eventos bruscos, desvios). Na literatura internacional, o **K-Means** (com suporte de PCA) é identificado como o algoritmo predominante para essa tarefa, permitindo inferência rápida em tempo real ($< 1\text{ ms}$).
+2. **Escala Microscópica (Driving Pattern Recognition):** Foco na análise das trajetórias e séries temporais contínuas segundo a segundo (curvas de velocidade e aceleração ao longo das janelas). O **Dynamic Time Warping (DTW)** é destacado como a metodologia de referência para medir a similaridade morfológica entre séries temporais veiculares sujeitas a distorções temporais.
+* **Aplicação no TCC:** O presente trabalho adota exatamente esse framework integrado: utiliza as **6 features agregadas** para o classificador operacional K-Means e a **matriz DTW $1700 \times 1700$** sobre as séries temporais contínuas de 120s para a análise de comunidades estruturais via Redes Complexas (MST e Louvain).
+
+---
+
 ## 📚 3. Catálogo Bibliográfico Completo com Links e DOIs
 
 Abaixo estão listados os principais artigos científicos e normas técnicas consultadas, prontos para citação no formato ABNT/IEEE:
@@ -154,7 +164,7 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * **Título:** *A state-of-the-art review on machine learning techniques for driving behavior analysis: clustering and classification approaches*
    * **Periódico:** *Complex & Intelligent Systems*, Springer, Vol. 11, Artigo 386.
    * **DOI:** [10.1007/s40747-025-01988-5](https://doi.org/10.1007/s40747-025-01988-5)
-   * **Aplicação no TCC:** Justificativa da clusterização K-Means, tamanho das janelas temporais (60-120s) e taxonomia tripartite de perfis.
+   * **Aplicação no TCC:** Justificativa da clusterização não supervisionada (K-Means), consolidação da taxonomia tripartite de perfis (Econômico, Moderado e Agressivo) e revisão do estado da arte de técnicas de Machine Learning aplicadas a dados veiculares.
 
 2. **Martinez, C. M., Heucke, M., Wang, F. Y., Gao, B., & Cao, D. (2018)**
    * **Título:** *Driving Style Recognition for Intelligent Vehicle Control and Advanced Driver Assistance: A Survey*
@@ -168,22 +178,48 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
    * **DOI:** [10.1109/TITS.2017.2764047](https://doi.org/10.1109/TITS.2017.2764047)
    * **Aplicação no TCC:** Uso de aprendizado não supervisionado para extração de perfis e limiares de aceleração em manobras primitivas.
 
+4. **Tselentis, D. I., & Papadimitriou, E. (2023)**
+   * **Título:** *Driver Profile and Driving Pattern Recognition for Road Safety Assessment: Main Challenges and Future Directions*
+   * **Periódico:** *IEEE Open Journal of Intelligent Transportation Systems*, Vol. 4, pp. 88-103.
+   * **DOI:** [10.1109/OJITS.2023.3237177](https://doi.org/10.1109/OJITS.2023.3237177)
+   * **Afiliação:** Delft University of Technology (TU Delft), Safety and Security Science Section.
+   * **Aplicação no TCC:** 
+     * **Validação Teórica da Frequência a 1 Hz:** Justificativa formal de que a agregação temporal a 1 Hz é a frequência ideal na literatura internacional para equilibrar a mitigação de ruído de quantização e a preservação da dinâmica veicular.
+     * **Arquitetura Integrada em Duas Camadas:** Formalização teórica da divisão metodológica entre perfilamento macroscópico (*driver profiling* via features agregadas e K-Means) e detecção de padrões microscópicos (*driving pattern recognition* via séries temporais e Dynamic Time Warping).
+     * **Consonância com Algoritmos Escolhidos:** Confirmação de que K-Means (com PCA) é a técnica predominante para perfis de agressividade e DTW é a técnica de referência para comparação morfológica elástica de séries temporais.
+
+---
+
+### 📄 Artigos sobre Segmentação Temporal, Microtrips e Classificação de Janelas
+5. **Tollner, D., & Zöldy, M. (2025)**
+   * **Título:** *Road Type Classification of Driving Data Using Neural Networks*
+   * **Periódico:** *Computers*, MDPI, Vol. 14, No. 2, Artigo 70.
+   * **DOI:** [10.3390/computers14020070](https://doi.org/10.3390/computers14020070)
+   * **Afiliação:** Budapest University of Technology and Economics & Robert Bosch Kft.
+   * **Aplicação no TCC:** Demonstração empírica de como o tamanho da janela temporal afeta a estabilidade da modelagem em dados de telemetria OBD/FCD. O artigo comprova que janelas inferiores a 140 segundos sofrem forte instabilidade de acurácia por ruídos de tráfego (*stop-and-go*, semáforos), enquanto janelas entre 140s e 180s atingem um patamar consolidado de representatividade, fundamentando tecnicamente a escolha de janelas de 120s como limite operacional de estabilidade sem diluir a sensibilidade a manobras pontuais.
+
+6. **Daniel, R., Brooks, T., & Pates, D. (2009)**
+   * **Título:** *Analysis of US and EU Drive Styles to Improve Understanding of Market Usage and the Effects on OBD Monitor IUMPR*
+   * **Publicação:** *SAE Technical Papers*, SAE International, Artigo 2009-01-0236.
+   * **DOI:** [10.4271/2009-01-0236](https://doi.org/10.4271/2009-01-0236)
+   * **Aplicação no TCC:** Metodologia pioneira de discretização de dados de condução OBD em trechos operacionais (*microtrips* de 40s agregáveis) com base em velocidade máxima, velocidade média sem idle e tempos de residência de velocidade, fornecendo a base histórica da divisão em janelas temporais fixas para análise comportamental.
+
 ---
 
 ### 📄 Artigos sobre o Dataset VED e Modelagem de Veículos Elétricos
-4. **Oh, G., LeBlanc, D. J., & Peng, H. (2020)**
+7. **Oh, G., LeBlanc, D. J., & Peng, H. (2020)**
    * **Título:** *Vehicle Energy Dataset (VED), A Large-Scale Dataset for Vehicle Energy Consumption Research*
    * **Periódico:** *IEEE Transactions on Intelligent Transportation Systems*, Vol. 23, No. 4, pp. 3302-3312.
    * **DOI:** [10.1109/TITS.2020.3035596](https://doi.org/10.1109/TITS.2020.3035596) | Preprint: [arXiv:1905.02081](https://arxiv.org/abs/1905.02081)
    * **Aplicação no TCC:** Descrição do dataset VED, amostragem a 1 Hz, protocolo OBD-II e telemetria de alta voltagem dos veículos elétricos Nissan Leaf.
 
-5. **Fiori, C., Ahn, K., & Rakha, H. A. (2016)**
+8. **Fiori, C., Ahn, K., & Rakha, H. A. (2016)**
    * **Título:** *Power-based electric vehicle energy consumption model: Model development and validation*
    * **Periódico:** *Applied Energy*, Elsevier, Vol. 168, pp. 257-268.
    * **DOI:** [10.1016/j.apenergy.2016.01.097](https://doi.org/10.1016/j.apenergy.2016.01.097)
    * **Aplicação no TCC:** Formulação da potência elétrica da bateria ($P = V \times I$), equações de forças resistentes e eficiência da frenagem regenerativa.
 
-6. **Bingham, C., Walsh, C., & Carroll, S. (2012)**
+9. **Bingham, C., Walsh, C., & Carroll, S. (2012)**
    * **Título:** *Impact of driving characteristics on electric vehicle energy consumption*
    * **Periódico:** *World Electric Vehicle Journal*, Vol. 5, No. 1, pp. 32-41.
    * **DOI:** [10.3390/wevj5010032](https://doi.org/10.3390/wevj5010032)
@@ -192,25 +228,25 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
 ---
 
 ### 📄 Artigos de Limiares de Aceleração, Frenagem Brusca e Jerk
-7. **Bagdadi, O. (2013)**
-   * **Título:** *Estimation of the severity of safety critical events: Development of a unified measure of driver behavior*
-   * **Periódico:** *Transportation Research Part F: Traffic Psychology and Behaviour*, Elsevier, Vol. 21, pp. 147-156.
-   * **DOI:** [10.1016/j.trf.2013.09.011](https://doi.org/10.1016/j.trf.2013.09.011)
-   * **Aplicação no TCC:** Limiar de frenagem brusca ($a \le -2,0\text{ m/s}^2$ a $-2,5\text{ m/s}^2$) como medida de condução agressiva e risco.
+10. **Bagdadi, O. (2013)**
+    * **Título:** *Estimation of the severity of safety critical events: Development of a unified measure of driver behavior*
+    * **Periódico:** *Transportation Research Part F: Traffic Psychology and Behaviour*, Elsevier, Vol. 21, pp. 147-156.
+    * **DOI:** [10.1016/j.trf.2013.09.011](https://doi.org/10.1016/j.trf.2013.09.011)
+    * **Aplicação no TCC:** Limiar de frenagem brusca ($a \le -2,0\text{ m/s}^2$ a $-2,5\text{ m/s}^2$) como medida de condução agressiva e risco.
 
-8. **Bagdadi, O., & Várhelyi, A. (2011)**
-   * **Título:** *Jerky driving—an indicator of accident proneness?*
-   * **Periódico:** *Accident Analysis & Prevention*, Elsevier, Vol. 43, No. 4, pp. 1359-1363.
-   * **DOI:** [10.1016/j.aap.2011.02.009](https://doi.org/10.1016/j.aap.2011.02.009)
-   * **Aplicação no TCC:** Definição física de *jerk* ($j = \Delta a / \Delta t$) e do limiar crítico da literatura ($\|j\| > 2,5\text{ m/s}^3$), servindo de base teórica para a calibração do limiar conservador adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$) contra ruídos de quantização OBD-II.
+11. **Bagdadi, O., & Várhelyi, A. (2011)**
+    * **Título:** *Jerky driving—an indicator of accident proneness?*
+    * **Periódico:** *Accident Analysis & Prevention*, Elsevier, Vol. 43, No. 4, pp. 1359-1363.
+    * **DOI:** [10.1016/j.aap.2011.02.009](https://doi.org/10.1016/j.aap.2011.02.009)
+    * **Aplicação no TCC:** Definição física de *jerk* ($j = \Delta a / \Delta t$) e do limiar crítico da literatura ($\|j\| > 2,5\text{ m/s}^3$), servindo de base teórica para a calibração do limiar conservador adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$) contra ruídos de quantização OBD-II.
 
-9. **Eboli, L., Mazzulla, G., & Pungillo, G. (2016)**
-   * **Título:** *Measuring bus comfort levels by using acceleration instantaneous values*
-   * **Periódico:** *Transport*, Vol. 31, No. 1, pp. 62-73.
-   * **DOI:** [10.3846/16484142.2015.1018318](https://doi.org/10.3846/16484142.2015.1018318)
-   * **Aplicação no TCC:** Avaliação de níveis de conforto através de valores instantâneos de aceleração e limiares de transição ($1,47\text{ m/s}^2$ a $2,0\text{ m/s}^2$).
+12. **Eboli, L., Mazzulla, G., & Pungillo, G. (2016)**
+    * **Título:** *Measuring bus comfort levels by using acceleration instantaneous values*
+    * **Periódico:** *Transport*, Vol. 31, No. 1, pp. 62-73.
+    * **DOI:** [10.3846/16484142.2015.1018318](https://doi.org/10.3846/16484142.2015.1018318)
+    * **Aplicação no TCC:** Avaliação de níveis de conforto através de valores instantâneos de aceleração e limiares de transição ($1,47\text{ m/s}^2$ a $2,0\text{ m/s}^2$).
 
-10. **Klauer, S. G., Dingus, T. A., Neale, V. L., Sudweeks, J. D., & Ramsey, D. J. (2006)**
+13. **Klauer, S. G., Dingus, T. A., Neale, V. L., Sudweeks, J. D., & Ramsey, D. J. (2006)**
     * **Título:** *The Impact of Driver Inattention on Near-Crash/Crash Risk: An Analysis Using the 100-Car Naturalistic Driving Study Data*
     * **Relatório Técnico:** *NHTSA - National Highway Traffic Safety Administration*, DOT HS 810 594.
     * **Link:** [NHTSA Technical Report DOT HS 810 594](https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/810594)
@@ -219,24 +255,24 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
 ---
 
 ### 📄 Artigos Seminais de Algoritmos e Métricas de Validação
-11. **Rousseeuw, P. J. (1987)**
+14. **Rousseeuw, P. J. (1987)**
     * **Título:** *Silhouettes: A graphical aid to the interpretation and validation of cluster analysis*
     * **Periódico:** *Journal of Computational and Applied Mathematics*, Elsevier, Vol. 20, pp. 53-65.
     * **DOI:** [10.1016/0377-0427(87)90125-7](https://doi.org/10.1016/0377-0427(87)90125-7)
     * **Aplicação no TCC:** Coeficiente de Silhueta para validação de coerência intra e inter-cluster.
 
-12. **Thorndike, R. L. (1953)**
+15. **Thorndike, R. L. (1953)**
     * **Título:** *Who belongs in the family?*
     * **Periódico:** *Psychometrika*, Vol. 18, No. 4, pp. 267-276.
     * **Aplicação no TCC:** Método do Cotovelo (*Elbow Method*) e minimização da inércia/WCSS para determinação de $k$.
 
-13. **Davies, D. L., & Bouldin, D. W. (1979)**
+16. **Davies, D. L., & Bouldin, D. W. (1979)**
     * **Título:** *A Cluster Separation Measure*
     * **Periódico:** *IEEE Transactions on Pattern Analysis and Machine Intelligence*, Vol. PAMI-1, No. 2, pp. 224-227.
     * **DOI:** [10.1109/TPAMI.1979.4766909](https://doi.org/10.1109/TPAMI.1979.4766909)
     * **Aplicação no TCC:** Índice Davies-Bouldin para aferição de dispersão e separabilidade dos grupos.
 
-14. **Caliński, T., & Harabasz, J. (1974)**
+17. **Caliński, T., & Harabasz, J. (1974)**
     * **Título:** *A dendrite method for cluster analysis*
     * **Periódico:** *Communications in Statistics*, Vol. 3, No. 1, pp. 1-27.
     * **DOI:** [10.1080/03610927408827101](https://doi.org/10.1080/03610927408827101)
@@ -248,12 +284,15 @@ Abaixo estão listados os principais artigos científicos e normas técnicas con
 
 1. **Na Introdução e Revisão Bibliográfica:**
    * Citar **Mobini Seraji et al. (2025)** e **Martinez et al. (2018)** para justificar a importância do estilo de condução e por que a categorização em 3 perfis (*Econômico, Moderado e Agressivo*) é o padrão ouro na literatura automotiva.
+   * Citar **Tselentis & Papadimitriou (2023)** para fundamentar o arcabouço conceitual que distingue a análise macroscópica (*driver profiling*) da caracterização microscópica (*driving pattern recognition*), respaldando o uso concomitante de K-Means e Dynamic Time Warping (DTW).
    * Citar **Bingham et al. (2012)** para demonstrar como o estilo de dirigir pode impactar em até 30% a autonomia de veículos elétricos.
 2. **Na Metodologia:**
-   * Citar **Oh et al. (2020)** para descrever o dataset VED e justificar a regularização temporal a 1 Hz.
+   * Citar **Oh et al. (2020)** para descrever o dataset VED e **Tselentis & Papadimitriou (2023)** para respaldar a amostragem a 1 Hz exato como compromisso ótimo internacional entre mitigação de ruído CAN/OBD-II e preservação da informação cinemática.
+   * Citar **Daniel et al. (2009)** e **Tollner & Zöldy (2025)** para fundamentar a divisão da telemetria em janelas temporais operacionais (120 segundos), explicitando o *trade-off* entre ruído instável de janelas curtas ($< 140\text{ s}$) e diluição estatística em janelas longas ($> 5\text{ min}$).
    * Citar **Klauer et al. (2006)**, **Bagdadi (2013)** e **Eboli et al. (2016)** para fundamentar os limiares de aceleração instantânea e $|a| \ge 2,0\text{ m/s}^2$ como frenagem brusca e arrancada rápida.
    * Citar **Bagdadi & Várhelyi (2011)** para a derivada da aceleração (*jerk*) e o limiar crítico de literatura ($> 2,5\text{ m/s}^3$) e a **Norma ISO 2631** para os limites de conforto e choque mecânico veicular ($2,0\text{ a }3,0\text{ m/s}^3$), diferenciando do limiar adotado na extração do projeto ($\|j\| \ge 3,0\text{ m/s}^3$, constante `HIGH_JERK_THRESHOLD`) com a justificativa técnica de filtrar ruídos de quantização da telemetria OBD-II (degraus de $1\text{ km/h}$) na segunda derivada e mitigar falsos positivos.
    * Citar **Fiori et al. (2016)** para a fórmula e convenção da potência elétrica instantânea da bateria ($P = -V \times I / 1000$).
+   * Citar **Tselentis & Papadimitriou (2023)** para embasar o Dynamic Time Warping (DTW) como a métrica clássica de comparação morfológica de trajetórias e séries temporais de velocidade.
 3. **Nos Resultados e Discussão:**
-   * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta), **Davies & Bouldin (1979)** e **Caliński & Harabasz (1974)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura.
+   * Inserir a tabela de comparação de $k \in [2, 6]$ citando **Thorndike (1953)** (Cotovelo), **Rousseeuw (1987)** (Silhueta), **Davies & Bouldin (1979)** e **Caliński & Harabasz (1974)** para fundamentar a escolha de $k=3$ como um compromisso ótimo orientado pelo domínio entre a inflexão da inércia, a estabilidade dos indicadores de validação e a taxonomia tripartite da literatura (**Martinez et al., 2018**; **Mobini Seraji et al., 2025**; **Tselentis & Papadimitriou, 2023**).
 

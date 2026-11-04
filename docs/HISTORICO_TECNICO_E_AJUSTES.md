@@ -92,10 +92,10 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 * **Contexto:**
   Para clusterizar o comportamento de um condutor, é necessário definir o horizonte temporal de observação.
 * **Fundamentação e Decisão:**
-  Conforme a revisão de mais de 120 artigos conduzida por Mobini Seraji et al. (2025) citada na proposta de pré-banca, janelas temporais inferiores a 30 segundos são altamente ruidosas (uma simples parada em semáforo faz um condutor agressivo parecer econômico). Já janelas superiores a 5 minutos diluem excessivamente as frenagens bruscas e arrancadas pontuais.
-  * Definida janela de **120 segundos (2 minutos)** com critério de validação mínimo de 30 pontos válidos por trecho.
+  Conforme discutido na proposta de pré-banca à luz da literatura automotiva, janelas temporais inferiores a 30 segundos são altamente ruidosas e vulneráveis a eventos externos (uma simples parada em semáforo faz um condutor agressivo parecer econômico). Já janelas superiores a 5 minutos diluem excessivamente as frenagens bruscas e arrancadas pontuais pela média estendida do percurso.
+  * Definida janela operacional de **120 segundos (2 minutos)** com critério de validação mínimo de 30 pontos válidos por trecho, permitindo capturar manobras dinâmicas preservando significância estatística.
 * **Impacto e Conclusão:**
-  Geração de **2.531 amostras operacionais de condução** independentes e robustas cobrindo todas as 491 viagens. Esse volume é estatisticamente ideal para treinamento de algoritmos de clusterização (K-Means) e posterior validação de silhueta.
+  Geração de **2.531 amostras operacionais de condução** (posteriormente consolidadas em 2.481 janelas, sendo 2.234 ativas) cobrindo todas as viagens dos EVs. Esse volume é estatisticamente ideal para treinamento de algoritmos de clusterização (K-Means) e posterior validação de silhueta.
 
 ---
 
@@ -329,7 +329,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 * **Branch:** `feature/pipeline-refinements-and-clustering-tests`
 * **Arquivos Afetados:** `src/feature_engineering.py`, `tests/test_step1_2.py`, bases processadas em `data/processed/driving_features/` e arquivos individuais em `data/windows/`
 * **Problema Identificado (Auditoria Pós-Reunião com Orientador):**
-  Durante a auditoria da base de janelas e fundamentação teórica de 120 segundos (Mobini Seraji et al., 2025), identificou-se que **101 janelas de condução ativa apresentavam duração registrada entre $121\text{ s}$ e $124\text{ s}$** (`duration_s > 120.0`), violando a especificação de janelas operacionais de 2 minutos cravados.
+  Durante a auditoria da base de janelas operacionais de 120 segundos, identificou-se que **101 janelas de condução ativa apresentavam duração registrada entre $121\text{ s}$ e $124\text{ s}$** (`duration_s > 120.0`), violando a especificação de janelas operacionais de 2 minutos cravados.
 * **Investigação e Diagnóstico Técnico Aprofundado:**
   1. *Causa Algorítmica na Fronteira Inter-janelas:*
      O cálculo do diferencial de tempo $\Delta t$ era efetuado agrupado exclusivamente por viagem: `df.groupby(["VehId", "Trip"])["second_id"].diff()`.
