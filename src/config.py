@@ -371,6 +371,20 @@ def get_feature_paths(feature: str = "speed_kmh") -> dict:
             "master_comparison_csv": MASTER_COMPARISON_CSV,
             "master_comparison_json": MASTER_COMPARISON_JSON,
             "fig_final_comparison_synthesis": FIG_FINAL_COMPARISON_SYNTHESIS,
+            "corr_pilot_npy": PROCESSED_SPEED_DIR / "corr_speed_kmh_matrix_pilot_100x100.npy",
+            "corr_pilot_parquet": PROCESSED_SPEED_DIR / "corr_speed_kmh_matrix_pilot_100x100.parquet",
+            "fig_corr_pilot_heatmap": FIGURES_SPEED_DIR / "17_corr_speed_kmh_heatmap_pilot_100x100.png",
+            "corr_full_npy": PROCESSED_SPEED_DIR / "corr_speed_kmh_matrix_train_1700x1700.npy",
+            "corr_full_parquet": PROCESSED_SPEED_DIR / "corr_speed_kmh_matrix_train_1700x1700.parquet",
+            "fig_corr_full_heatmap": FIGURES_SPEED_DIR / "17_corr_speed_kmh_heatmap_train_1700x1700.png",
+            "corr_louvain_pilot_csv": PROCESSED_SPEED_DIR / "corr_speed_kmh_louvain_clusters_pilot_100x100.csv",
+            "corr_louvain_pilot_parquet": PROCESSED_SPEED_DIR / "corr_speed_kmh_louvain_clusters_pilot_100x100.parquet",
+            "fig_corr_louvain_pilot_heatmap": FIGURES_SPEED_DIR / "18_corr_speed_kmh_louvain_heatmap_pilot_100x100.png",
+            "corr_louvain_full_csv": PROCESSED_SPEED_DIR / "corr_speed_kmh_louvain_clusters_train_1700x1700.csv",
+            "corr_louvain_full_parquet": PROCESSED_SPEED_DIR / "corr_speed_kmh_louvain_clusters_train_1700x1700.parquet",
+            "fig_corr_louvain_full_heatmap": FIGURES_SPEED_DIR / "18_corr_speed_kmh_louvain_heatmap_train_1700x1700.png",
+            "corr_vs_dtw_comparison_json": RESULTS_SPEED_DIR / "corr_vs_dtw_comparison_speed_kmh.json",
+            "corr_vs_dtw_comparison_csv": RESULTS_SPEED_DIR / "corr_vs_dtw_comparison_speed_kmh.csv",
         }
 
     proc_sub = PROCESSED_DATA_DIR / feature
@@ -434,6 +448,20 @@ def get_feature_paths(feature: str = "speed_kmh") -> dict:
         "master_comparison_csv": res_sub / f"master_methodology_comparison_{feature}.csv",
         "master_comparison_json": res_sub / f"master_methodology_comparison_{feature}.json",
         "fig_final_comparison_synthesis": fig_sub / f"14_methodology_comparison_synthesis_{feature}.png",
+        "corr_pilot_npy": proc_sub / f"corr_{feature}_matrix_pilot_100x100.npy",
+        "corr_pilot_parquet": proc_sub / f"corr_{feature}_matrix_pilot_100x100.parquet",
+        "fig_corr_pilot_heatmap": fig_sub / f"17_corr_{feature}_heatmap_pilot_100x100.png",
+        "corr_full_npy": proc_sub / f"corr_{feature}_matrix_train_1700x1700.npy",
+        "corr_full_parquet": proc_sub / f"corr_{feature}_matrix_train_1700x1700.parquet",
+        "fig_corr_full_heatmap": fig_sub / f"17_corr_{feature}_heatmap_train_1700x1700.png",
+        "corr_louvain_pilot_csv": proc_sub / f"corr_{feature}_louvain_clusters_pilot_100x100.csv",
+        "corr_louvain_pilot_parquet": proc_sub / f"corr_{feature}_louvain_clusters_pilot_100x100.parquet",
+        "fig_corr_louvain_pilot_heatmap": fig_sub / f"18_corr_{feature}_louvain_heatmap_pilot_100x100.png",
+        "corr_louvain_full_csv": proc_sub / f"corr_{feature}_louvain_clusters_train_1700x1700.csv",
+        "corr_louvain_full_parquet": proc_sub / f"corr_{feature}_louvain_clusters_train_1700x1700.parquet",
+        "fig_corr_louvain_full_heatmap": fig_sub / f"18_corr_{feature}_louvain_heatmap_train_1700x1700.png",
+        "corr_vs_dtw_comparison_json": res_sub / f"corr_vs_dtw_comparison_{feature}.json",
+        "corr_vs_dtw_comparison_csv": res_sub / f"corr_vs_dtw_comparison_{feature}.csv",
     }
 
 
