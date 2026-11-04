@@ -123,9 +123,13 @@ def compute_point_kinematics(df_telemetry: pd.DataFrame, save_1hz: bool = True) 
     )
     df_1hz["window_id"] = (df_1hz["elapsed_s"] // WINDOW_SIZE_SECONDS).astype(int)
 
-    # Delta de tempo exato em segundos entre registros (1.0s)
+    # Delta de tempo exato em segundos entre registros (1.0s) isolado por janela
+    # O agrupamento por window_id garante fronteira estrita e impede que uma janela herde tempo da anterior
     df_1hz["dt"] = (
-        df_1hz.groupby(["VehId", "Trip"])["second_id"].diff().fillna(1.0).clip(lower=1.0, upper=5.0)
+        df_1hz.groupby(["VehId", "Trip", "window_id"])["second_id"]
+        .diff()
+        .fillna(1.0)
+        .clip(lower=1.0, upper=5.0)
     )
 
     # Conversão de velocidade: km/h para m/s
@@ -138,13 +142,14 @@ def compute_point_kinematics(df_telemetry: pd.DataFrame, save_1hz: bool = True) 
     )
 
     # Aceleração longitudinal real em 1 Hz: a = dv / dt (m/s²)
+    # Isolada por window_id para evitar acelerações espúrias na fronteira entre blocos
     df_1hz["accel_ms2"] = (
-        df_1hz.groupby(["VehId", "Trip"])["v_smooth_ms"].diff() / df_1hz["dt"]
+        df_1hz.groupby(["VehId", "Trip", "window_id"])["v_smooth_ms"].diff() / df_1hz["dt"]
     ).fillna(0.0).clip(lower=-8.0, upper=6.0)
 
     # Jerk (taxa de variação da aceleração em m/s³)
     df_1hz["jerk_ms3"] = (
-        df_1hz.groupby(["VehId", "Trip"])["accel_ms2"].diff() / df_1hz["dt"]
+        df_1hz.groupby(["VehId", "Trip", "window_id"])["accel_ms2"].diff() / df_1hz["dt"]
     ).fillna(0.0).clip(lower=-15.0, upper=15.0)
 
     # Potência instantânea consumida da bateria em kW (P = - V * I / 1000)
@@ -171,7 +176,7 @@ def compute_single_window_features(
     Calcula o vetor resumo de uma única janela de 120 segundos (6 features cinemáticas
     principais do K-Means + novas features derivadas espaciais e dinâmicas).
     """
-    duration_s = float(group["dt"].sum())
+    duration_s = min(float(group["dt"].sum()), float(WINDOW_SIZE_SECONDS))
     speeds = group["Vehicle Speed[km/h]"]
     v_ms = group["v_ms"]
     accels = group["accel_ms2"]

@@ -324,6 +324,35 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 
 ---
 
+### 🔹 Item 21: Eliminação de Vazamento Temporal de Fronteira e Teto Estrito de 120s por Janela
+* **Data:** 04/11/2026
+* **Branch:** `feature/pipeline-refinements-and-clustering-tests`
+* **Arquivos Afetados:** `src/feature_engineering.py`, `tests/test_step1_2.py`, bases processadas em `data/processed/driving_features/` e arquivos individuais em `data/windows/`
+* **Problema Identificado (Auditoria Pós-Reunião com Orientador):**
+  Durante a auditoria da base de janelas e fundamentação teórica de 120 segundos (Mobini Seraji et al., 2025), identificou-se que **101 janelas de condução ativa apresentavam duração registrada entre $121\text{ s}$ e $124\text{ s}$** (`duration_s > 120.0`), violando a especificação de janelas operacionais de 2 minutos cravados.
+* **Investigação e Diagnóstico Técnico Aprofundado:**
+  1. *Causa Algorítmica na Fronteira Inter-janelas:*
+     O cálculo do diferencial de tempo $\Delta t$ era efetuado agrupado exclusivamente por viagem: `df.groupby(["VehId", "Trip"])["second_id"].diff()`.
+  2. *Vazamento de Hiatos de Sinal entre Janelas:*
+     Quando uma janela anterior (ex.: Janela 0) continha um pequeno hiato de recepção de sensor nos segundos finais (ex.: última leitura no segundo 117), a primeira leitura da janela seguinte (Janela 1 no segundo 120) calculava $\Delta t = 120 - 117 = 3{,}0\text{ s}$.
+     Isso fazia com que a Janela 1 "roubasse" os segundos faltantes da Janela 0, inflando a soma acumulada de $\Delta t$ para $122\text{ s}$ (enquanto no relógio da viagem a janela abrangia rigorosamente o intervalo planejado de 120 segundos).
+  3. *Acelerações Espúrias na Primeira Amostra:*
+     A mesma ausência de isolamento fazia com que o $\Delta v$ da primeira amostra comparasse a velocidade com a última amostra da janela anterior através do gap, criando eventos artificiais de frenagem ou aceleração na largada do trecho.
+* **Solução Matemática e de Engenharia de Dados:**
+  1. *Isolamento Estrito por Chave Tríplice (`VehId`, `Trip`, `window_id`):*
+     O cálculo de $\Delta t$, da aceleração longitudinal `accel_ms2` e do tranco `jerk_ms3` passou a ser agrupado por `(VehId, Trip, window_id)`.
+     Com isso, a primeira amostra de cada janela é formalmente autocontida (`fillna(1.0)` para $\Delta t$ e `fillna(0.0)` para $\Delta v$), eliminando qualquer dependência temporal com a janela precedente.
+  2. *Trava Paramétrica de Teto Máximo:*
+     Adicionada a trava matemática `duration_s = min(float(group["dt"].sum()), float(WINDOW_SIZE_SECONDS))`.
+  3. *Atualização do Contrato de Dados (`test_step1_2.py`):*
+     Inserção da asserção estrita `assert (df["duration_s"] <= WINDOW_SIZE_SECONDS).all()`.
+* **Resultados e Validação:**
+  - Janelas com `duration_s > 120.0s`: de **101** para **0** (máximo absoluto rigorosamente fixado em $120{,}0\text{ s}$).
+  - Janelas com `duration_s == 120.0s`: **967 janelas ativas** (e 1.008 janelas totais considerando as inativas).
+  - Preservação total das **2.234 janelas ativas** (1.700 Treino / 534 Teste) e dos 4.468 arquivos individuais (.csv e .parquet) com 100% de integridade no contrato de dados.
+
+---
+
 ## 📋 3. Matriz de Rastreabilidade Rápida de Erros e Correções
 
 | Sintoma / Problema | Causa Raiz | Módulo Afetado | Ação Corretiva | Status |
@@ -346,6 +375,7 @@ Este documento registra **todas as decisões arquiteturais, problemas identifica
 | Ruído de fundo limitando Modularidade do Louvain ($Q=0{,}10$) | Grafo completo com $1{,}44\text{ milhão}$ de conexões fracas | `src/mst_builder.py`, `src/mst_louvain.py` | Árvore Geradora Mínima (Kruskal) elevando $Q$ para $0{,}9492$ (41 comunidades) | ✅ Resolvido |
 | Risco de nós órfãos na filtragem por corte fixo $P_{25}$ | Janelas atípicas (ex: Nó 1650 a $132\text{ km/h}$) sem aresta $\le P_{25}$ | `src/percentile_clustering.py` | Rede unificada $\text{MST} \cup P_{25}$ garantindo 100% dos nós conexos (5 comunidades coesas) | ✅ Resolvido |
 | Risco de Data Leakage na avaliação de generalização | Ajuste conjunto em base unificada sem separação física | `src/train_test_clustering.py` | Treinamento estrito nas 1.700 janelas de treino e predição pura nas 534 de teste | ✅ Resolvido |
+| Janelas com duração registrada $> 120\text{ s}$ (101 trechos) | Vazamento de $\Delta t$ na fronteira entre janelas consecutivas da viagem | `src/feature_engineering.py`, `tests/test_step1_2.py` | Agrupamento por `(VehId, Trip, window_id)` + teto paramétrico `min(dt.sum(), 120.0)` | ✅ Resolvido |
 
 ---
 
