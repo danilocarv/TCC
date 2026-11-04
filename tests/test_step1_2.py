@@ -201,8 +201,8 @@ def test_step_1_2():
 
     # 6. Leitura cruzada detalhada de amostra estratificada (.parquet vs. .csv)
     print("\n[6/6] Realizando inspecao profunda em amostra estratificada (Parquet vs. CSV)...")
-    sample_indices = [0, 50, 500, 1000, 1699]  # Treino
-    sample_test_indices = [0, 50, 250, 533]    # Teste
+    sample_indices = [0, len(train_pq_files) // 4, len(train_pq_files) // 2, len(train_pq_files) - 1]
+    sample_test_indices = [0, len(test_pq_files) // 4, len(test_pq_files) // 2, len(test_pq_files) - 1]
 
     for idx in sample_indices:
         df_p = pd.read_parquet(train_pq_files[idx])

@@ -1,6 +1,6 @@
 {
-  "n_train": 1700,
-  "n_test": 534,
+  "n_train": 750,
+  "n_test": 217,
   "features_used": [
     "mean_speed_kmh",
     "std_speed_kmh",
@@ -11,74 +11,74 @@
   ],
   "metrics": {
     "silhouette_score": {
-      "train": 0.24323170999695415,
-      "test": 0.24210254167992834
+      "train": 0.25390233867812473,
+      "test": 0.24531057801215334
     },
     "davies_bouldin": {
-      "train": 1.448124132304257,
-      "test": 1.4974190321688863
+      "train": 1.3591572163622925,
+      "test": 1.3383983549313612
     },
     "calinski_harabasz": {
-      "train": 512.8910271237602,
-      "test": 141.84528400776912
+      "train": 247.4815533555909,
+      "test": 71.66757218355227
     },
     "inertia_per_sample": {
-      "train": 3.739557480965526,
-      "test": 3.627876854412695
+      "train": 3.608802850729358,
+      "test": 3.478436143227553
     }
   },
   "pca_explained_variance_ratio": [
-    0.4268942093977043,
-    0.2073500869085115
+    0.460422228315466,
+    0.19022602111254863
   ],
   "distribution_summary": [
     {
       "perfil": "Econômico / Suave",
-      "treino_count": 387,
-      "treino_pct": 22.76,
-      "teste_count": 124,
-      "teste_pct": 23.22,
-      "diff_pct": 0.46,
-      "treino_vel_media_kmh": 49.67,
-      "teste_vel_media_kmh": 50.22,
-      "treino_acel_max_ms2": 0.97,
-      "teste_acel_max_ms2": 1.0,
-      "treino_freadas_min": 0.28,
-      "teste_freadas_min": 0.3,
-      "treino_potencia_kw": 6.12,
-      "teste_potencia_kw": 6.69
+      "treino_count": 177,
+      "treino_pct": 23.6,
+      "teste_count": 49,
+      "teste_pct": 22.58,
+      "diff_pct": -1.02,
+      "treino_vel_media_kmh": 54.63,
+      "teste_vel_media_kmh": 55.18,
+      "treino_acel_max_ms2": 0.93,
+      "teste_acel_max_ms2": 1.04,
+      "treino_freadas_min": 0.19,
+      "teste_freadas_min": 0.15,
+      "treino_potencia_kw": 7.38,
+      "teste_potencia_kw": 7.87
     },
     {
       "perfil": "Moderado / Regular",
-      "treino_count": 995,
-      "treino_pct": 58.53,
-      "teste_count": 329,
-      "teste_pct": 61.61,
-      "diff_pct": 3.08,
-      "treino_vel_media_kmh": 30.88,
-      "teste_vel_media_kmh": 30.47,
-      "treino_acel_max_ms2": 1.69,
-      "teste_acel_max_ms2": 1.66,
-      "treino_freadas_min": 0.33,
-      "teste_freadas_min": 0.32,
-      "treino_potencia_kw": 4.94,
-      "teste_potencia_kw": 4.72
+      "treino_count": 455,
+      "treino_pct": 60.67,
+      "teste_count": 138,
+      "teste_pct": 63.59,
+      "diff_pct": 2.92,
+      "treino_vel_media_kmh": 36.1,
+      "teste_vel_media_kmh": 32.78,
+      "treino_acel_max_ms2": 1.67,
+      "teste_acel_max_ms2": 1.6,
+      "treino_freadas_min": 0.4,
+      "teste_freadas_min": 0.45,
+      "treino_potencia_kw": 5.9,
+      "teste_potencia_kw": 5.44
     },
     {
       "perfil": "Agressivo / Dinâmico",
-      "treino_count": 318,
-      "treino_pct": 18.71,
-      "teste_count": 81,
-      "teste_pct": 15.17,
-      "diff_pct": -3.54,
-      "treino_vel_media_kmh": 39.54,
-      "teste_vel_media_kmh": 40.99,
-      "treino_acel_max_ms2": 2.29,
-      "teste_acel_max_ms2": 2.27,
-      "treino_freadas_min": 1.29,
-      "teste_freadas_min": 1.21,
-      "treino_potencia_kw": 6.5,
-      "teste_potencia_kw": 6.84
+      "treino_count": 118,
+      "treino_pct": 15.73,
+      "teste_count": 30,
+      "teste_pct": 13.82,
+      "diff_pct": -1.91,
+      "treino_vel_media_kmh": 42.14,
+      "teste_vel_media_kmh": 46.07,
+      "treino_acel_max_ms2": 2.35,
+      "teste_acel_max_ms2": 2.37,
+      "treino_freadas_min": 1.39,
+      "teste_freadas_min": 1.47,
+      "treino_potencia_kw": 7.19,
+      "teste_potencia_kw": 7.49
     }
   ]
 }

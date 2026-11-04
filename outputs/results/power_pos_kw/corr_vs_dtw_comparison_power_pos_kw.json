@@ -1,76 +1,118 @@
 {
   "feature": "power_pos_kw",
-  "is_pilot": true,
-  "n_windows": 100,
+  "is_pilot": false,
+  "n_windows": 750,
   "topology": {
-    "n_nodes": 100,
-    "total_possible_pairs": 4950,
-    "positive_edges_retained": 2369,
-    "pct_edges_retained": 47.858585858585855,
+    "n_nodes": 750,
+    "total_possible_pairs": 280875,
+    "positive_edges_retained": 137589,
+    "pct_edges_retained": 48.985847797062746,
     "isolated_nodes_count": 1,
     "is_connected": false,
-    "mean_degree": 47.38,
-    "mean_positive_correlation": 0.21245839981382209
+    "mean_degree": 366.904,
+    "mean_positive_correlation": 0.18821746304521267
   },
   "louvain": {
     "resolution": 1.0,
-    "modularity_q": 0.2635398713767163,
+    "modularity_q": 0.23016433168013273,
     "n_total_communities": 6,
     "n_active_communities": 5,
     "community_sizes": [
-      28,
-      20,
-      20,
-      16,
-      15,
+      214,
+      168,
+      156,
+      112,
+      99,
       1
     ]
   },
   "intra_inter_correlation": {
-    "mean_intra_correlation": 0.22184961194048897,
-    "mean_inter_correlation": -0.04578465508299769,
-    "diff_intra_inter": 0.26763426702348664
+    "mean_intra_correlation": 0.17026404752928853,
+    "mean_inter_correlation": -0.03983470326488079,
+    "diff_intra_inter": 0.21009875079416931
   },
   "comparisons": {
-    "dtw_comparison": {
-      "ari": 0.039196619053652695,
-      "nmi": 0.08790279897933262,
+    "kmeans_comparison": {
+      "ari": 0.007472092557962679,
+      "nmi": 0.026983493085103418,
       "crosstab": {
-        "0": {
-          "0": 14,
-          "1": 8,
-          "2": 1,
-          "3": 6,
-          "4": 7,
+        "Agressivo / Dinâmico": {
+          "0": 29,
+          "1": 33,
+          "2": 18,
+          "3": 17,
+          "4": 21,
           "5": 0,
-          "All": 36
+          "All": 118
         },
-        "1": {
-          "0": 11,
-          "1": 8,
-          "2": 7,
-          "3": 7,
-          "4": 6,
+        "Econômico / Suave": {
+          "0": 84,
+          "1": 24,
+          "2": 35,
+          "3": 17,
+          "4": 16,
           "5": 1,
-          "All": 40
+          "All": 177
         },
-        "2": {
-          "0": 3,
-          "1": 4,
-          "2": 12,
-          "3": 3,
-          "4": 2,
+        "Moderado / Regular": {
+          "0": 101,
+          "1": 111,
+          "2": 103,
+          "3": 78,
+          "4": 62,
           "5": 0,
-          "All": 24
+          "All": 455
         },
         "All": {
-          "0": 28,
-          "1": 20,
-          "2": 20,
-          "3": 16,
-          "4": 15,
+          "0": 214,
+          "1": 168,
+          "2": 156,
+          "3": 112,
+          "4": 99,
           "5": 1,
-          "All": 100
+          "All": 750
+        }
+      }
+    },
+    "dtw_comparison": {
+      "ari": 0.03673051536666522,
+      "nmi": 0.06454068543525104,
+      "crosstab": {
+        "0": {
+          "0": 67,
+          "1": 68,
+          "2": 68,
+          "3": 45,
+          "4": 43,
+          "5": 0,
+          "All": 291
+        },
+        "1": {
+          "0": 50,
+          "1": 91,
+          "2": 70,
+          "3": 50,
+          "4": 48,
+          "5": 1,
+          "All": 310
+        },
+        "2": {
+          "0": 97,
+          "1": 9,
+          "2": 18,
+          "3": 17,
+          "4": 8,
+          "5": 0,
+          "All": 149
+        },
+        "All": {
+          "0": 214,
+          "1": 168,
+          "2": 156,
+          "3": 112,
+          "4": 99,
+          "5": 1,
+          "All": 750
         }
       }
     }

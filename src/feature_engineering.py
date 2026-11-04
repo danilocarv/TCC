@@ -347,13 +347,15 @@ def export_and_split_active_windows(
             old_file.unlink()
 
     df_all = df_features.copy()
-    active_mask = df_all["mean_speed_kmh"] >= ACTIVE_SPEED_THRESHOLD_KMH
+    active_mask = (df_all["mean_speed_kmh"] >= ACTIVE_SPEED_THRESHOLD_KMH) & (
+        df_all["duration_s"] == float(WINDOW_SIZE_SECONDS)
+    )
     df_active = df_all[active_mask].copy().reset_index(drop=True)
 
     expected_total_active = train_count + test_count
     if len(df_active) != expected_total_active:
         raise ValueError(
-            f"Esperado {expected_total_active} janelas ativas (1700 + 534), mas foram encontradas {len(df_active)}."
+            f"Esperado {expected_total_active} janelas ativas ({train_count} + {test_count}), mas foram encontradas {len(df_active)}."
         )
 
     # Embaralhamento reprodutível (Shuffle) das 2.234 janelas ativas

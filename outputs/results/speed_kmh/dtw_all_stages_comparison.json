@@ -1,50 +1,50 @@
 [
   {
     "cenario": "1. Grafo Completo (Sem Filtro)",
-    "arestas": 1444150,
+    "arestas": 280875,
     "pct_arestas": 100.0,
     "nos_orfaos": 0,
     "is_conexo": true,
-    "modularidade_q": 0.10354252537255645,
+    "modularidade_q": 0.10731098462007352,
     "comunidades_total": 3,
-    "dtw_intra_medio": 1274.692263556085,
-    "dtw_inter_medio": 2133.7221240748377,
-    "razao_intra_inter": 0.5974031244151718
+    "dtw_intra_medio": 1489.8102409626465,
+    "dtw_inter_medio": 2528.0119704334807,
+    "razao_intra_inter": 0.5893208807500968
   },
   {
     "cenario": "2. Árvore Geradora Mínima (MST Pura)",
-    "arestas": 1699,
-    "pct_arestas": 0.1176470588235294,
+    "arestas": 749,
+    "pct_arestas": 0.051864418516082124,
     "nos_orfaos": 0,
     "is_conexo": true,
-    "modularidade_q": 0.9492006691949149,
-    "comunidades_total": 41,
-    "dtw_intra_medio": 714.7491567810523,
-    "dtw_inter_medio": 1869.2403282241285,
-    "razao_intra_inter": 0.3823741366954669
+    "modularidade_q": 0.9239066693599126,
+    "comunidades_total": 26,
+    "dtw_intra_medio": 983.3877902463389,
+    "dtw_inter_medio": 2214.386637946845,
+    "razao_intra_inter": 0.4440903740089966
   },
   {
     "cenario": "3A. Percentil 25 Direto (Sem MST)",
-    "arestas": 361038,
-    "pct_arestas": 25.000034622442268,
-    "nos_orfaos": 1,
-    "is_conexo": false,
-    "modularidade_q": 0.3184978527690641,
-    "comunidades_total": 6,
-    "dtw_intra_medio": 1078.3106571308676,
-    "dtw_inter_medio": 2087.357806932154,
-    "razao_intra_inter": 0.5165911917687414
+    "arestas": 70219,
+    "pct_arestas": 25.000089007565645,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.319773001689883,
+    "comunidades_total": 5,
+    "dtw_intra_medio": 1192.152096177721,
+    "dtw_inter_medio": 2477.061238699352,
+    "razao_intra_inter": 0.4812767958872477
   },
   {
     "cenario": "3B. Rede Otimizada (MST ∪ P25)",
-    "arestas": 361039,
-    "pct_arestas": 25.0001038673268,
+    "arestas": 70219,
+    "pct_arestas": 25.000089007565645,
     "nos_orfaos": 0,
     "is_conexo": true,
-    "modularidade_q": 0.3185000064202463,
+    "modularidade_q": 0.319773001689883,
     "comunidades_total": 5,
-    "dtw_intra_medio": 1079.7013567579936,
-    "dtw_inter_medio": 2089.862368298255,
-    "razao_intra_inter": 0.5166375418478772
+    "dtw_intra_medio": 1192.152096177721,
+    "dtw_inter_medio": 2477.061238699352,
+    "razao_intra_inter": 0.4812767958872477
   }
 ]

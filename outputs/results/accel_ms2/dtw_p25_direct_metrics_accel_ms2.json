@@ -55,98 +55,90 @@
     "active_intra_inter_ratio": 0.7633164204989444
   },
   "train_1700x1700": {
-    "n_nodes": 1700,
+    "n_nodes": 750,
     "percentile_dtw": 25.0,
     "equivalent_affinity_percentile": 75.0,
-    "sigma_median_dtw_kmh": 36.57443258166312,
-    "dtw_p25_threshold_kmh": 29.756631031632423,
-    "affinity_p75_threshold": 0.4432634233033243,
-    "dtw_min_kmh": 2.5235325892766407,
-    "dtw_p50_median_kmh": 36.57443258166312,
-    "dtw_p75_kmh": 44.38115263730292,
-    "dtw_max_kmh": 120.45563548803328,
-    "full_graph_edges": 1444150,
-    "retained_edges": 361038,
-    "retained_edges_pct": 25.000034622442268,
+    "sigma_median_dtw_kmh": 37.74742655456066,
+    "dtw_p25_threshold_kmh": 31.150806672043263,
+    "affinity_p75_threshold": 0.43812843142795516,
+    "dtw_min_kmh": 4.548224210739124,
+    "dtw_p50_median_kmh": 37.74742655456066,
+    "dtw_p75_kmh": 45.172843421498925,
+    "dtw_max_kmh": 112.9197529554367,
+    "full_graph_edges": 280875,
+    "retained_edges": 70219,
+    "retained_edges_pct": 25.000089007565645,
     "is_connected": false,
-    "total_connected_components": 28,
-    "non_trivial_components_count": 1,
-    "largest_component_nodes": 1673,
-    "largest_component_pct": 98.41176470588235,
-    "connected_nodes_count": 1673,
-    "isolated_orphan_nodes_count": 27,
-    "isolated_orphan_nodes_pct": 1.588235294117647,
+    "total_connected_components": 15,
+    "non_trivial_components_count": 2,
+    "largest_component_nodes": 735,
+    "largest_component_pct": 98.0,
+    "connected_nodes_count": 737,
+    "isolated_orphan_nodes_count": 13,
+    "isolated_orphan_nodes_pct": 1.7333333333333332,
     "isolated_orphan_nodes_sample": [
       {
-        "node_id": 14,
-        "window_file": "train_0014_veh10_trip2019_w003"
+        "node_id": 182,
+        "window_file": "train_0182_veh10_trip2019_w003"
       },
       {
-        "node_id": 71,
-        "window_file": "train_0071_veh10_trip2019_w002"
+        "node_id": 186,
+        "window_file": "train_0186_veh10_trip3211_w000"
       },
       {
-        "node_id": 104,
-        "window_file": "train_0104_veh10_trip1920_w001"
+        "node_id": 216,
+        "window_file": "train_0216_veh10_trip2949_w006"
       },
       {
-        "node_id": 126,
-        "window_file": "train_0126_veh10_trip1996_w002"
+        "node_id": 231,
+        "window_file": "train_0231_veh10_trip2019_w002"
       },
       {
-        "node_id": 429,
-        "window_file": "train_0429_veh455_trip1339_w000"
+        "node_id": 257,
+        "window_file": "train_0257_veh10_trip2150_w004"
       },
       {
-        "node_id": 507,
-        "window_file": "train_0507_veh455_trip2007_w003"
+        "node_id": 261,
+        "window_file": "train_0261_veh455_trip1969_w000"
       },
       {
-        "node_id": 568,
-        "window_file": "train_0568_veh10_trip2150_w000"
+        "node_id": 308,
+        "window_file": "train_0308_veh455_trip2021_w003"
       },
       {
-        "node_id": 604,
-        "window_file": "train_0604_veh455_trip2092_w014"
+        "node_id": 315,
+        "window_file": "train_0315_veh455_trip2356_w002"
       },
       {
-        "node_id": 680,
-        "window_file": "train_0680_veh455_trip2280_w000"
+        "node_id": 400,
+        "window_file": "train_0400_veh10_trip2397_w000"
       },
       {
-        "node_id": 697,
-        "window_file": "train_0697_veh455_trip1969_w000"
+        "node_id": 526,
+        "window_file": "train_0526_veh455_trip1418_w001"
       },
       {
-        "node_id": 716,
-        "window_file": "train_0716_veh10_trip2919_w000"
+        "node_id": 564,
+        "window_file": "train_0564_veh455_trip2314_w000"
       },
       {
-        "node_id": 766,
-        "window_file": "train_0766_veh455_trip1418_w001"
+        "node_id": 636,
+        "window_file": "train_0636_veh455_trip2021_w001"
       },
       {
-        "node_id": 804,
-        "window_file": "train_0804_veh10_trip1572_w002"
-      },
-      {
-        "node_id": 818,
-        "window_file": "train_0818_veh455_trip2360_w014"
-      },
-      {
-        "node_id": 891,
-        "window_file": "train_0891_veh455_trip2021_w003"
+        "node_id": 662,
+        "window_file": "train_0662_veh10_trip1721_w003"
       }
     ],
-    "mean_degree": 424.7505882352941,
-    "max_degree": 1252,
-    "louvain_execution_time_s": 4.240703105926514,
-    "modularity_q": 0.18025238492457718,
-    "total_partitions_returned": 30,
-    "active_communities_count": 3,
-    "orphan_singletons_count": 27,
-    "active_weighted_intra_dtw_mean": 32.875630211259576,
-    "active_weighted_inter_dtw_mean": 39.62561481642877,
-    "active_intra_inter_ratio": 0.8296560283937688
+    "mean_degree": 187.25066666666666,
+    "max_degree": 505,
+    "louvain_execution_time_s": 0.8804433345794678,
+    "modularity_q": 0.18091477620106547,
+    "total_partitions_returned": 18,
+    "active_communities_count": 5,
+    "orphan_singletons_count": 13,
+    "active_weighted_intra_dtw_mean": 32.840873102745306,
+    "active_weighted_inter_dtw_mean": 40.68766750130717,
+    "active_intra_inter_ratio": 0.80714563206874
   }
 }
