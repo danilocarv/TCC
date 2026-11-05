@@ -39,6 +39,7 @@ from src.config import (
     TRAIN_WINDOW_COUNT,
     TEST_WINDOW_COUNT,
     MIN_WINDOW_POINTS,
+    WINDOW_SIZE_SECONDS,
 )
 
 
@@ -168,6 +169,7 @@ def test_step_1_2():
     assert (df["tortuosity_index"] >= 0.99).all(), "tortuosity_index menor que 1.0 encontrado!"
     assert (df["distance_straight_m"] <= df["distance_total_m"] + 1e-2).all(), "Haversine maior que distancia total percorrida!"
     assert (df["duration_s"] >= MIN_WINDOW_POINTS).all(), f"Duracao menor que {MIN_WINDOW_POINTS}s!"
+    assert (df["duration_s"] <= WINDOW_SIZE_SECONDS).all(), f"Duracao maior que {WINDOW_SIZE_SECONDS}s!"
     print("  [OK] Todos os atributos cinemáticos, espaciais e operacionais estao consistentes.")
 
     # 5. Validação de contrato de dados em massa de todos os 2.234 arquivos
@@ -199,8 +201,8 @@ def test_step_1_2():
 
     # 6. Leitura cruzada detalhada de amostra estratificada (.parquet vs. .csv)
     print("\n[6/6] Realizando inspecao profunda em amostra estratificada (Parquet vs. CSV)...")
-    sample_indices = [0, 50, 500, 1000, 1699]  # Treino
-    sample_test_indices = [0, 50, 250, 533]    # Teste
+    sample_indices = [0, len(train_pq_files) // 4, len(train_pq_files) // 2, len(train_pq_files) - 1]
+    sample_test_indices = [0, len(test_pq_files) // 4, len(test_pq_files) // 2, len(test_pq_files) - 1]
 
     for idx in sample_indices:
         df_p = pd.read_parquet(train_pq_files[idx])

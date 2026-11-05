@@ -51,53 +51,53 @@
     ]
   },
   "train_1700x1700": {
-    "n_nodes": 1700,
-    "full_graph_edges": 1444150,
-    "mst_edges": 1699,
-    "edge_reduction_pct": 99.88235294117646,
+    "n_nodes": 750,
+    "full_graph_edges": 280875,
+    "mst_edges": 749,
+    "edge_reduction_pct": 99.73333333333333,
     "is_connected": true,
     "is_tree": true,
     "self_loops": 0,
-    "kruskal_execution_time_s": 3.725141763687134,
-    "full_graph_dtw_sum": 660616937.6783314,
-    "mst_dtw_total_cost": 288094.9909328744,
-    "full_graph_dtw_mean": 457.44343570843154,
-    "full_graph_dtw_median": 420.6980023756623,
-    "mst_dtw_min": 16.725759878754616,
-    "mst_dtw_mean": 169.5673872471303,
-    "mst_dtw_median": 157.0584469884634,
-    "mst_dtw_std": 81.96914044567784,
-    "mst_dtw_max": 688.0438995957375,
-    "mean_degree": 1.9988235294117647,
-    "max_degree": 18,
-    "leaf_nodes_count": 935,
-    "leaf_nodes_pct": 55.00000000000001,
-    "tree_diameter_hops": 43,
+    "kruskal_execution_time_s": 0.5562376976013184,
+    "full_graph_dtw_sum": 148329815.06592113,
+    "mst_dtw_total_cost": 175142.7199956365,
+    "full_graph_dtw_mean": 528.0990300522336,
+    "full_graph_dtw_median": 476.1682635471225,
+    "mst_dtw_min": 77.57547871768475,
+    "mst_dtw_mean": 233.83540720378704,
+    "mst_dtw_median": 221.16387995705009,
+    "mst_dtw_std": 87.5848221242982,
+    "mst_dtw_max": 757.2104852199554,
+    "mean_degree": 1.9973333333333334,
+    "max_degree": 11,
+    "leaf_nodes_count": 380,
+    "leaf_nodes_pct": 50.66666666666667,
+    "tree_diameter_hops": 30,
     "top_hubs": [
       {
-        "node_id": 1308,
-        "window_file": "train_1308_veh10_trip1582_w000",
-        "degree": 18
+        "node_id": 431,
+        "window_file": "train_0431_veh10_trip2780_w001",
+        "degree": 11
       },
       {
-        "node_id": 1298,
-        "window_file": "train_1298_veh455_trip2066_w004",
-        "degree": 15
+        "node_id": 313,
+        "window_file": "train_0313_veh455_trip2176_w001",
+        "degree": 10
       },
       {
-        "node_id": 1123,
-        "window_file": "train_1123_veh455_trip588_w008",
-        "degree": 13
+        "node_id": 669,
+        "window_file": "train_0669_veh455_trip2277_w002",
+        "degree": 10
       },
       {
-        "node_id": 96,
-        "window_file": "train_0096_veh455_trip1641_w001",
-        "degree": 12
+        "node_id": 172,
+        "window_file": "train_0172_veh10_trip1599_w003",
+        "degree": 9
       },
       {
-        "node_id": 894,
-        "window_file": "train_0894_veh455_trip2298_w001",
-        "degree": 12
+        "node_id": 501,
+        "window_file": "train_0501_veh455_trip1595_w000",
+        "degree": 9
       }
     ]
   }

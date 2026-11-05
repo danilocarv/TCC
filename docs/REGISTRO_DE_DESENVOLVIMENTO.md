@@ -69,7 +69,7 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
   * Implementação do módulo `src/feature_engineering.py`.
   * Regularização temporal a 1 Hz exato e correção de ruído de clock CAN do OBD-II.
   * Agrupamento estrito por chave composta `(VehId, Trip)` evitando contaminação entre carros.
-  * Segmentação em janelas operacionais de 120 segundos (Mobini Seraji et al., 2025).
+  * Segmentação em janelas operacionais de 120 segundos.
   * Extração de métricas cinemáticas normalizadas por minuto (freadas bruscas, arrancadas rápidas, oscilação de velocidade, potência em kW).
   * Validação completa via `test_step1_2.py` e criação de `inspect_trip.py`.
 
@@ -109,3 +109,16 @@ Abaixo encontra-se o inventário atualizado de todos os componentes do repositó
   * Geração dos datasets rotulados finais `driving_windows_train_labeled.*` e `driving_windows_test_labeled.*`.
   * Criação das Figuras 15 (PCA 2D lado a lado) e 16 (Perfis comparativos) em 300 DPI.
   * Implementação da suíte de testes automatizados `test_train_test_clustering.py` com 100% de aprovação.
+
+### [Marco 6: Refinamento de Fronteira das Janelas (120s Estritos) e Auditoria Teórica] - 04/11/2026
+* **Branch de Trabalho:** `feature/pipeline-refinements-and-clustering-tests`
+* **Alinhamentos com Orientação:**
+  * Consolidação da não utilização de LLMs para classificação comportamental de estilos.
+  * Definição de modelo de Machine Learning clássico (**XGBoost Regressor**) para a futura predição de consumo energético em rotas.
+* **Ações e Correções Implementadas:**
+  * **Diagnóstico de Fronteira Inter-janelas:** Auditoria identificou 101 janelas ativas reportando $121\text{ s}$ a $124\text{ s}$ devido a vazamento de $\Delta t$ na virada de blocos (herança de hiato do sensor da janela anterior).
+  * **Isolamento por `window_id`:** Agrupamento composto por `(VehId, Trip, window_id)` em `src/feature_engineering.py` para $\Delta t$, aceleração longitudinal `accel_ms2` e tranco `jerk_ms3`. A primeira amostra de cada janela passa a ser 100% autocontida ($\Delta t = 1{,}0\text{ s}$, $\Delta v = 0$).
+  * **Trava Matemática de Teto:** Duração acumulada rigidamente limitada a $\le 120{,}0\text{ s}$ (`min(duration_s, 120.0)`).
+  * **Atualização do Contrato de Teste:** Inclusão de asserção em `tests/test_step1_2.py` garantindo teto de $120\text{ s}$.
+  * **Execução Completa do Pipeline:** Regeneração de todos os 2.481 registros consolidados e dos 4.468 arquivos individuais (1.700 Treino / 534 Teste em `.csv` e `.parquet`), reduzindo as janelas $> 120\text{ s}$ de 101 para exatamente **zero**.
+  * **Validação:** `test_step1_2.py` executado e aprovado com 100% de sucesso.

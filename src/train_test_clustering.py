@@ -57,6 +57,8 @@ from src.config import (
     FIG_KMEANS_TRAIN_TEST_PCA,
     FIG_KMEANS_TRAIN_TEST_PROFILES,
     CLUSTER_FEATURE_COLS,
+    TRAIN_WINDOW_COUNT,
+    TEST_WINDOW_COUNT,
     ensure_directories,
 )
 
@@ -99,7 +101,7 @@ def run_train_test_clustering():
     """Executa o pipeline completo de treino estrito (1.700) e validação (534)."""
     ensure_directories()
     print("=" * 96)
-    print("INICIANDO TREINAMENTO DO K-MEANS NO TREINO (1.700) E VALIDAÇÃO NO TESTE (534)")
+    print("INICIANDO TREINAMENTO DO K-MEANS NO TREINO (750) E VALIDAÇÃO NO TESTE (217)")
     print("=" * 96)
 
     # 1. Carrega dados de Treino e Teste
@@ -113,8 +115,8 @@ def run_train_test_clustering():
 
     n_train = len(df_train)
     n_test = len(df_test)
-    assert n_train == 1700, f"Esperado 1.700 janelas no treino, obtido {n_train}"
-    assert n_test == 534, f"Esperado 534 janelas no teste, obtido {n_test}"
+    assert n_train == TRAIN_WINDOW_COUNT, f"Esperado {TRAIN_WINDOW_COUNT} janelas no treino, obtido {n_train}"
+    assert n_test == TEST_WINDOW_COUNT, f"Esperado {TEST_WINDOW_COUNT} janelas no teste, obtido {n_test}"
     print(f"-> Bases carregadas com sucesso: {n_train:,d} janelas de Treino e {n_test:,d} janelas de Teste.")
 
     # 2. Fit Exclusivo no Treino (Zero Data Leakage)
@@ -267,7 +269,7 @@ def run_train_test_clustering():
         json.dump(validation_payload, f, indent=2, ensure_ascii=False)
 
     print("\n" + "=" * 96)
-    print("TABELA COMPARATIVA DE GENERALIZAÇÃO: TREINO (1.700) VS. TESTE (534)")
+    print("TABELA COMPARATIVA DE GENERALIZAÇÃO: TREINO (750) VS. TESTE (217)")
     print("=" * 96)
     print(df_summary[["perfil", "treino_count", "treino_pct", "teste_count", "teste_pct", "diff_pct", "treino_potencia_kw", "teste_potencia_kw"]].to_string(index=False))
 
@@ -313,7 +315,7 @@ def generate_train_test_visualizations(
     centers_pca = pca.transform(model.cluster_centers_)
 
     # -------------------------------------------------------------
-    # FIGURA 15: PCA 2D Lado a Lado (Treino 1.700 vs. Teste 534)
+    # FIGURA 15: PCA 2D Lado a Lado (Treino 750 vs. Teste 217)
     # -------------------------------------------------------------
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 7), dpi=300, sharex=True, sharey=True)
 
@@ -414,8 +416,8 @@ def generate_train_test_visualizations(
     width = 0.35
 
     for ax, (title, tr_col, te_col) in zip(axes, metrics_to_plot):
-        bars_tr = ax.bar(x - width/2, df_summary[tr_col], width, label="Treino (1.700)", color="#1f77b4", alpha=0.85, edgecolor="black")
-        bars_te = ax.bar(x + width/2, df_summary[te_col], width, label="Teste (534)", color="#2ca02c", alpha=0.85, edgecolor="black")
+        bars_tr = ax.bar(x - width/2, df_summary[tr_col], width, label="Treino (750)", color="#1f77b4", alpha=0.85, edgecolor="black")
+        bars_te = ax.bar(x + width/2, df_summary[te_col], width, label="Teste (217)", color="#2ca02c", alpha=0.85, edgecolor="black")
 
         ax.set_title(title, fontsize=11.5, fontweight="bold", pad=8)
         ax.set_xticks(x)
@@ -432,7 +434,7 @@ def generate_train_test_visualizations(
             ax.text(bar.get_x() + bar.get_width()/2, h * 1.01, f"{h:.1f}", ha="center", va="bottom", fontsize=8.5)
 
     plt.suptitle(
-        "CONSISTÊNCIA FÍSICA DOS PERFIS: COMPARAÇÃO DIRETA TREINO (1.700) VS. TESTE (534)",
+        "CONSISTÊNCIA FÍSICA DOS PERFIS: COMPARAÇÃO DIRETA TREINO (750) VS. TESTE (217)",
         fontsize=13.5,
         fontweight="bold",
         y=1.02,

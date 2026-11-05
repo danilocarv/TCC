@@ -1,11 +1,11 @@
 {
     "dataset": "VED - Pure Electric Vehicles Driving Behavior Features",
-    "description": "Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino (1,700) / Teste (534)",
+    "description": "Atributos comportamentais e espaciais agregados em janelas de 120 segundos com divisão Treino (750) / Teste (217)",
     "total_windows": 2481,
-    "active_windows_total": 2234,
-    "train_windows_count": 1700,
-    "test_windows_count": 534,
-    "inactive_windows_count": 247,
+    "active_windows_total": 967,
+    "train_windows_count": 750,
+    "test_windows_count": 217,
+    "inactive_windows_count": 1514,
     "random_seed_shuffle": 42,
     "total_trips_covered": 491,
     "vehicles": [
@@ -63,88 +63,88 @@
             "std": 0.242,
             "min": 0.0,
             "p50": 0.581,
-            "p90": 0.85,
+            "p90": 0.853,
             "max": 1.586
         },
         "max_pos_accel_ms2": {
-            "mean": 1.515,
-            "std": 0.644,
+            "mean": 1.512,
+            "std": 0.645,
             "min": 0.0,
-            "p50": 1.62,
-            "p90": 2.212,
+            "p50": 1.619,
+            "p90": 2.21,
             "max": 3.506
         },
         "mean_neg_accel_ms2": {
-            "mean": -0.624,
-            "std": 0.262,
+            "mean": -0.623,
+            "std": 0.263,
             "min": -1.877,
             "p50": -0.641,
-            "p90": -0.293,
+            "p90": -0.284,
             "max": 0.0
         },
         "min_neg_accel_ms2": {
-            "mean": -1.65,
-            "std": 0.745,
+            "mean": -1.645,
+            "std": 0.748,
             "min": -4.835,
-            "p50": -1.716,
-            "p90": -0.585,
+            "p50": -1.71,
+            "p90": -0.575,
             "max": 0.0
         },
         "std_jerk_ms3": {
-            "mean": 0.25,
-            "std": 0.105,
+            "mean": 0.254,
+            "std": 0.107,
             "min": 0.0,
-            "p50": 0.25,
-            "p90": 0.377,
-            "max": 0.756
+            "p50": 0.255,
+            "p90": 0.38,
+            "max": 0.755
         },
         "hard_braking_events": {
-            "mean": 0.803,
-            "std": 1.477,
+            "mean": 0.796,
+            "std": 1.47,
             "min": 0.0,
             "p50": 0.0,
             "p90": 3.0,
             "max": 10.0
         },
         "hard_braking_rate_min": {
-            "mean": 0.441,
-            "std": 0.822,
+            "mean": 0.438,
+            "std": 0.819,
             "min": 0.0,
             "p50": 0.0,
             "p90": 1.54,
             "max": 6.98
         },
         "rapid_accel_events": {
-            "mean": 0.408,
-            "std": 0.997,
+            "mean": 0.405,
+            "std": 0.994,
             "min": 0.0,
             "p50": 0.0,
             "p90": 2.0,
             "max": 11.0
         },
         "rapid_accel_rate_min": {
-            "mean": 0.223,
-            "std": 0.541,
+            "mean": 0.221,
+            "std": 0.537,
             "min": 0.0,
             "p50": 0.0,
             "p90": 1.0,
             "max": 5.55
         },
         "high_jerk_events": {
-            "mean": 0.0,
-            "std": 0.02,
+            "mean": 0.001,
+            "std": 0.035,
             "min": 0.0,
             "p50": 0.0,
             "p90": 0.0,
             "max": 1.0
         },
         "high_jerk_rate_min": {
-            "mean": 0.0,
-            "std": 0.011,
+            "mean": 0.001,
+            "std": 0.019,
             "min": 0.0,
             "p50": 0.0,
             "p90": 0.0,
-            "max": 0.53
+            "max": 0.61
         },
         "idle_ratio": {
             "mean": 0.221,
@@ -155,16 +155,16 @@
             "max": 1.0
         },
         "distance_total_m": {
-            "mean": 940.585,
-            "std": 614.54,
+            "mean": 940.466,
+            "std": 614.504,
             "min": 0.0,
-            "p50": 892.38,
+            "p50": 891.59,
             "p90": 1705.08,
             "max": 3901.39
         },
         "distance_straight_m": {
-            "mean": 808.581,
-            "std": 547.828,
+            "mean": 808.575,
+            "std": 547.83,
             "min": 0.0,
             "p50": 760.37,
             "p90": 1505.69,

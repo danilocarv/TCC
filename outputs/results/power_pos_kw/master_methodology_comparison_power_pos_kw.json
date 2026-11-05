@@ -1,50 +1,50 @@
 [
   {
     "cenario": "1. Grafo Completo (Sem Filtro)",
-    "arestas": 1444150,
+    "arestas": 280875,
     "pct_arestas": 100.0,
     "nos_orfaos": 0,
     "is_conexo": true,
-    "modularidade_q": 0.0471,
+    "modularidade_q": 0.0402,
     "comunidades_total": 3,
-    "dtw_intra_medio": 392.43,
-    "dtw_inter_medio": 491.76,
-    "razao_intra_inter": 0.798
+    "dtw_intra_medio": 461.72,
+    "dtw_inter_medio": 562.89,
+    "razao_intra_inter": 0.82
   },
   {
     "cenario": "2. Árvore Geradora Mínima (MST Pura)",
-    "arestas": 1699,
-    "pct_arestas": 0.12,
+    "arestas": 749,
+    "pct_arestas": 0.05,
     "nos_orfaos": 0,
     "is_conexo": true,
-    "modularidade_q": 0.9451,
-    "comunidades_total": 37,
-    "dtw_intra_medio": 361.7,
-    "dtw_inter_medio": 460.11,
-    "razao_intra_inter": 0.786
+    "modularidade_q": 0.9192,
+    "comunidades_total": 26,
+    "dtw_intra_medio": 437.42,
+    "dtw_inter_medio": 531.56,
+    "razao_intra_inter": 0.823
   },
   {
     "cenario": "3A. Percentil 25 Direto (Sem MST)",
-    "arestas": 361038,
+    "arestas": 70219,
     "pct_arestas": 25.0,
-    "nos_orfaos": 66,
+    "nos_orfaos": 39,
     "is_conexo": false,
-    "modularidade_q": 0.1436,
-    "comunidades_total": 72,
-    "dtw_intra_medio": 357.03,
-    "dtw_inter_medio": 467.64,
-    "razao_intra_inter": 0.763
+    "modularidade_q": 0.1542,
+    "comunidades_total": 44,
+    "dtw_intra_medio": 407.44,
+    "dtw_inter_medio": 533.23,
+    "razao_intra_inter": 0.764
   },
   {
     "cenario": "3B. Rede Otimizada (MST ∪ P25)",
-    "arestas": 361106,
-    "pct_arestas": 25.0,
+    "arestas": 70259,
+    "pct_arestas": 25.01,
     "nos_orfaos": 0,
     "is_conexo": true,
-    "modularidade_q": 0.1437,
+    "modularidade_q": 0.1544,
     "comunidades_total": 6,
-    "dtw_intra_medio": 387.76,
-    "dtw_inter_medio": 480.14,
-    "razao_intra_inter": 0.808
+    "dtw_intra_medio": 450.07,
+    "dtw_inter_medio": 554.02,
+    "razao_intra_inter": 0.812
   }
 ]
