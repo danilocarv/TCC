@@ -2,118 +2,103 @@
   "feature": "power_pos_kw",
   "is_pilot": false,
   "n_windows": 750,
-  "topology": {
-    "n_nodes": 750,
-    "total_possible_pairs": 280875,
-    "positive_edges_retained": 137589,
-    "pct_edges_retained": 48.985847797062746,
-    "isolated_nodes_count": 1,
-    "is_connected": false,
-    "mean_degree": 366.904,
-    "mean_positive_correlation": 0.18821746304521267
-  },
-  "louvain": {
-    "resolution": 1.0,
-    "modularity_q": 0.23016433168013273,
-    "n_total_communities": 6,
-    "n_active_communities": 5,
-    "community_sizes": [
-      214,
-      168,
-      156,
-      112,
-      99,
-      1
-    ]
-  },
-  "intra_inter_correlation": {
-    "mean_intra_correlation": 0.17026404752928853,
-    "mean_inter_correlation": -0.03983470326488079,
-    "diff_intra_inter": 0.21009875079416931
-  },
-  "comparisons": {
-    "kmeans_comparison": {
-      "ari": 0.007472092557962679,
-      "nmi": 0.026983493085103418,
-      "crosstab": {
-        "Agressivo / Dinâmico": {
-          "0": 29,
-          "1": 33,
-          "2": 18,
-          "3": 17,
-          "4": 21,
-          "5": 0,
-          "All": 118
-        },
-        "Econômico / Suave": {
-          "0": 84,
-          "1": 24,
-          "2": 35,
-          "3": 17,
-          "4": 16,
-          "5": 1,
-          "All": 177
-        },
-        "Moderado / Regular": {
-          "0": 101,
-          "1": 111,
-          "2": 103,
-          "3": 78,
-          "4": 62,
-          "5": 0,
-          "All": 455
-        },
-        "All": {
-          "0": 214,
-          "1": 168,
-          "2": 156,
-          "3": 112,
-          "4": 99,
-          "5": 1,
-          "All": 750
-        }
+  "stages_comparison": [
+    {
+      "cenario": "1. Grafo Completo (Similaridade S ∈ [0, 1])",
+      "arestas": 280875,
+      "pct_arestas": 100.0,
+      "nos_orfaos": 0,
+      "is_conexo": true,
+      "modularidade_q": 0.03564580268735759,
+      "comunidades_total": 4,
+      "comunidades_ativas": 4,
+      "corr_intra_media": 0.15422050567696585,
+      "corr_inter_media": -0.04665180336522767,
+      "diff_intra_inter": 0.20087230904219353,
+      "razao_intra_inter": -3.3057780096860188
+    },
+    {
+      "cenario": "2. Árvore Geradora Mínima (MST)",
+      "arestas": 749,
+      "pct_arestas": 0.26666666666666666,
+      "nos_orfaos": 0,
+      "is_conexo": true,
+      "modularidade_q": 0.923966154887649,
+      "comunidades_total": 28,
+      "comunidades_ativas": 28,
+      "corr_intra_media": 0.24860589582994136,
+      "corr_inter_media": -0.004313208325411382,
+      "diff_intra_inter": 0.25291910415535274,
+      "razao_intra_inter": -57.63827690985226
+    },
+    {
+      "cenario": "3A. Percentil 25 Direto (Sem MST)",
+      "arestas": 70219,
+      "pct_arestas": 25.000089007565645,
+      "nos_orfaos": 1,
+      "is_conexo": false,
+      "modularidade_q": 0.24546630509279094,
+      "comunidades_total": 6,
+      "comunidades_ativas": 5,
+      "corr_intra_media": 0.17473024378163926,
+      "corr_inter_media": -0.04133781917363866,
+      "diff_intra_inter": 0.21606806295527792,
+      "razao_intra_inter": -4.226885870483116
+    },
+    {
+      "cenario": "3B. Rede Otimizada (MST ∪ P25)",
+      "arestas": 70220,
+      "pct_arestas": 25.000445037828218,
+      "nos_orfaos": 0,
+      "is_conexo": true,
+      "modularidade_q": 0.24547252720446505,
+      "comunidades_total": 5,
+      "comunidades_ativas": 5,
+      "corr_intra_media": 0.17425898443726823,
+      "corr_inter_media": -0.04136838574545809,
+      "diff_intra_inter": 0.21562737018272632,
+      "razao_intra_inter": -4.212370903459786
+    }
+  ],
+  "cross_comparisons": {
+    "Cenário 1: Completo": {
+      "kmeans": {
+        "ari": 0.007316105790569724,
+        "nmi": 0.025221998043310413
+      },
+      "dtw": {
+        "ari": 0.04974181249046614,
+        "nmi": 0.08892318803821062
       }
     },
-    "dtw_comparison": {
-      "ari": 0.03673051536666522,
-      "nmi": 0.06454068543525104,
-      "crosstab": {
-        "0": {
-          "0": 67,
-          "1": 68,
-          "2": 68,
-          "3": 45,
-          "4": 43,
-          "5": 0,
-          "All": 291
-        },
-        "1": {
-          "0": 50,
-          "1": 91,
-          "2": 70,
-          "3": 50,
-          "4": 48,
-          "5": 1,
-          "All": 310
-        },
-        "2": {
-          "0": 97,
-          "1": 9,
-          "2": 18,
-          "3": 17,
-          "4": 8,
-          "5": 0,
-          "All": 149
-        },
-        "All": {
-          "0": 214,
-          "1": 168,
-          "2": 156,
-          "3": 112,
-          "4": 99,
-          "5": 1,
-          "All": 750
-        }
+    "Cenário 2: MST": {
+      "kmeans": {
+        "ari": 0.004729435902827343,
+        "nmi": 0.03758919367526866
+      },
+      "dtw": {
+        "ari": 0.0091390138996576,
+        "nmi": 0.05689002732095993
+      }
+    },
+    "Cenário 3A: P25": {
+      "kmeans": {
+        "ari": 0.004063076267545473,
+        "nmi": 0.026922341268717818
+      },
+      "dtw": {
+        "ari": 0.04216396334968243,
+        "nmi": 0.08531448563907718
+      }
+    },
+    "Cenário 3B: MST ∪ P25": {
+      "kmeans": {
+        "ari": 0.003532799073891647,
+        "nmi": 0.02546989852638743
+      },
+      "dtw": {
+        "ari": 0.04235639792507116,
+        "nmi": 0.08473802897661768
       }
     }
   }

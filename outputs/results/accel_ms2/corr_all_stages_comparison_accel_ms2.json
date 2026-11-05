@@ -1,0 +1,58 @@
+[
+  {
+    "cenario": "1. Grafo Completo (Similaridade S ∈ [0, 1])",
+    "arestas": 280875,
+    "pct_arestas": 100.0,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.03037243276155241,
+    "comunidades_total": 3,
+    "comunidades_ativas": 3,
+    "corr_intra_media": 0.09923447304853346,
+    "corr_inter_media": -0.042883022030889326,
+    "diff_intra_inter": 0.14211749507942278,
+    "razao_intra_inter": -2.314073690446846
+  },
+  {
+    "cenario": "2. Árvore Geradora Mínima (MST)",
+    "arestas": 749,
+    "pct_arestas": 0.26666666666666666,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.9251353032880197,
+    "comunidades_total": 28,
+    "comunidades_ativas": 28,
+    "corr_intra_media": 0.2584520230764201,
+    "corr_inter_media": -0.005011816081644352,
+    "diff_intra_inter": 0.2634638391580645,
+    "razao_intra_inter": -51.568537006574125
+  },
+  {
+    "cenario": "3A. Percentil 25 Direto (Sem MST)",
+    "arestas": 70219,
+    "pct_arestas": 25.000089007565645,
+    "nos_orfaos": 1,
+    "is_conexo": false,
+    "modularidade_q": 0.2166850547960521,
+    "comunidades_total": 7,
+    "comunidades_ativas": 6,
+    "corr_intra_media": 0.17128989140339956,
+    "corr_inter_media": -0.0320671861641227,
+    "diff_intra_inter": 0.20335707756752225,
+    "razao_intra_inter": -5.341594068363926
+  },
+  {
+    "cenario": "3B. Rede Otimizada (MST ∪ P25)",
+    "arestas": 70220,
+    "pct_arestas": 25.000445037828218,
+    "nos_orfaos": 0,
+    "is_conexo": true,
+    "modularidade_q": 0.2204258781668825,
+    "comunidades_total": 6,
+    "comunidades_ativas": 6,
+    "corr_intra_media": 0.1748334983656009,
+    "corr_inter_media": -0.03219009132371482,
+    "diff_intra_inter": 0.20702358968931572,
+    "razao_intra_inter": -5.431283080480078
+  }
+]

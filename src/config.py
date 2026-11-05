@@ -194,6 +194,12 @@ MASTER_COMPARISON_JSON = RESULTS_SPEED_DIR / "master_methodology_comparison.json
 KMEANS_LOUVAIN_CONTINGENCY_CSV = RESULTS_SPEED_DIR / "contingency_kmeans_vs_louvain.csv"
 FIG_FINAL_COMPARISON_SYNTHESIS = FIGURES_SPEED_DIR / "14_methodology_comparison_synthesis.png"
 
+# Configuração de similaridade para a Análise de Correlação de Pearson
+# 'linear_normalized': S = (1 + r) / 2 = 1 - |1 - r| / 2 (converte negativos em [0, 0.5) sem descarte)
+# 'mantegna_normalized': S = 1 - sqrt(2*(1 - r)) / 2
+# 'exponential_kernel': S = exp(-sqrt(2*(1 - r)) / sigma)
+CORRELATION_SIMILARITY_METHOD = "linear_normalized"
+
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)
 PROCESSED_CLUSTERS_PARQUET = PROCESSED_FEATURES_DIR / "driving_behavior_clusters.parquet"
@@ -385,6 +391,20 @@ def get_feature_paths(feature: str = "speed_kmh") -> dict:
             "fig_corr_louvain_full_heatmap": FIGURES_SPEED_DIR / "18_corr_speed_kmh_louvain_heatmap_train_750x750.png",
             "corr_vs_dtw_comparison_json": RESULTS_SPEED_DIR / "corr_vs_dtw_comparison_speed_kmh.json",
             "corr_vs_dtw_comparison_csv": RESULTS_SPEED_DIR / "corr_vs_dtw_comparison_speed_kmh.csv",
+            "corr_mst_edges_csv": PROCESSED_SPEED_DIR / f"corr_speed_kmh_mst_edges_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+            "corr_mst_edges_parquet": PROCESSED_SPEED_DIR / f"corr_speed_kmh_mst_edges_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+            "corr_mst_louvain_csv": PROCESSED_SPEED_DIR / f"corr_speed_kmh_mst_louvain_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+            "corr_mst_louvain_parquet": PROCESSED_SPEED_DIR / f"corr_speed_kmh_mst_louvain_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+            "fig_corr_mst_heatmap": FIGURES_SPEED_DIR / f"19_corr_speed_kmh_mst_louvain_heatmap_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.png",
+            "corr_p25_direct_csv": PROCESSED_SPEED_DIR / f"corr_speed_kmh_p25_direct_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+            "corr_p25_direct_parquet": PROCESSED_SPEED_DIR / f"corr_speed_kmh_p25_direct_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+            "fig_corr_p25_direct_heatmap": FIGURES_SPEED_DIR / f"20_corr_speed_kmh_p25_direct_heatmap_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.png",
+            "corr_p25_mst_csv": PROCESSED_SPEED_DIR / f"corr_speed_kmh_p25_mst_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+            "corr_p25_mst_parquet": PROCESSED_SPEED_DIR / f"corr_speed_kmh_p25_mst_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+            "fig_corr_p25_mst_heatmap": FIGURES_SPEED_DIR / f"21_corr_speed_kmh_p25_mst_heatmap_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.png",
+            "corr_all_stages_comparison_csv": RESULTS_SPEED_DIR / "corr_all_stages_comparison_speed_kmh.csv",
+            "corr_all_stages_comparison_json": RESULTS_SPEED_DIR / "corr_all_stages_comparison_speed_kmh.json",
+            "fig_corr_final_comparison_synthesis": FIGURES_SPEED_DIR / "22_corr_methodology_comparison_synthesis_speed_kmh.png",
         }
 
     proc_sub = PROCESSED_DATA_DIR / feature
@@ -462,6 +482,20 @@ def get_feature_paths(feature: str = "speed_kmh") -> dict:
         "fig_corr_louvain_full_heatmap": fig_sub / f"18_corr_{feature}_louvain_heatmap_train_750x750.png",
         "corr_vs_dtw_comparison_json": res_sub / f"corr_vs_dtw_comparison_{feature}.json",
         "corr_vs_dtw_comparison_csv": res_sub / f"corr_vs_dtw_comparison_{feature}.csv",
+        "corr_mst_edges_csv": proc_sub / f"corr_{feature}_mst_edges_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+        "corr_mst_edges_parquet": proc_sub / f"corr_{feature}_mst_edges_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+        "corr_mst_louvain_csv": proc_sub / f"corr_{feature}_mst_louvain_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+        "corr_mst_louvain_parquet": proc_sub / f"corr_{feature}_mst_louvain_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+        "fig_corr_mst_heatmap": fig_sub / f"19_corr_{feature}_mst_louvain_heatmap_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.png",
+        "corr_p25_direct_csv": proc_sub / f"corr_{feature}_p25_direct_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+        "corr_p25_direct_parquet": proc_sub / f"corr_{feature}_p25_direct_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+        "fig_corr_p25_direct_heatmap": fig_sub / f"20_corr_{feature}_p25_direct_heatmap_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.png",
+        "corr_p25_mst_csv": proc_sub / f"corr_{feature}_p25_mst_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.csv",
+        "corr_p25_mst_parquet": proc_sub / f"corr_{feature}_p25_mst_clusters_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.parquet",
+        "fig_corr_p25_mst_heatmap": fig_sub / f"21_corr_{feature}_p25_mst_heatmap_train_{TRAIN_WINDOW_COUNT}x{TRAIN_WINDOW_COUNT}.png",
+        "corr_all_stages_comparison_csv": res_sub / f"corr_all_stages_comparison_{feature}.csv",
+        "corr_all_stages_comparison_json": res_sub / f"corr_all_stages_comparison_{feature}.json",
+        "fig_corr_final_comparison_synthesis": fig_sub / f"22_corr_methodology_comparison_synthesis_{feature}.png",
     }
 
 
