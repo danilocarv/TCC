@@ -1,0 +1,19 @@
+id,familia,feature,feature_pt,cenario,k_louvain_ativas,k_kmeans_pareado,dimensao_matriz,janelas_ativas,nos_orfaos,total_janelas,soma_diagonal_principal,maior_celula_real,ari_pareado_kxk,nmi_pareado_kxk,ari_baseline_k3,nmi_baseline_k3,arquivo_csv
+DTW-01,DTW,speed_kmh,Velocidade (km/h),1. Completo,3,3,3x3,750,0,750,344,223,0.0511,0.0524,0.0511,0.0524,dtw-01_dtw_speed_kmh_completo_kmeans_k3x3.csv
+DTW-02,DTW,speed_kmh,Velocidade (km/h),2. MST,26,26,26x26,750,0,750,26,14,0.0668,0.3078,0.0162,0.0982,dtw-02_dtw_speed_kmh_mst_kmeans_k26x26.csv
+DTW-03,DTW,speed_kmh,Velocidade (km/h),3. P25,5,5,5x5,750,0,750,170,127,0.0605,0.1015,0.0424,0.054,dtw-03_dtw_speed_kmh_p25_kmeans_k5x5.csv
+CORR-01,Correlação,speed_kmh,Velocidade (km/h),1. Completo,3,3,3x3,750,0,750,315,186,0.0054,0.0154,0.0054,0.0154,corr-01_corr_speed_kmh_completo_kmeans_k3x3.csv
+CORR-02,Correlação,speed_kmh,Velocidade (km/h),2. MST,26,26,26x26,750,0,750,29,9,0.0158,0.1876,0.0068,0.0443,corr-02_corr_speed_kmh_mst_kmeans_k26x26.csv
+CORR-03,Correlação,speed_kmh,Velocidade (km/h),3. P25,3,3,3x3,749,1,750,296,160,0.0076,0.0157,0.0084,0.0175,corr-03_corr_speed_kmh_p25_kmeans_k3x3.csv
+DTW-04,DTW,accel_ms2,Aceleração (m/s²),1. Completo,3,3,3x3,750,0,750,154,243,0.1169,0.1422,0.1169,0.1422,dtw-04_dtw_accel_ms2_completo_kmeans_k3x3.csv
+DTW-05,DTW,accel_ms2,Aceleração (m/s²),2. MST,25,25,25x25,750,0,750,33,16,0.0499,0.2518,0.0209,0.1116,dtw-05_dtw_accel_ms2_mst_kmeans_k25x25.csv
+DTW-06,DTW,accel_ms2,Aceleração (m/s²),3. P25,5,5,5x5,737,13,750,144,112,0.0712,0.1293,0.0871,0.1255,dtw-06_dtw_accel_ms2_p25_kmeans_k5x5.csv
+CORR-04,Correlação,accel_ms2,Aceleração (m/s²),1. Completo,3,3,3x3,750,0,750,284,160,0.0054,0.0114,0.0054,0.0114,corr-04_corr_accel_ms2_completo_kmeans_k3x3.csv
+CORR-05,Correlação,accel_ms2,Aceleração (m/s²),2. MST,28,28,28x28,750,0,750,23,8,0.0097,0.1908,0.0042,0.0364,corr-05_corr_accel_ms2_mst_kmeans_k28x28.csv
+CORR-06,Correlação,accel_ms2,Aceleração (m/s²),3. P25,6,6,6x6,749,1,750,156,63,0.0076,0.0304,0.0026,0.0174,corr-06_corr_accel_ms2_p25_kmeans_k6x6.csv
+DTW-07,DTW,power_pos_kw,Potência Positiva (kW),1. Completo,3,3,3x3,750,0,750,266,207,0.0472,0.0618,0.0472,0.0618,dtw-07_dtw_power_pos_kw_completo_kmeans_k3x3.csv
+DTW-08,DTW,power_pos_kw,Potência Positiva (kW),2. MST,26,26,26x26,750,0,750,38,9,0.0187,0.1981,0.0046,0.051,dtw-08_dtw_power_pos_kw_mst_kmeans_k26x26.csv
+DTW-09,DTW,power_pos_kw,Potência Positiva (kW),3. P25,5,5,5x5,711,39,750,170,84,0.0267,0.048,0.0352,0.0897,dtw-09_dtw_power_pos_kw_p25_kmeans_k5x5.csv
+CORR-07,Correlação,power_pos_kw,Potência Positiva (kW),1. Completo,4,4,4x4,750,0,750,184,98,0.0071,0.0206,0.0073,0.0252,corr-07_corr_power_pos_kw_completo_kmeans_k4x4.csv
+CORR-08,Correlação,power_pos_kw,Potência Positiva (kW),2. MST,28,28,28x28,750,0,750,45,7,0.0091,0.1863,0.0047,0.0376,corr-08_corr_power_pos_kw_mst_kmeans_k28x28.csv
+CORR-09,Correlação,power_pos_kw,Potência Positiva (kW),3. P25,5,5,5x5,749,1,750,140,81,0.0079,0.0214,0.0041,0.0269,corr-09_corr_power_pos_kw_p25_kmeans_k5x5.csv
