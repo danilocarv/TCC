@@ -36,3 +36,6 @@ Thumbs.db
 *.tmp
 *.log
 .vscode/
+
+# DEM Digital Elevation Model
+data/raw/dem/

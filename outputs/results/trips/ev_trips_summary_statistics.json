@@ -1,0 +1,63 @@
+{
+  "total_trips": 504,
+  "valid_trips": 486,
+  "invalid_trips": 18,
+  "trips_by_vehicle": {
+    "455": 293,
+    "10": 201,
+    "541": 10
+  },
+  "valid_trips_by_vehicle": {
+    "455": 287,
+    "10": 189,
+    "541": 10
+  },
+  "driver_profile_distribution": {
+    "Moderado / Regular": 279,
+    "Econômico / Suave": 149,
+    "Agressivo / Dinâmico": 58
+  },
+  "metrics_summary": {
+    "distance_km": {
+      "mean": 4.82,
+      "min": 0.51,
+      "max": 21.5,
+      "sum": 2340.22
+    },
+    "duration_min": {
+      "mean": 9.32,
+      "min": 1.02,
+      "max": 64.7
+    },
+    "energy_net_kwh": {
+      "mean": 0.755,
+      "min": 0.003,
+      "max": 3.728,
+      "sum": 366.832
+    },
+    "energy_gross_kwh": {
+      "mean": 0.976,
+      "sum": 474.159
+    },
+    "energy_regen_kwh": {
+      "mean": 0.221,
+      "sum": 107.328
+    },
+    "regen_efficiency_ratio": {
+      "mean": 0.2576
+    },
+    "aux_hvac_energy_kwh": {
+      "mean": 0.11,
+      "sum": 53.447
+    },
+    "elevation_gain_m": {
+      "mean": 232.38,
+      "max": 2228.0
+    },
+    "mean_oat_c": {
+      "mean": 12.24,
+      "min": -14.45,
+      "max": 35.51
+    }
+  }
+}
