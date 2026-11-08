@@ -1,0 +1,4 @@
+﻿feature,comparison,n_windows,diagonal_sum,diagonal_pct,ari,nmi,ri,homogeneity,completeness
+accel_ms2,K-Medóides DTW vs. Louvain DTW,750,477,63.6,0.2488,0.2648,0.656,0.2593,0.2706
+accel_ms2,K-Medóides DTW vs. K-Means Euclidiano,750,343,45.73,0.0481,0.0799,0.5399,0.0743,0.0864
+accel_ms2,Louvain DTW vs. K-Means Euclidiano,750,319,42.53,0.1169,0.1422,0.5706,0.1349,0.1503

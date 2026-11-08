@@ -1,0 +1,10 @@
+﻿feature,method,cluster_order,profile_label,n_windows,share_pct,mean_pos_accel_ms2,max_pos_accel_ms2,rapid_accel_rate_min,hard_braking_rate_min,mean_speed_kmh,mean_power_kw
+accel_ms2,K-Medoids DTW,0,Econômico / Suave,208,27.73,0.4531,1.3377,0.1154,0.2981,46.97,7.372
+accel_ms2,Louvain DTW,0,Econômico / Suave,271,36.13,0.415,1.2275,0.0738,0.1993,47.22,7.036
+accel_ms2,K-Means Euclidiano,0,Econômico / Suave,177,23.6,0.3293,0.933,0.0028,0.1864,54.63,7.381
+accel_ms2,K-Medoids DTW,1,Moderado / Regular,302,40.27,0.529,1.5633,0.1788,0.356,39.57,5.967
+accel_ms2,Louvain DTW,1,Moderado / Regular,141,18.8,0.5493,1.7792,0.2695,0.5461,44.04,6.416
+accel_ms2,K-Means Euclidiano,1,Moderado / Regular,455,60.67,0.5823,1.6665,0.0714,0.3978,36.1,5.895
+accel_ms2,K-Medoids DTW,2,Agressivo / Dinâmico,240,32.0,0.6615,1.876,0.3833,0.8667,38.95,6.257
+accel_ms2,Louvain DTW,2,Agressivo / Dinâmico,338,45.07,0.6594,1.8257,0.3314,0.7293,35.68,5.993
+accel_ms2,K-Means Euclidiano,2,Agressivo / Dinâmico,118,15.73,0.7589,2.3493,1.161,1.3856,42.14,7.191
