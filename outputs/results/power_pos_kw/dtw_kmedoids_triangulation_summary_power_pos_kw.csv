@@ -1,0 +1,4 @@
+﻿feature,comparison,n_windows,diagonal_sum,diagonal_pct,ari,nmi,ri,homogeneity,completeness
+power_pos_kw,K-Medóides DTW vs. Louvain DTW,750,449,59.87,0.2542,0.2217,0.6564,0.2215,0.222
+power_pos_kw,K-Medóides DTW vs. K-Means Euclidiano,750,276,36.8,0.0378,0.028,0.533,0.0264,0.0298
+power_pos_kw,Louvain DTW vs. K-Means Euclidiano,750,224,29.87,0.0472,0.0618,0.5376,0.0583,0.0657

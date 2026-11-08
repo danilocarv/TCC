@@ -1,0 +1,100 @@
+{
+  "feature": "speed_kmh",
+  "feature_name_pt": "Velocidade",
+  "n_windows": 750,
+  "k_clusters": 3,
+  "pam_optimization": {
+    "total_dtw_inertia": 696528.6753,
+    "mean_dtw_distance_to_medoid": 928.7049,
+    "silhouette_precomputed_dtw": 0.1352,
+    "iterations": 10
+  },
+  "medoids_prototypes": [
+    {
+      "cluster_id": 0,
+      "profile_label": "Econômico / Suave",
+      "medoid_window_index": 546,
+      "window_file": "train_0546_veh10_trip3183_w002",
+      "VehId": 10,
+      "Trip": 3183,
+      "window_id": 2,
+      "cluster_size": 311,
+      "cluster_share_pct": 41.47,
+      "medoid_mean_pos_accel_ms2": 0.908,
+      "medoid_max_pos_accel_ms2": 1.768,
+      "medoid_mean_speed_kmh": 13.29,
+      "cluster_mean_pos_accel_ms2": 0.5886,
+      "cluster_max_pos_accel_ms2": 1.6966,
+      "cluster_rapid_accel_rate_min": 0.2717,
+      "cluster_mean_speed_kmh": 32.47
+    },
+    {
+      "cluster_id": 1,
+      "profile_label": "Moderado / Regular",
+      "medoid_window_index": 709,
+      "window_file": "train_0709_veh455_trip896_w002",
+      "VehId": 455,
+      "Trip": 896,
+      "window_id": 2,
+      "cluster_size": 217,
+      "cluster_share_pct": 28.93,
+      "medoid_mean_pos_accel_ms2": 0.453,
+      "medoid_max_pos_accel_ms2": 2.504,
+      "medoid_mean_speed_kmh": 46.29,
+      "cluster_mean_pos_accel_ms2": 0.5622,
+      "cluster_max_pos_accel_ms2": 1.5889,
+      "cluster_rapid_accel_rate_min": 0.1682,
+      "cluster_mean_speed_kmh": 36.13
+    },
+    {
+      "cluster_id": 2,
+      "profile_label": "Agressivo / Dinâmico",
+      "medoid_window_index": 542,
+      "window_file": "train_0542_veh455_trip2021_w002",
+      "VehId": 455,
+      "Trip": 2021,
+      "window_id": 2,
+      "cluster_size": 222,
+      "cluster_share_pct": 29.6,
+      "medoid_mean_pos_accel_ms2": 0.445,
+      "medoid_max_pos_accel_ms2": 1.477,
+      "medoid_mean_speed_kmh": 60.07,
+      "cluster_mean_pos_accel_ms2": 0.4854,
+      "cluster_max_pos_accel_ms2": 1.4782,
+      "cluster_rapid_accel_rate_min": 0.2207,
+      "cluster_mean_speed_kmh": 59.14
+    }
+  ],
+  "triangulation_alignment": {
+    "kmedoids_vs_louvain": {
+      "n_windows": 750,
+      "diagonal_sum": 376,
+      "diagonal_pct": 50.13,
+      "ari": 0.1601,
+      "nmi": 0.1802,
+      "ri": 0.6184,
+      "homogeneity": 0.1783,
+      "completeness": 0.1821
+    },
+    "kmedoids_vs_kmeans": {
+      "n_windows": 750,
+      "diagonal_sum": 215,
+      "diagonal_pct": 28.67,
+      "ari": 0.0809,
+      "nmi": 0.0652,
+      "ri": 0.5556,
+      "homogeneity": 0.0607,
+      "completeness": 0.0704
+    },
+    "louvain_vs_kmeans": {
+      "n_windows": 750,
+      "diagonal_sum": 173,
+      "diagonal_pct": 23.07,
+      "ari": 0.0511,
+      "nmi": 0.0524,
+      "ri": 0.5399,
+      "homogeneity": 0.0493,
+      "completeness": 0.056
+    }
+  }
+}

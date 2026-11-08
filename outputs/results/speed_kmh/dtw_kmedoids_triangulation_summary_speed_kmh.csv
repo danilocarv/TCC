@@ -1,0 +1,4 @@
+﻿feature,comparison,n_windows,diagonal_sum,diagonal_pct,ari,nmi,ri,homogeneity,completeness
+speed_kmh,K-Medóides DTW vs. Louvain DTW,750,376,50.13,0.1601,0.1802,0.6184,0.1783,0.1821
+speed_kmh,K-Medóides DTW vs. K-Means Euclidiano,750,215,28.67,0.0809,0.0652,0.5556,0.0607,0.0704
+speed_kmh,Louvain DTW vs. K-Means Euclidiano,750,173,23.07,0.0511,0.0524,0.5399,0.0493,0.056

@@ -353,11 +353,13 @@ def plot_medoid_prototypes(
         # Destaca picos extremos na série do medóide
         max_t = int(np.argmax(series))
         min_t = int(np.argmin(series))
+        y_span = max(y_max - y_min, 1.0)
         ax.scatter([max_t], [series[max_t]], color="#1E293B", s=35, zorder=5)
+        text_x_peak = (max_t - 15) if max_t > 72 else min(max_t + 2, 96)
         ax.annotate(
-            f"Pico: {series[max_t]:+.2f} {unit}",
+            f"Pico: {series[max_t]:.2f} {unit}" if feature != "accel_ms2" else f"Pico: {series[max_t]:+.2f} {unit}",
             xy=(max_t, series[max_t]),
-            xytext=(max_t + 3, series[max_t] + (0.12 if series[max_t] >= 0 else -0.25)),
+            xytext=(text_x_peak, series[max_t] + y_span * 0.04),
             fontsize=8.5,
             fontweight="bold",
             color="#1E293B",
@@ -367,7 +369,7 @@ def plot_medoid_prototypes(
             ax.annotate(
                 f"Fren.: {series[min_t]:+.2f} {unit}",
                 xy=(min_t, series[min_t]),
-                xytext=(min_t + 3, series[min_t] - 0.25),
+                xytext=(min(min_t + 2, 96), series[min_t] - y_span * 0.07),
                 fontsize=8.0,
                 color="#475569",
             )
@@ -379,23 +381,37 @@ def plot_medoid_prototypes(
         if c_idx == 2:
             ax.set_xlabel("Tempo na Janela de Condução Ativa (segundos)", fontsize=10, fontweight="bold")
 
+        cl_mean_power = float(df_train.loc[cluster_mask, "mean_power_kw"].mean())
         title_str = (
             f"Cluster {c_idx} — {prof_title}  |  N = {n_members} janelas ({pct_members:.1f}%)  |  "
             f"Medóide Real: #{m_idx} (Veículo {int(row_meta['VehId'])}, Viagem {int(row_meta['Trip'])}, Janela {int(row_meta['window_id'])})"
         )
         subtitle_stats = (
-            f"Médias do Grupo: Acel. Positiva = {cl_mean_accel:.3f} m/s²  |  Pico Acel. = {cl_max_accel:.2f} m/s²  |  "
-            f"Arrancadas Bruscas = {cl_rapid_rate:.2f}/min  |  Veloc. Média = {cl_mean_speed:.1f} km/h"
+            f"Médias do Grupo: Veloc. = {cl_mean_speed:.1f} km/h  |  Acel. Positiva = {cl_mean_accel:.3f} m/s²  |  "
+            f"Pico Acel. = {cl_max_accel:.2f} m/s²  |  Potência Média = {cl_mean_power:.2f} kW"
         )
         ax.set_title(f"{title_str}\n{subtitle_stats}", fontsize=9.8, fontweight="bold", color="#1E293B", loc="left", pad=6)
         ax.legend(loc="upper right", fontsize=8.5, framealpha=0.92)
 
     # Linha 4: 3 gráficos de barras comparando a progressão física dos 3 clusters K-Medóides
-    metrics_to_plot = [
-        ("mean_pos_accel_ms2", "Aceleração Positiva Média (m/s²)", "m/s²"),
-        ("max_pos_accel_ms2", "Pico Médio de Aceleração (m/s²)", "m/s²"),
-        ("rapid_accel_rate_min", "Taxa de Arrancadas Bruscas (/min)", "ev/min"),
-    ]
+    if feature == "speed_kmh":
+        metrics_to_plot = [
+            ("mean_speed_kmh", "Velocidade Média do Cluster (km/h)", "km/h"),
+            ("max_speed_kmh", "Velocidade Máxima Média (km/h)", "km/h"),
+            ("mean_pos_accel_ms2", "Aceleração Positiva Média (m/s²)", "m/s²"),
+        ]
+    elif feature == "power_pos_kw":
+        metrics_to_plot = [
+            ("mean_power_kw", "Potência Elétrica Média (kW)", "kW"),
+            ("mean_pos_accel_ms2", "Aceleração Positiva Média (m/s²)", "m/s²"),
+            ("mean_speed_kmh", "Velocidade Média (km/h)", "km/h"),
+        ]
+    else:
+        metrics_to_plot = [
+            ("mean_pos_accel_ms2", "Aceleração Positiva Média (m/s²)", "m/s²"),
+            ("max_pos_accel_ms2", "Pico Médio de Aceleração (m/s²)", "m/s²"),
+            ("rapid_accel_rate_min", "Taxa de Arrancadas Bruscas (/min)", "ev/min"),
+        ]
 
     for m_i, (col_m, m_title, m_unit) in enumerate(metrics_to_plot):
         ax_b = fig.add_subplot(gs[3, m_i])

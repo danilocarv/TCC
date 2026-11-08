@@ -1,0 +1,3 @@
+﻿comparison,n_windows,diagonal_sum,diagonal_pct,ari,nmi,ri,homogeneity,completeness
+Louvain DTW (Aceleração vs. Potência),750,358,47.73,0.0711,0.0516,0.5698,0.0519,0.0513
+K-Medóides DTW (Aceleração vs. Potência),750,259,34.53,0.0304,0.0248,0.5585,0.0244,0.0251

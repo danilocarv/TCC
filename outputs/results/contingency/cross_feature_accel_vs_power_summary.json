@@ -1,0 +1,38 @@
+{
+  "analysis": "cross_feature_accel_vs_power_dtw",
+  "n_windows": 750,
+  "k_clusters": 3,
+  "louvain_dtw_accel_vs_power": {
+    "n_windows": 750,
+    "diagonal_sum": 358,
+    "diagonal_pct": 47.73,
+    "ari": 0.0711,
+    "nmi": 0.0516,
+    "ri": 0.5698,
+    "homogeneity": 0.0519,
+    "completeness": 0.0513
+  },
+  "kmedoids_dtw_accel_vs_power": {
+    "n_windows": 750,
+    "diagonal_sum": 259,
+    "diagonal_pct": 34.53,
+    "ari": 0.0304,
+    "nmi": 0.0248,
+    "ri": 0.5585,
+    "homogeneity": 0.0244,
+    "completeness": 0.0251
+  },
+  "key_findings": {
+    "aggressive_regime_concordance_louvain": {
+      "shared_aggressive_windows": 198,
+      "pct_of_accel_aggressive": 58.58,
+      "pct_of_power_aggressive": 63.87
+    },
+    "economic_regime_concordance_louvain": {
+      "shared_economic_windows": 127,
+      "pct_of_accel_economic": 46.86,
+      "pct_of_power_economic": 43.64
+    },
+    "physical_physics_insight": "A potência elétrica líquida decorre da relação física P = F * v = (m*a + F_drag + F_roll) * v. Por isso, arrancadas a baixa velocidade geram alta aceleração com potência intermediária, enquanto cruzeiro a alta velocidade exige alta potência mesmo com aceleração perto de zero. Nos extremos de alta agressividade (pedal a fundo em velocidade média/alta), aceleração e potência coincidem em 58.6% a 63.9% das janelas."
+  }
+}
