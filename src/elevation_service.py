@@ -85,16 +85,18 @@ class ElevationService:
         records = [
             {'lat_round': lat, 'lon_round': lon, 'elevation_m': elev}
             for (lat, lon), elev in self.cache.items()
+            if not np.isnan(elev)
         ]
         df = pd.DataFrame(records)
         self.cache_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_parquet(self.cache_path, index=False)
-        logger.info(f"Saved {len(self.cache)} elevation points to {self.cache_path}")
+        logger.info(f"Saved {len(records)} elevation points to {self.cache_path}")
 
     def get_elevation(self, lat: float, lon: float) -> float:
         """
         Looks up elevation (in meters) for a single coordinate.
-        Queries memory cache first, then SRTM DEM grid, else falls back to mean elevation.
+        Queries memory cache first, then SRTM DEM grid.
+        Returns np.nan if outside DEM or invalid (avoiding constant 260.0 cliffs).
         """
         pt_key = (round(lat, 4), round(lon, 4))
         if pt_key in self.cache:
@@ -106,11 +108,11 @@ class ElevationService:
                 row = int(np.clip(np.round((43.0 - lat) * 3600.0), 0, 3600))
                 col = int(np.clip(np.round((lon - (-84.0)) * 3600.0), 0, 3600))
                 elev = float(self.dem_grid[row, col])
-                self.cache[pt_key] = elev
-                return elev
+                if elev > -100:  # Valid SRTM reading (voids in SRTM are -32768)
+                    self.cache[pt_key] = elev
+                    return elev
 
-        self.cache[pt_key] = ANN_ARBOR_MEAN_ELEVATION_M
-        return ANN_ARBOR_MEAN_ELEVATION_M
+        return np.nan
 
     def fetch_elevations_for_coords(self, coords: List[Tuple[float, float]]) -> None:
         """
@@ -186,7 +188,16 @@ class ElevationService:
                 'net_grade_percent': 0.0
             }
 
-        elevations = [self.get_elevation(lat, lon) for lat, lon in sampled_coords]
+        raw_elevations = [self.get_elevation(lat, lon) for lat, lon in sampled_coords]
+        
+        # Robust linear interpolation along trajectory for any isolated missing points
+        s_elev = pd.Series(raw_elevations, dtype=float)
+        if s_elev.isna().any():
+            s_elev = s_elev.interpolate(method='linear').bfill().ffill()
+            if s_elev.isna().all():
+                s_elev = s_elev.fillna(ANN_ARBOR_MEAN_ELEVATION_M)
+
+        elevations = s_elev.tolist()
 
         initial_elev = elevations[0]
         final_elev = elevations[-1]

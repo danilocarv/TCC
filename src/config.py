@@ -198,7 +198,8 @@ FIG_FINAL_COMPARISON_SYNTHESIS = FIGURES_SPEED_DIR / "14_methodology_comparison_
 # 'linear_normalized': S = (1 + r) / 2 = 1 - |1 - r| / 2 (converte negativos em [0, 0.5) sem descarte)
 # 'mantegna_normalized': S = 1 - sqrt(2*(1 - r)) / 2
 # 'exponential_kernel': S = exp(-sqrt(2*(1 - r)) / sigma)
-CORRELATION_SIMILARITY_METHOD = "linear_normalized"
+# 'abs_correlation': S = |r|, Distância D = 1 - |r| (r = +1 e r = -1 têm máxima similaridade)
+CORRELATION_SIMILARITY_METHOD = "abs_correlation"
 
 
 # Caminhos dos artefatos da Etapa 1.3 (Clusterização K-Means)

@@ -456,7 +456,7 @@ def run_all_18_comparisons() -> pd.DataFrame:
         )
     fig_corr.suptitle(
         "Comparação de Contingência K x K em Números Reais: Correlação de Pearson (Completo, MST, P25) vs. K-Means Pareado\n"
-        "750 Janelas de Treino (120s) — Contagem Absoluta de Viagens por Célula (Similaridade S = (1+r)/2)",
+        "750 Janelas de Treino (120s) — Contagem Absoluta de Viagens por Célula (Similaridade S = |r|)",
         fontsize=14,
         fontweight="bold",
         y=0.995,

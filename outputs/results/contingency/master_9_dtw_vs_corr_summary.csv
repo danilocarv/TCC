@@ -1,0 +1,10 @@
+﻿id,feature,feature_pt,cenario,k_dtw,k_corr,dimensao_matriz,janelas_ativas,nos_orfaos,total_janelas,maior_celula_real,ari_dtw_vs_corr,nmi_dtw_vs_corr,arquivo_csv
+DVC-01,speed_kmh,Velocidade (km/h),1. Completo,3,5,3x5,750,0,750,94,0.0028,0.0247,dvc-01_dtw_vs_corr_speed_kmh_completo_k3x5.csv
+DVC-02,speed_kmh,Velocidade (km/h),2. MST,26,27,26x27,750,0,750,11,0.0286,0.2266,dvc-02_dtw_vs_corr_speed_kmh_mst_k26x27.csv
+DVC-03,speed_kmh,Velocidade (km/h),3. P25,5,5,5x5,750,0,750,89,0.0573,0.0745,dvc-03_dtw_vs_corr_speed_kmh_p25_k5x5.csv
+DVC-04,accel_ms2,Aceleração (m/s²),1. Completo,3,8,3x8,750,0,750,79,0.0348,0.0583,dvc-04_dtw_vs_corr_accel_ms2_completo_k3x8.csv
+DVC-05,accel_ms2,Aceleração (m/s²),2. MST,25,27,25x27,750,0,750,12,0.0216,0.2,dvc-05_dtw_vs_corr_accel_ms2_mst_k25x27.csv
+DVC-06,accel_ms2,Aceleração (m/s²),3. P25,18,8,18x8,750,0,750,64,0.0441,0.081,dvc-06_dtw_vs_corr_accel_ms2_p25_k18x8.csv
+DVC-07,power_pos_kw,Potência Positiva (kW),1. Completo,3,7,3x7,750,0,750,72,0.0131,0.0289,dvc-07_dtw_vs_corr_power_pos_kw_completo_k3x7.csv
+DVC-08,power_pos_kw,Potência Positiva (kW),2. MST,26,28,26x28,750,0,750,7,0.018,0.2102,dvc-08_dtw_vs_corr_power_pos_kw_mst_k26x28.csv
+DVC-09,power_pos_kw,Potência Positiva (kW),3. P25,44,7,44x7,750,0,750,84,0.0453,0.1119,dvc-09_dtw_vs_corr_power_pos_kw_p25_k44x7.csv

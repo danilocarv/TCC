@@ -133,7 +133,10 @@ def correlation_to_similarity(
       r = +1.0 -> S = 1.0; r = 0.0 -> S = 0.293; r = -1.0 -> S = 0.0.
     - 'exponential_kernel': S = exp(-sqrt(2*(1 - r)) / sigma) onde sigma = mediana(d_Mantegna).
     """
-    if method == "linear_normalized":
+    if method in ("abs_correlation", "abs_linear", "absolute"):
+        # S = |r| in [0, 1] e Distância D = 1 - |r| (r = +1 e r = -1 têm similaridade máxima 1.0)
+        sim = np.abs(corr_matrix)
+    elif method == "linear_normalized":
         # S = 1 - |1 - r| / 2 = (1 + r) / 2
         sim = (1.0 + corr_matrix) / 2.0
     elif method == "mantegna_normalized":
@@ -227,7 +230,10 @@ def build_correlation_mst(
 
     rows, cols = np.triu_indices(k, k=1)
     r_vals = corr_matrix[rows, cols]
-    d_vals = np.sqrt(np.maximum(0.0, 2.0 * (1.0 - r_vals)))
+    if CORRELATION_SIMILARITY_METHOD in ("abs_correlation", "abs_linear", "absolute"):
+        d_vals = 1.0 - np.abs(r_vals)
+    else:
+        d_vals = np.sqrt(np.maximum(0.0, 2.0 * (1.0 - r_vals)))
     s_vals = sim_matrix[rows, cols]
 
     for u, v, d, r, s in zip(rows, cols, d_vals, r_vals, s_vals):
@@ -242,7 +248,7 @@ def build_correlation_mst(
 
     sorted_edges = sorted(
         mst_dist.edges(data=True),
-        key=lambda x: x[2]["correlation"],
+        key=(lambda x: abs(x[2]["correlation"])) if CORRELATION_SIMILARITY_METHOD in ("abs_correlation", "abs_linear", "absolute") else (lambda x: x[2]["correlation"]),
         reverse=True,
     )
 
@@ -313,7 +319,10 @@ def build_correlation_percentile_graph(
 
     threshold_r = float(np.percentile(r_vals, 100.0 - percentile_cutoff))
     threshold_s = float(np.percentile(s_vals, 100.0 - percentile_cutoff))
-    mask = r_vals >= threshold_r
+    if CORRELATION_SIMILARITY_METHOD in ("abs_correlation", "abs_linear", "absolute"):
+        mask = s_vals >= threshold_s
+    else:
+        mask = r_vals >= threshold_r
 
     sel_rows = rows[mask]
     sel_cols = cols[mask]
