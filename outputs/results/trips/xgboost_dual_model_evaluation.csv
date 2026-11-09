@@ -1,0 +1,7 @@
+target,target_label,unit,model_name,r2_test,mae_test,rmse_test,mape_percent_test,mae_100km_test
+energy_net_kwh,Energia Líquida da Bateria,kWh,dummy_mean,-0.0145,0.4036,0.5095,106.16,17.49
+energy_net_kwh,Energia Líquida da Bateria,kWh,linear_regression_12f,0.9295,0.1018,0.1343,19.0,3.22
+energy_net_kwh,Energia Líquida da Bateria,kWh,xgboost_regressor,0.93,0.0985,0.1339,18.65,3.26
+delta_soc_percent,Variação do Estado de Carga (ΔSOC),%,dummy_mean,-0.002,2.6866,3.6576,88.25,100.8
+delta_soc_percent,Variação do Estado de Carga (ΔSOC),%,linear_regression_12f,0.6906,1.3205,2.0325,38.99,37.44
+delta_soc_percent,Variação do Estado de Carga (ΔSOC),%,xgboost_regressor,0.7336,1.1677,1.8859,30.0,31.98

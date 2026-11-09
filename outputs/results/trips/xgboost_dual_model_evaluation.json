@@ -1,0 +1,335 @@
+{
+  "dataset_metadata": {
+    "total_trips": 504,
+    "valid_trips": 486,
+    "train_trips": 388,
+    "test_trips": 98,
+    "n_features": 12,
+    "feature_columns": [
+      "distance_km",
+      "duration_s",
+      "mean_speed_kmh",
+      "std_speed_kmh",
+      "mean_pos_accel_ms2",
+      "mean_neg_accel_ms2",
+      "elevation_gain_m",
+      "elevation_loss_m",
+      "net_grade_percent",
+      "aux_hvac_energy_kwh",
+      "mean_oat_c",
+      "initial_soc_percent"
+    ]
+  },
+  "models": {
+    "energy_net_kwh": {
+      "label": "Energia Líquida da Bateria",
+      "unit": "kWh",
+      "cv_5fold": {
+        "mean_r2": 0.9192,
+        "std_r2": 0.0146,
+        "mean_mae": 0.1115,
+        "std_mae": 0.0097,
+        "mean_rmse": 0.1816,
+        "std_rmse": 0.0366,
+        "mean_mape_percent": 19.63,
+        "mean_mae_100km": 2.87,
+        "folds": [
+          {
+            "r2": 0.9094,
+            "mae": 0.1187,
+            "rmse": 0.2079,
+            "mape_percent": 17.69,
+            "mae_100km": 2.78
+          },
+          {
+            "r2": 0.92,
+            "mae": 0.1072,
+            "rmse": 0.1718,
+            "mape_percent": 21.39,
+            "mae_100km": 3.03
+          },
+          {
+            "r2": 0.9372,
+            "mae": 0.0955,
+            "rmse": 0.1256,
+            "mape_percent": 18.98,
+            "mae_100km": 2.78
+          },
+          {
+            "r2": 0.9321,
+            "mae": 0.1131,
+            "rmse": 0.1697,
+            "mape_percent": 21.59,
+            "mae_100km": 2.84
+          },
+          {
+            "r2": 0.8974,
+            "mae": 0.1232,
+            "rmse": 0.233,
+            "mape_percent": 18.49,
+            "mae_100km": 2.92
+          }
+        ]
+      },
+      "holdout_test": {
+        "r2": 0.93,
+        "mae": 0.0985,
+        "rmse": 0.1339,
+        "mape_percent": 18.65,
+        "mae_100km": 3.26
+      },
+      "baselines": {
+        "dummy_mean": {
+          "r2": -0.0145,
+          "mae": 0.4036,
+          "rmse": 0.5095,
+          "mape_percent": 106.16,
+          "mae_100km": 17.49
+        },
+        "linear_regression_12f": {
+          "r2": 0.9295,
+          "mae": 0.1018,
+          "rmse": 0.1343,
+          "mape_percent": 19.0,
+          "mae_100km": 3.22
+        },
+        "xgboost_regressor": {
+          "r2": 0.93,
+          "mae": 0.0985,
+          "rmse": 0.1339,
+          "mape_percent": 18.65,
+          "mae_100km": 3.26
+        }
+      },
+      "shap_ranking": [
+        {
+          "feature": "elevation_gain_m",
+          "mean_abs_shap": 0.21639,
+          "group": "Topografia (SRTM)",
+          "color": "#047857"
+        },
+        {
+          "feature": "distance_km",
+          "mean_abs_shap": 0.13843,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "aux_hvac_energy_kwh",
+          "mean_abs_shap": 0.10227,
+          "group": "Clima & Conforto (HVAC)",
+          "color": "#D97706"
+        },
+        {
+          "feature": "duration_s",
+          "mean_abs_shap": 0.04888,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "mean_oat_c",
+          "mean_abs_shap": 0.03247,
+          "group": "Clima & Conforto (HVAC)",
+          "color": "#D97706"
+        },
+        {
+          "feature": "std_speed_kmh",
+          "mean_abs_shap": 0.02014,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "net_grade_percent",
+          "mean_abs_shap": 0.0198,
+          "group": "Topografia (SRTM)",
+          "color": "#047857"
+        },
+        {
+          "feature": "initial_soc_percent",
+          "mean_abs_shap": 0.0148,
+          "group": "Bateria & Eletroquímica",
+          "color": "#7C3AED"
+        },
+        {
+          "feature": "mean_neg_accel_ms2",
+          "mean_abs_shap": 0.00504,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "mean_speed_kmh",
+          "mean_abs_shap": 0.00335,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "mean_pos_accel_ms2",
+          "mean_abs_shap": 0.00232,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "elevation_loss_m",
+          "mean_abs_shap": 0.00098,
+          "group": "Topografia (SRTM)",
+          "color": "#047857"
+        }
+      ]
+    },
+    "delta_soc_percent": {
+      "label": "Variação do Estado de Carga (ΔSOC)",
+      "unit": "%",
+      "cv_5fold": {
+        "mean_r2": 0.8286,
+        "std_r2": 0.0589,
+        "mean_mae": 1.1596,
+        "std_mae": 0.114,
+        "mean_rmse": 1.7205,
+        "std_rmse": 0.2711,
+        "mean_mape_percent": 34.7,
+        "mean_mae_100km": 29.68,
+        "folds": [
+          {
+            "r2": 0.8769,
+            "mae": 1.1401,
+            "rmse": 1.6677,
+            "mape_percent": 29.98,
+            "mae_100km": 29.21
+          },
+          {
+            "r2": 0.7792,
+            "mae": 1.1601,
+            "rmse": 1.7556,
+            "mape_percent": 30.84,
+            "mae_100km": 27.54
+          },
+          {
+            "r2": 0.74,
+            "mae": 1.3099,
+            "rmse": 2.1464,
+            "mape_percent": 40.99,
+            "mae_100km": 31.48
+          },
+          {
+            "r2": 0.8921,
+            "mae": 0.9647,
+            "rmse": 1.2943,
+            "mape_percent": 37.82,
+            "mae_100km": 26.73
+          },
+          {
+            "r2": 0.8549,
+            "mae": 1.2231,
+            "rmse": 1.7383,
+            "mape_percent": 33.89,
+            "mae_100km": 33.45
+          }
+        ]
+      },
+      "holdout_test": {
+        "r2": 0.7336,
+        "mae": 1.1677,
+        "rmse": 1.8859,
+        "mape_percent": 30.0,
+        "mae_100km": 31.98
+      },
+      "baselines": {
+        "dummy_mean": {
+          "r2": -0.002,
+          "mae": 2.6866,
+          "rmse": 3.6576,
+          "mape_percent": 88.25,
+          "mae_100km": 100.8
+        },
+        "linear_regression_12f": {
+          "r2": 0.6906,
+          "mae": 1.3205,
+          "rmse": 2.0325,
+          "mape_percent": 38.99,
+          "mae_100km": 37.44
+        },
+        "xgboost_regressor": {
+          "r2": 0.7336,
+          "mae": 1.1677,
+          "rmse": 1.8859,
+          "mape_percent": 30.0,
+          "mae_100km": 31.98
+        }
+      },
+      "shap_ranking": [
+        {
+          "feature": "distance_km",
+          "mean_abs_shap": 1.13447,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "aux_hvac_energy_kwh",
+          "mean_abs_shap": 0.71655,
+          "group": "Clima & Conforto (HVAC)",
+          "color": "#D97706"
+        },
+        {
+          "feature": "elevation_gain_m",
+          "mean_abs_shap": 0.62026,
+          "group": "Topografia (SRTM)",
+          "color": "#047857"
+        },
+        {
+          "feature": "duration_s",
+          "mean_abs_shap": 0.6125,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "initial_soc_percent",
+          "mean_abs_shap": 0.46394,
+          "group": "Bateria & Eletroquímica",
+          "color": "#7C3AED"
+        },
+        {
+          "feature": "mean_oat_c",
+          "mean_abs_shap": 0.23817,
+          "group": "Clima & Conforto (HVAC)",
+          "color": "#D97706"
+        },
+        {
+          "feature": "std_speed_kmh",
+          "mean_abs_shap": 0.10413,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "mean_neg_accel_ms2",
+          "mean_abs_shap": 0.08269,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "net_grade_percent",
+          "mean_abs_shap": 0.07294,
+          "group": "Topografia (SRTM)",
+          "color": "#047857"
+        },
+        {
+          "feature": "mean_speed_kmh",
+          "mean_abs_shap": 0.05768,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        },
+        {
+          "feature": "elevation_loss_m",
+          "mean_abs_shap": 0.0143,
+          "group": "Topografia (SRTM)",
+          "color": "#047857"
+        },
+        {
+          "feature": "mean_pos_accel_ms2",
+          "mean_abs_shap": 0.00579,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF"
+        }
+      ]
+    }
+  }
+}
