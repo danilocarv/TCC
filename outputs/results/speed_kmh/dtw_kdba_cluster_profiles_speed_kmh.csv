@@ -1,0 +1,4 @@
+cluster_id,profile_name,n_windows,pct_total,mean_pos_accel_ms2,max_pos_accel_ms2,mean_speed_kmh,max_speed_kmh,mean_power_kw,mean_energy_kwh,rapid_accel_rate_min
+0,Econômico / Suave,300,40.0,0.6213,1.7217,29.38,53.97,5.876,0.1874,0.22
+1,Moderado / Regular,414,55.2,0.5135,1.5553,45.91,68.16,6.228,0.2037,0.237
+2,Agressivo / Dinâmico,36,4.8,0.3835,1.1169,90.13,111.68,13.78,0.4582,0.167

@@ -1,0 +1,4 @@
+feature,feature_name_pt,comparison_pair,diagonal_concordance_count,diagonal_concordance_pct,adjusted_rand_index,normalized_mutual_info,rand_index,homogeneity,completeness
+accel_ms2,Aceleração Longitudinal,K-DBA DTW vs. K-Medóides DTW,386,51.47,0.1382,0.1598,0.6147,0.1591,0.1605
+accel_ms2,Aceleração Longitudinal,K-DBA DTW vs. Louvain DTW,540,72.0,0.4058,0.3626,0.7289,0.3535,0.3721
+accel_ms2,Aceleração Longitudinal,K-DBA DTW vs. K-Means Euclidiano,363,48.4,0.1167,0.183,0.5737,0.1695,0.1988

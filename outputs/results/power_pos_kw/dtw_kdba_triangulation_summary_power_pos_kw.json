@@ -1,0 +1,90 @@
+{
+  "feature": "power_pos_kw",
+  "n_windows": 750,
+  "hyperparameters": {
+    "n_clusters": 3,
+    "metric": "dtw",
+    "barycenter_algorithm": "DBA (DTW Barycenter Averaging)",
+    "max_iter": 10,
+    "max_iter_barycenter": 5,
+    "random_state": 42
+  },
+  "cluster_distribution": {
+    "Econômico / Suave": 399,
+    "Moderado / Regular": 311,
+    "Agressivo / Dinâmico": 40
+  },
+  "triangulation_metrics": {
+    "kdba_vs_kmedoids": {
+      "n_samples": 750,
+      "diagonal_sum": 436,
+      "diagonal_pct": 58.13,
+      "ari": 0.1823,
+      "nmi": 0.1531,
+      "rand_index": 0.601,
+      "homogeneity": 0.1709,
+      "completeness": 0.1387
+    },
+    "kdba_vs_louvain": {
+      "n_samples": 750,
+      "diagonal_sum": 420,
+      "diagonal_pct": 56.0,
+      "ari": 0.3064,
+      "nmi": 0.2929,
+      "rand_index": 0.6615,
+      "homogeneity": 0.3265,
+      "completeness": 0.2656
+    },
+    "kdba_vs_kmeans": {
+      "n_samples": 750,
+      "diagonal_sum": 287,
+      "diagonal_pct": 38.27,
+      "ari": 0.0628,
+      "nmi": 0.0463,
+      "rand_index": 0.5356,
+      "homogeneity": 0.0484,
+      "completeness": 0.0444
+    }
+  },
+  "cluster_profiles": [
+    {
+      "cluster_id": 0,
+      "profile_name": "Econômico / Suave",
+      "n_windows": 399,
+      "pct_total": 53.2,
+      "mean_pos_accel_ms2": 0.517,
+      "max_pos_accel_ms2": 1.4879,
+      "mean_speed_kmh": 36.29,
+      "max_speed_kmh": 59.45,
+      "mean_power_kw": 4.951,
+      "mean_energy_kwh": 0.1599,
+      "rapid_accel_rate_min": 0.098
+    },
+    {
+      "cluster_id": 1,
+      "profile_name": "Moderado / Regular",
+      "n_windows": 311,
+      "pct_total": 41.47,
+      "mean_pos_accel_ms2": 0.5876,
+      "max_pos_accel_ms2": 1.7236,
+      "mean_speed_kmh": 44.78,
+      "max_speed_kmh": 67.9,
+      "mean_power_kw": 7.459,
+      "mean_energy_kwh": 0.2426,
+      "rapid_accel_rate_min": 0.315
+    },
+    {
+      "cluster_id": 2,
+      "profile_name": "Agressivo / Dinâmico",
+      "n_windows": 40,
+      "pct_total": 5.33,
+      "mean_pos_accel_ms2": 0.5943,
+      "max_pos_accel_ms2": 1.7722,
+      "mean_speed_kmh": 66.52,
+      "max_speed_kmh": 89.89,
+      "mean_power_kw": 13.55,
+      "mean_energy_kwh": 0.445,
+      "rapid_accel_rate_min": 0.825
+    }
+  ]
+}

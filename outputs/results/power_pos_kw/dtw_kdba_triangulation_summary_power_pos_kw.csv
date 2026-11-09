@@ -1,0 +1,4 @@
+feature,feature_name_pt,comparison_pair,diagonal_concordance_count,diagonal_concordance_pct,adjusted_rand_index,normalized_mutual_info,rand_index,homogeneity,completeness
+power_pos_kw,Consumo Positivo de Potência,K-DBA DTW vs. K-Medóides DTW,436,58.13,0.1823,0.1531,0.601,0.1709,0.1387
+power_pos_kw,Consumo Positivo de Potência,K-DBA DTW vs. Louvain DTW,420,56.0,0.3064,0.2929,0.6615,0.3265,0.2656
+power_pos_kw,Consumo Positivo de Potência,K-DBA DTW vs. K-Means Euclidiano,287,38.27,0.0628,0.0463,0.5356,0.0484,0.0444
