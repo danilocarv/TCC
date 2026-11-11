@@ -5,17 +5,17 @@
   "stages_comparison": [
     {
       "cenario": "1. Grafo Completo (Similaridade S ∈ [0, 1])",
-      "arestas": 280126,
-      "pct_arestas": 99.73333333333333,
+      "arestas": 280124,
+      "pct_arestas": 99.73262127280819,
       "nos_orfaos": 1,
       "is_conexo": false,
-      "modularidade_q": 0.07391957939175545,
-      "comunidades_total": 8,
-      "comunidades_ativas": 7,
-      "corr_intra_media": 0.03495404055893756,
-      "corr_inter_media": -0.0008646726601382083,
-      "diff_intra_inter": 0.03581871321907577,
-      "razao_intra_inter": -40.42459322508306
+      "modularidade_q": 0.07241977061694435,
+      "comunidades_total": 9,
+      "comunidades_ativas": 8,
+      "corr_intra_media": 0.027353367891806406,
+      "corr_inter_media": -0.0003637674135358345,
+      "diff_intra_inter": 0.02771713530534224,
+      "razao_intra_inter": -75.19466250682139
     },
     {
       "cenario": "2. Árvore Geradora Mínima (MST)",
@@ -23,13 +23,13 @@
       "pct_arestas": 0.26666666666666666,
       "nos_orfaos": 0,
       "is_conexo": true,
-      "modularidade_q": 0.9228782569241788,
-      "comunidades_total": 27,
-      "comunidades_ativas": 27,
-      "corr_intra_media": 0.11399312699414536,
-      "corr_inter_media": 0.00018064464130622727,
-      "diff_intra_inter": 0.11381248235283914,
-      "razao_intra_inter": 631.0351979990659
+      "modularidade_q": 0.9230270740323824,
+      "comunidades_total": 28,
+      "comunidades_ativas": 28,
+      "corr_intra_media": 0.08953048319191384,
+      "corr_inter_media": -5.6708558052716444e-05,
+      "diff_intra_inter": 0.08958719174996656,
+      "razao_intra_inter": -1578.782572970486
     },
     {
       "cenario": "3A. Percentil 25 Direto (Sem MST)",
@@ -37,13 +37,13 @@
       "pct_arestas": 25.000089007565645,
       "nos_orfaos": 1,
       "is_conexo": false,
-      "modularidade_q": 0.17327704460255502,
-      "comunidades_total": 8,
-      "comunidades_ativas": 7,
-      "corr_intra_media": 0.03926755193066586,
-      "corr_inter_media": -0.0016025552443381804,
-      "diff_intra_inter": 0.04087010717500404,
-      "razao_intra_inter": -24.503087846361566
+      "modularidade_q": 0.16764444103708703,
+      "comunidades_total": 9,
+      "comunidades_ativas": 8,
+      "corr_intra_media": 0.0308930537129836,
+      "corr_inter_media": -0.0008041485945308259,
+      "diff_intra_inter": 0.031697202307514424,
+      "razao_intra_inter": -38.41709594855153
     },
     {
       "cenario": "3B. Rede Otimizada (MST ∪ P25)",
@@ -51,54 +51,54 @@
       "pct_arestas": 25.000445037828218,
       "nos_orfaos": 0,
       "is_conexo": true,
-      "modularidade_q": 0.17327704463209018,
-      "comunidades_total": 7,
-      "comunidades_ativas": 7,
-      "corr_intra_media": 0.039184163627564,
-      "corr_inter_media": -0.0016031599973801458,
-      "diff_intra_inter": 0.040787323624944145,
-      "razao_intra_inter": -24.441829693603903
+      "modularidade_q": 0.16764444106342394,
+      "comunidades_total": 8,
+      "comunidades_ativas": 8,
+      "corr_intra_media": 0.030792670807314723,
+      "corr_inter_media": -0.0008045328235258767,
+      "diff_intra_inter": 0.0315972036308406,
+      "razao_intra_inter": -38.27397702975672
     }
   ],
   "cross_comparisons": {
     "Cenário 1: Completo": {
       "kmeans": {
-        "ari": 0.010371164718600674,
-        "nmi": 0.026101839047917675
+        "ari": 0.005055606872049147,
+        "nmi": 0.014259971502505577
       },
       "dtw": {
-        "ari": 0.03484031087054923,
-        "nmi": 0.05829926409394396
+        "ari": 0.023762239132470428,
+        "nmi": 0.04269191562841615
       }
     },
     "Cenário 2: MST": {
       "kmeans": {
-        "ari": 0.002356090442890142,
-        "nmi": 0.02790015336863109
+        "ari": 0.004390632682067089,
+        "nmi": 0.04049014731958712
       },
       "dtw": {
-        "ari": 0.01246067301773927,
-        "nmi": 0.06201386118691072
+        "ari": 0.014484194989334545,
+        "nmi": 0.06866252363801073
       }
     },
     "Cenário 3A: P25": {
       "kmeans": {
-        "ari": 0.010045427969653417,
-        "nmi": 0.027118250202077195
+        "ari": 0.005728634238930601,
+        "nmi": 0.016588076513446254
       },
       "dtw": {
-        "ari": 0.031773780970932426,
-        "nmi": 0.0549492765701304
+        "ari": 0.021238404628212054,
+        "nmi": 0.03977394977405744
       }
     },
     "Cenário 3B: MST ∪ P25": {
       "kmeans": {
-        "ari": 0.009640711656768323,
-        "nmi": 0.025472271897438503
+        "ari": 0.0056140212625217425,
+        "nmi": 0.015786374437094002
       },
       "dtw": {
-        "ari": 0.03185212187366417,
-        "nmi": 0.054313902351822894
+        "ari": 0.021709560617889267,
+        "nmi": 0.03943349779730066
       }
     }
   }

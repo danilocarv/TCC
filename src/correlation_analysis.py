@@ -46,11 +46,11 @@ from src.config import (
 def load_and_resample_series(
     feature: str = "speed_kmh",
     n_windows: int | None = None,
-    n_points: int = 100,
+    n_points: int = 120,
 ) -> tuple[np.ndarray, list[str]]:
     """
-    Carrega as séries temporais de treino da feature especificada e as reamostra
-    (via interpolação linear) para um grid padronizado de n_points (0% a 100% de progresso).
+    Carrega as séries temporais de treino da feature especificada e as alinha segundo a segundo (1 Hz)
+    em um grid temporal fixo de 120 s (t = 0..119 s) via timestamps reais, interpolando lacunas.
     
     Retorna a matriz X de dimensão (K, n_points) e a lista com os nomes dos arquivos.
     """
@@ -67,14 +67,14 @@ def load_and_resample_series(
         train_files = train_files[:n_windows]
 
     k = len(train_files)
-    grid_target = np.linspace(0.0, 1.0, n_points)
+    grid_target = np.arange(n_points, dtype=np.float64) if n_points == 120 else np.linspace(0.0, 119.0, n_points)
     X = np.zeros((k, n_points), dtype=np.float64)
     file_stems = []
 
     clip_positive = fcfg.get("clip_positive", False)
 
     for idx, fpath in enumerate(train_files):
-        df_win = pd.read_parquet(fpath, columns=[col_name])
+        df_win = pd.read_parquet(fpath, columns=[col_name, "elapsed_s", "window_id"])
         vals = df_win[col_name].to_numpy(dtype=np.float64)
 
         if clip_positive:
@@ -84,8 +84,8 @@ def load_and_resample_series(
         if n_samples < 2:
             X[idx, :] = vals[0] if n_samples == 1 else 0.0
         else:
-            orig_grid = np.linspace(0.0, 1.0, n_samples)
-            X[idx, :] = np.interp(grid_target, orig_grid, vals)
+            rel_seconds = df_win["elapsed_s"].to_numpy(dtype=np.float64) - float(df_win["window_id"].iloc[0]) * 120.0
+            X[idx, :] = np.interp(grid_target, rel_seconds, vals)
 
         file_stems.append(fpath.stem)
 
@@ -793,7 +793,7 @@ def compare_scenarios_with_dtw_and_kmeans(
 def run_correlation_pipeline(
     feature: str = "speed_kmh",
     is_pilot: bool = False,
-    n_points: int = 100,
+    n_points: int = 120,
     resolution: float = 1.0,
 ) -> dict:
     """
@@ -812,11 +812,11 @@ def run_correlation_pipeline(
     print(f"PIPELINE INTEGRADO DE CORRELAÇÃO DE PEARSON E REDES COMPLEXAS — {fcfg['name_pt'].upper()} [{tag}]")
     print(f"{'='*95}")
 
-    # 1. Carrega e reamostra séries temporais
+    # 1. Carrega e alinha séries temporais segundo a segundo (120 s a 1 Hz)
     t0 = time.time()
     X, file_stems = load_and_resample_series(feature=feature, n_windows=n_windows, n_points=n_points)
     k = X.shape[0]
-    print(f"-> [PASSO 1/5] {k:,d} séries carregadas e reamostradas para grid de {n_points} pontos.")
+    print(f"-> [PASSO 1/5] {k:,d} séries carregadas e alinhadas segundo a segundo ({n_points} s, 1 Hz).")
 
     # 2. Calcula e salva matriz de correlação de Pearson e similaridade [0, 1]
     corr_matrix = compute_pearson_correlation_matrix(X)
@@ -1082,8 +1082,8 @@ def main():
     parser.add_argument(
         "--points",
         type=int,
-        default=100,
-        help="Número de pontos do grid uniforme de interpolação temporal (padrão: 100).",
+        default=120,
+        help="Número de pontos do grid temporal fixo de 0..119 s (padrão: 120 = 1 Hz).",
     )
     parser.add_argument(
         "--resolution",
