@@ -136,6 +136,79 @@ def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray, distance_km: np.nd
     return res
 
 
+def _run_kfold_cv(
+    model_factory,
+    X_train: pd.DataFrame,
+    y_train: np.ndarray,
+    dist_train: np.ndarray,
+    is_energy: bool,
+    unit: str,
+    model_label: str,
+) -> dict:
+    """Executa 5-Fold Stratified Cross-Validation estratificada por quantis de distância."""
+    cv_strat = pd.qcut(dist_train, q=5, labels=False)
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+
+    cv_folds = []
+    logger.info(f"Executando 5-Fold Stratified Cross-Validation no Treino ({model_label})...")
+
+    for fold_num, (f_train_idx, f_val_idx) in enumerate(skf.split(X_train, cv_strat), 1):
+        f_X_train, f_X_val = X_train.iloc[f_train_idx], X_train.iloc[f_val_idx]
+        f_y_train, f_y_val = y_train[f_train_idx], y_train[f_val_idx]
+        f_dist_val = dist_train[f_val_idx]
+
+        model_cv = model_factory()
+        model_cv.fit(f_X_train, f_y_train)
+        f_pred = model_cv.predict(f_X_val)
+
+        fold_m = calculate_metrics(f_y_val, f_pred, f_dist_val, is_energy=is_energy)
+        cv_folds.append(fold_m)
+        logger.info(
+            f"  [{model_label}] Fold {fold_num}: R²={fold_m['r2']:.4f} | "
+            f"MAE={fold_m['mae']:.4f} {unit} | RMSE={fold_m['rmse']:.4f} {unit}"
+        )
+
+    cv_summary = {
+        "mean_r2": float(round(np.mean([f["r2"] for f in cv_folds]), 4)),
+        "std_r2": float(round(np.std([f["r2"] for f in cv_folds]), 4)),
+        "mean_mae": float(round(np.mean([f["mae"] for f in cv_folds]), 4)),
+        "std_mae": float(round(np.std([f["mae"] for f in cv_folds]), 4)),
+        "mean_rmse": float(round(np.mean([f["rmse"] for f in cv_folds]), 4)),
+        "std_rmse": float(round(np.std([f["rmse"] for f in cv_folds]), 4)),
+        "mean_mape_percent": float(round(np.mean([f["mape_percent"] for f in cv_folds]), 2)),
+        "mean_mae_100km": float(round(np.mean([f["mae_100km"] for f in cv_folds]), 2)),
+        "folds": cv_folds,
+    }
+    logger.info(
+        f"Resumo 5-Fold CV ({model_label}): R² = {cv_summary['mean_r2']} ± {cv_summary['std_r2']}, "
+        f"MAE = {cv_summary['mean_mae']} ± {cv_summary['std_mae']} {unit}"
+    )
+    return cv_summary
+
+
+def _build_shap_ranking(
+    shap_values: np.ndarray,
+    columns: pd.Index,
+    coefs: np.ndarray | None = None,
+) -> list[dict]:
+    """Ordena as features pelo impacto médio absoluto (mean(|SHAP|))."""
+    mean_abs_shap = np.mean(np.abs(shap_values), axis=0)
+    ranking = []
+    for idx, (col, val) in enumerate(zip(columns, mean_abs_shap)):
+        group_name, group_color = FEATURE_GROUPS.get(col, ("Outros", "#64748B"))
+        item = {
+            "feature": col,
+            "mean_abs_shap": round(float(val), 5),
+            "group": group_name,
+            "color": group_color,
+        }
+        if coefs is not None:
+            item["coef"] = round(float(coefs[idx]), 6)
+        ranking.append(item)
+    ranking.sort(key=lambda x: x["mean_abs_shap"], reverse=True)
+    return ranking
+
+
 def train_and_evaluate_single_target(
     target_key: str,
     df_valid: pd.DataFrame,
@@ -158,19 +231,8 @@ def train_and_evaluate_single_target(
     y_train, y_test = y[train_idx], y[test_idx]
     dist_train, dist_test = distances[train_idx], distances[test_idx]
 
-    # 1. 5-Fold Stratified Cross-Validation no Treino
-    cv_strat = pd.qcut(dist_train, q=5, labels=False)
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-
-    cv_folds = []
-    logger.info("Executando 5-Fold Stratified Cross-Validation no Treino...")
-
-    for fold_num, (f_train_idx, f_val_idx) in enumerate(skf.split(X_train, cv_strat), 1):
-        f_X_train, f_X_val = X_train.iloc[f_train_idx], X_train.iloc[f_val_idx]
-        f_y_train, f_y_val = y_train[f_train_idx], y_train[f_val_idx]
-        f_dist_val = dist_train[f_val_idx]
-
-        model_cv = xgb.XGBRegressor(
+    def _make_xgb():
+        return xgb.XGBRegressor(
             n_estimators=120,
             learning_rate=0.04,
             max_depth=3,
@@ -179,41 +241,18 @@ def train_and_evaluate_single_target(
             reg_alpha=0.1,
             reg_lambda=1.0,
             random_state=42,
-            n_jobs=-1
+            n_jobs=-1,
         )
-        model_cv.fit(f_X_train, f_y_train)
-        f_pred = model_cv.predict(f_X_val)
 
-        fold_m = calculate_metrics(f_y_val, f_pred, f_dist_val, is_energy=is_energy)
-        cv_folds.append(fold_m)
-        logger.info(f"  Fold {fold_num}: R²={fold_m['r2']:.4f} | MAE={fold_m['mae']:.4f} {unit} | RMSE={fold_m['rmse']:.4f} {unit}")
-
-    cv_summary = {
-        "mean_r2": float(round(np.mean([f["r2"] for f in cv_folds]), 4)),
-        "std_r2": float(round(np.std([f["r2"] for f in cv_folds]), 4)),
-        "mean_mae": float(round(np.mean([f["mae"] for f in cv_folds]), 4)),
-        "std_mae": float(round(np.std([f["mae"] for f in cv_folds]), 4)),
-        "mean_rmse": float(round(np.mean([f["rmse"] for f in cv_folds]), 4)),
-        "std_rmse": float(round(np.std([f["rmse"] for f in cv_folds]), 4)),
-        "mean_mape_percent": float(round(np.mean([f["mape_percent"] for f in cv_folds]), 2)),
-        "mean_mae_100km": float(round(np.mean([f["mae_100km"] for f in cv_folds]), 2)),
-        "folds": cv_folds
-    }
-    logger.info(f"Resumo 5-Fold CV: R² = {cv_summary['mean_r2']} ± {cv_summary['std_r2']}, MAE = {cv_summary['mean_mae']} ± {cv_summary['std_mae']} {unit}")
-
-    # 2. Treinamento do Modelo Final no Treino Completo (N=388)
-    logger.info("Treinando Modelo Final XGBoost no conjunto de treino completo...")
-    final_model = xgb.XGBRegressor(
-        n_estimators=120,
-        learning_rate=0.04,
-        max_depth=3,
-        subsample=0.8,
-        colsample_bytree=0.85,
-        reg_alpha=0.1,
-        reg_lambda=1.0,
-        random_state=42,
-        n_jobs=-1
+    # 1. 5-Fold Stratified Cross-Validation no Treino (XGBoost e Baseline Linear)
+    cv_summary = _run_kfold_cv(_make_xgb, X_train, y_train, dist_train, is_energy, unit, "XGBoost")
+    lr_cv_summary = _run_kfold_cv(
+        LinearRegression, X_train, y_train, dist_train, is_energy, unit, "Regressão Linear"
     )
+
+    # 2. Treinamento do Modelo Final XGBoost no Treino Completo (N=388)
+    logger.info("Treinando Modelo Final XGBoost no conjunto de treino completo...")
+    final_model = _make_xgb()
     final_model.fit(X_train, y_train)
 
     # 3. Avaliação no Teste Holdout (N=98)
@@ -240,22 +279,16 @@ def train_and_evaluate_single_target(
         "xgboost_regressor": test_metrics
     }
 
-    # 5. Importância de Variáveis via SHAP
-    logger.info("Calculando atribuição de importância SHAP via TreeExplainer...")
+    # 5. Importância de Variáveis via SHAP (XGBoost TreeExplainer e LinearExplainer)
+    logger.info("Calculando atribuição de importância SHAP via TreeExplainer e LinearExplainer...")
     explainer = shap.TreeExplainer(final_model)
     shap_values = explainer.shap_values(X_test)
-    mean_abs_shap = np.mean(np.abs(shap_values), axis=0)
+    shap_ranking = _build_shap_ranking(shap_values, X_test.columns)
 
-    shap_ranking = []
-    for col, val in zip(X_test.columns, mean_abs_shap):
-        group_name, group_color = FEATURE_GROUPS.get(col, ("Outros", "#64748B"))
-        shap_ranking.append({
-            "feature": col,
-            "mean_abs_shap": round(float(val), 5),
-            "group": group_name,
-            "color": group_color
-        })
-    shap_ranking.sort(key=lambda x: x["mean_abs_shap"], reverse=True)
+    lr_masker = shap.maskers.Independent(X_train, max_samples=len(X_train))
+    lr_explainer = shap.LinearExplainer(lr_model, lr_masker)
+    lr_shap_values = lr_explainer.shap_values(X_test)
+    lr_shap_ranking = _build_shap_ranking(lr_shap_values, X_test.columns, coefs=lr_model.coef_)
 
     # 6. Salva Modelo em Disco
     OUTPUT_MODELS_DIR.mkdir(parents=True, exist_ok=True)
@@ -277,10 +310,18 @@ def train_and_evaluate_single_target(
         "unit": unit,
         "y_test": y_test,
         "y_pred_test": y_pred_test,
+        "dummy_pred_test": dummy_pred,
+        "lr_pred_test": lr_pred,
         "residuals": y_test - y_pred_test,
+        "lr_residuals": y_test - lr_pred,
         "dist_test": dist_test,
         "test_metrics": test_metrics,
         "cv_summary": cv_summary,
+        "lr_test_metrics": lr_metrics,
+        "lr_cv_summary": lr_cv_summary,
+        "lr_intercept": round(float(lr_model.intercept_), 6),
+        "lr_shap_ranking": lr_shap_ranking,
+        "lr_shap_values": lr_shap_values,
         "baselines": baselines,
         "shap_ranking": shap_ranking,
         "shap_values": shap_values,
@@ -288,13 +329,23 @@ def train_and_evaluate_single_target(
     }
 
 
-def plot_dual_real_vs_pred(res_energy: dict, res_soc: dict, save_path: Path):
-    """Gera a Figura 25: Painel Dual Real vs. Predito (Energia Líquida e Variação de SOC)."""
+def plot_dual_real_vs_pred(
+    res_energy: dict,
+    res_soc: dict,
+    save_path: Path,
+    *,
+    suptitle: str = "Figura 25: Desempenho Preditivo do XGBoost Regressor Dual no Conjunto de Teste (Holdout 20%)",
+    model_prep_phrase: str = "pelo XGBoost",
+    pred_key: str = "y_pred_test",
+    metrics_key: str = "test_metrics",
+    cv_key: str = "cv_summary",
+):
+    """Gera Painel Dual Real vs. Predito (Energia Líquida e Variação de SOC)."""
     sns.set_theme(style="whitegrid", font_scale=1.05)
     fig, axes = plt.subplots(1, 2, figsize=(15, 6.8), dpi=300)
 
     fig.suptitle(
-        "Figura 25: Desempenho Preditivo do XGBoost Regressor Dual no Conjunto de Teste (Holdout 20%)",
+        suptitle,
         fontsize=13.5,
         fontweight="bold",
         y=0.98,
@@ -302,18 +353,20 @@ def plot_dual_real_vs_pred(res_energy: dict, res_soc: dict, save_path: Path):
     )
 
     panels_data = [
-        (axes[0], res_energy, "A. Energia Líquida da Bateria ($E_{net}$)", "Consumo Real de Energia [kWh]", "Consumo Predito pelo XGBoost [kWh]", "#1E40AF", "kWh", 0.10),
-        (axes[1], res_soc, "B. Variação do Estado de Carga ($\Delta$SOC)", "Variação Real de SOC [$\Delta$%]", "Variação Predita pelo XGBoost [$\Delta$%]", "#7C3AED", "%", 0.15)
+        (axes[0], res_energy, "A. Energia Líquida da Bateria ($E_{net}$)", "Consumo Real de Energia [kWh]", f"Consumo Predito {model_prep_phrase} [kWh]", "#1E40AF", "kWh", 0.10),
+        (axes[1], res_soc, r"B. Variação do Estado de Carga ($\Delta$SOC)", r"Variação Real de SOC [$\Delta$%]", rf"Variação Predita {model_prep_phrase} [$\Delta$%]", "#7C3AED", "%", 0.15)
     ]
 
     for ax, res, title, xlabel, ylabel, main_color, unit, env_ratio in panels_data:
         y_real = res["y_test"]
-        y_pred = res["y_pred_test"]
+        y_pred = res[pred_key]
         dist = res["dist_test"]
-        m = res["test_metrics"]
+        m = res[metrics_key]
+        cv = res[cv_key]
 
         max_val = max(np.max(y_real), np.max(y_pred)) * 1.08
-        min_val = 0.0
+        min_pred = float(np.min(y_pred))
+        min_val = min(0.0, min_pred * 1.15 - 0.03 * max_val) if min_pred < 0.0 else 0.0
 
         # Dispersão colorida pela distância da viagem
         scatter = ax.scatter(
@@ -330,8 +383,11 @@ def plot_dual_real_vs_pred(res_energy: dict, res_soc: dict, save_path: Path):
         cbar = plt.colorbar(scatter, ax=ax, shrink=0.78, pad=0.02)
         cbar.set_label("Distância da Viagem [km]", fontsize=9, fontweight="semibold")
 
+        if min_val < 0.0:
+            ax.axhline(0.0, color="#94A3B8", linestyle="-", lw=0.9, zorder=2)
+
         # Reta Identidade y = x
-        ax.plot([min_val, max_val], [min_val, max_val], "k--", lw=1.6, label="Identidade Exata ($y = x$)", zorder=3)
+        ax.plot([max(0.0, min_val), max_val], [max(0.0, min_val), max_val], "k--", lw=1.6, label="Identidade Exata ($y = x$)", zorder=3)
 
         # Envelope de Erro
         x_env = np.linspace(0.05, max_val, 100)
@@ -341,19 +397,20 @@ def plot_dual_real_vs_pred(res_energy: dict, res_soc: dict, save_path: Path):
             x_env * (1.0 + env_ratio),
             color="#94A3B8",
             alpha=0.18,
-            label=f"Envelope $\pm${int(env_ratio*100)}%"
+            label=rf"Envelope $\pm${int(env_ratio*100)}%"
         )
 
         # Caixa com Métricas Oficiais
         norm_text = f"• MAE/100km: {m['mae_100km']:.2f} {unit}/100km\n" if unit == "kWh" else ""
+        mae_fmt = f"{m['mae']:.3f}" if (pred_key == "y_pred_test" or unit != "kWh") else f"{m['mae']:.4f}"
         box_text = (
             f"Métricas Holdout (N=98 viagens):\n"
             f"• R² = {m['r2']:.4f}\n"
-            f"• MAE = {m['mae']:.3f} {unit}\n"
+            f"• MAE = {mae_fmt} {unit}\n"
             f"• RMSE = {m['rmse']:.3f} {unit}\n"
             f"• MAPE = {m['mape_percent']:.1f}%\n"
             f"{norm_text}"
-            f"• 5-Fold CV R²: {res['cv_summary']['mean_r2']:.4f} ± {res['cv_summary']['std_r2']:.3f}"
+            f"• 5-Fold CV R²: {cv['mean_r2']:.4f} ± {cv['std_r2']:.3f}"
         )
         ax.text(
             0.04, 0.96, box_text,
@@ -377,16 +434,24 @@ def plot_dual_real_vs_pred(res_energy: dict, res_soc: dict, save_path: Path):
     save_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
-    logger.info(f"Figura 25 salva com sucesso: {save_path}")
+    logger.info(f"Figura Real vs Predito salva com sucesso: {save_path}")
 
 
-def plot_dual_residuals_distribution(res_energy: dict, res_soc: dict, save_path: Path):
-    """Gera a Figura 26: Painel Dual da Distribuição dos Resíduos de Predição."""
+def plot_dual_residuals_distribution(
+    res_energy: dict,
+    res_soc: dict,
+    save_path: Path,
+    *,
+    suptitle: str = "Figura 26: Distribuição e Densidade dos Resíduos de Predição ($e = y_{real} - y_{pred}$)",
+    residuals_key: str = "residuals",
+    headroom_scale: float = 1.0,
+):
+    """Gera Painel Dual da Distribuição dos Resíduos de Predição."""
     sns.set_theme(style="whitegrid", font_scale=1.05)
     fig, axes = plt.subplots(1, 2, figsize=(15, 5.8), dpi=300)
 
     fig.suptitle(
-        "Figura 26: Distribuição e Densidade dos Resíduos de Predição ($e = y_{real} - y_{pred}$)",
+        suptitle,
         fontsize=13.5,
         fontweight="bold",
         y=0.98,
@@ -395,11 +460,11 @@ def plot_dual_residuals_distribution(res_energy: dict, res_soc: dict, save_path:
 
     panels_data = [
         (axes[0], res_energy, "A. Resíduos da Energia Líquida ($E_{net}$)", "Erro Residual de Energia [kWh]", "#1E40AF", "kWh"),
-        (axes[1], res_soc, "B. Resíduos da Variação de SOC ($\Delta$SOC)", "Erro Residual de SOC [$\Delta$%]", "#7C3AED", "%")
+        (axes[1], res_soc, r"B. Resíduos da Variação de SOC ($\Delta$SOC)", r"Erro Residual de SOC [$\Delta$%]", "#7C3AED", "%")
     ]
 
     for ax, res, title, xlabel, color, unit in panels_data:
-        residuals = res["residuals"]
+        residuals = res[residuals_key]
         mean_res = float(np.mean(residuals))
         std_res = float(np.std(residuals))
         median_res = float(np.median(residuals))
@@ -422,6 +487,10 @@ def plot_dual_residuals_distribution(res_energy: dict, res_soc: dict, save_path:
         ax.axvline(median_res, color="#D97706", linestyle=":", lw=1.6, label=f"Mediana: {median_res:+.3f} {unit}")
         ax.axvline(p05, color="#64748B", linestyle="-.", lw=1.1, label=f"P5-P95: [{p05:+.2f}, {p95:+.2f}]")
         ax.axvline(p95, color="#64748B", linestyle="-.", lw=1.1)
+
+        if headroom_scale > 1.0:
+            ymin, ymax = ax.get_ylim()
+            ax.set_ylim(ymin, ymax * headroom_scale)
 
         stats_box = (
             f"Diagnóstico Residual (N=98):\n"
@@ -449,16 +518,24 @@ def plot_dual_residuals_distribution(res_energy: dict, res_soc: dict, save_path:
     save_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
-    logger.info(f"Figura 26 salva com sucesso: {save_path}")
+    logger.info(f"Figura de Resíduos salva com sucesso: {save_path}")
 
 
-def plot_dual_shap_importance(res_energy: dict, res_soc: dict, save_path: Path):
-    """Gera a Figura 27: Painel Dual de Importância SHAP das 12 Features Físicas."""
+def plot_dual_shap_importance(
+    res_energy: dict,
+    res_soc: dict,
+    save_path: Path,
+    *,
+    suptitle: str = "Figura 27: Atribuição de Importância das 12 Features Físicas (SHAP TreeExplainer Attribution)",
+    ranking_key: str = "shap_ranking",
+    show_coef_sign: bool = False,
+):
+    """Gera Painel Dual de Importância SHAP das 12 Features Físicas."""
     sns.set_theme(style="whitegrid", font_scale=1.0)
     fig, axes = plt.subplots(1, 2, figsize=(16, 7.5), dpi=300)
 
     fig.suptitle(
-        "Figura 27: Atribuição de Importância das 12 Features Físicas (SHAP TreeExplainer Attribution)",
+        suptitle,
         fontsize=13.5,
         fontweight="bold",
         y=0.98,
@@ -467,27 +544,40 @@ def plot_dual_shap_importance(res_energy: dict, res_soc: dict, save_path: Path):
 
     panels_data = [
         (axes[0], res_energy, "A. Importância para Energia Líquida ($E_{net}$)", "Impacto Médio Absoluto [mean(|SHAP|) em kWh]", "kWh"),
-        (axes[1], res_soc, "B. Importância para Variação de SOC ($\Delta$SOC)", "Impacto Médio Absoluto [mean(|SHAP|) em %]", "%")
+        (axes[1], res_soc, r"B. Importância para Variação de SOC ($\Delta$SOC)", "Impacto Médio Absoluto [mean(|SHAP|) em %]", "%")
     ]
 
     for ax, res, title, xlabel, unit in panels_data:
-        ranking = res["shap_ranking"]
+        ranking = res[ranking_key]
         df_plot = pd.DataFrame(ranking).sort_values("mean_abs_shap", ascending=True)
 
         y_pos = np.arange(len(df_plot))
         colors = df_plot["color"].tolist()
 
-        bars = ax.barh(y_pos, df_plot["mean_abs_shap"], color=colors, height=0.72, edgecolor="#0F172A", linewidth=0.6)
+        ax.barh(y_pos, df_plot["mean_abs_shap"], color=colors, height=0.72, edgecolor="#0F172A", linewidth=0.6)
 
         # Adiciona rótulos numéricos
-        for i, val in enumerate(df_plot["mean_abs_shap"]):
-            ax.text(val + 0.002 * max(df_plot["mean_abs_shap"]), i, f"{val:.4f} {unit}", va="center", fontsize=8.8, fontweight="bold", color="#0F172A")
+        max_shap = max(df_plot["mean_abs_shap"])
+        for i, (_, row) in enumerate(df_plot.iterrows()):
+            val = row["mean_abs_shap"]
+            sign_suffix = ""
+            if show_coef_sign and "coef" in row:
+                sign_suffix = " (+)" if row["coef"] >= 0 else " (−)"
+            ax.text(
+                val + 0.002 * max_shap,
+                i,
+                f"{val:.4f} {unit}{sign_suffix}",
+                va="center",
+                fontsize=8.8,
+                fontweight="bold",
+                color="#0F172A",
+            )
 
         ax.set_yticks(y_pos)
         ax.set_yticklabels(df_plot["feature"], fontsize=9.5, fontweight="semibold")
         ax.set_xlabel(xlabel, fontsize=9.8, fontweight="semibold")
         ax.set_title(title, fontsize=11.2, fontweight="bold", pad=8, color="#0F172A")
-        ax.set_xlim(0, max(df_plot["mean_abs_shap"]) * 1.25)
+        ax.set_xlim(0, max_shap * (1.28 if show_coef_sign else 1.25))
         ax.grid(True, axis="x", linestyle="--", alpha=0.4, color="#CBD5E1")
 
     # Legenda Compartilhada de Grupos Físicos
@@ -503,7 +593,134 @@ def plot_dual_shap_importance(res_energy: dict, res_soc: dict, save_path: Path):
     save_path.parent.mkdir(parents=True, exist_ok=True)
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close()
-    logger.info(f"Figura 27 salva com sucesso: {save_path}")
+    logger.info(f"Figura de Importância SHAP salva com sucesso: {save_path}")
+
+
+def _fmt_pt(val: float, decimals: int = 2) -> str:
+    """Formata número float no padrão decimal brasileiro (vírgula e sinal menos real)."""
+    formatted = f"{val:.{decimals}f}".replace(".", ",")
+    return formatted.replace("-", "−")
+
+
+def plot_models_comparison_panel(res_energy: dict, res_soc: dict, save_path: Path):
+    """Gera painel visual limpo comparando Dummy, Regressão Linear e XGBoost no conjunto de teste."""
+    sns.set_theme(style="ticks", font_scale=1.0)
+    fig, axes = plt.subplots(3, 2, figsize=(13.0, 12.2), dpi=300, gridspec_kw={"height_ratios": [1.55, 0.85, 0.85]})
+
+    fig.suptitle(
+        "Comparação dos Modelos no Teste Final (N = 98 viagens)",
+        fontsize=14,
+        fontweight="bold",
+        y=0.985,
+        color="#0F172A"
+    )
+
+    color_dummy = "#94A3B8"
+    color_lr = "#EA580C"
+    color_xgb = "#1D4ED8"
+
+    cols_cfg = [
+        (0, res_energy, "Energia Líquida (kWh)", "kWh", -0.15, 4),
+        (1, res_soc, "Queda de Carga — ΔSOC (%)", "%", -1.1, 2)
+    ]
+
+    for col_idx, res, col_title, unit, y_floor, mae_dec in cols_cfg:
+        y_real = res["y_test"]
+        y_xgb = res["y_pred_test"]
+        y_lr = res["lr_pred_test"]
+        y_dum = res["dummy_pred_test"]
+        baselines = res["baselines"]
+
+        # Linha 1: Real vs. Predito
+        ax_sc = axes[0, col_idx]
+        hi = max(float(np.max(y_real)), float(np.max(y_xgb)), float(np.max(y_lr))) * 1.08
+
+        ax_sc.axhline(0.0, color="#CBD5E1", linestyle="-", linewidth=1.0, zorder=1)
+        ax_sc.plot([0.0, hi], [0.0, hi], color="#0F172A", linestyle="--", linewidth=1.4, label="Ideal (y = x)", zorder=2)
+        ax_sc.axhline(float(y_dum[0]), color=color_dummy, linestyle=":", linewidth=1.8, label="Dummy (Média)", zorder=2)
+
+        ax_sc.scatter(
+            y_real, y_lr,
+            facecolors="none", edgecolors=color_lr,
+            s=36, linewidths=1.3, alpha=0.85,
+            label="Regressão Linear", zorder=3
+        )
+        ax_sc.scatter(
+            y_real, y_xgb,
+            color=color_xgb, edgecolors="white",
+            s=30, linewidths=0.4, alpha=0.88,
+            label="XGBoost", zorder=4
+        )
+
+        ax_sc.set_xlim(-0.04 * hi, hi)
+        ax_sc.set_ylim(y_floor, hi)
+        ax_sc.set_title(col_title, fontsize=12, fontweight="bold", pad=10, color="#0F172A")
+        ax_sc.set_xlabel(f"Valor real ({unit})", fontsize=10, color="#334155")
+        ax_sc.set_ylabel(f"Valor predito ({unit})" if col_idx == 0 else "", fontsize=10, color="#334155")
+        ax_sc.grid(True, linestyle="--", alpha=0.35, color="#CBD5E1")
+        sns.despine(ax=ax_sc)
+
+        # Linha 2 e 3: Barras de R² e MAE
+        model_order = ["dummy_mean", "linear_regression_12f", "xgboost_regressor"]
+        model_labels = ["Dummy\n(Média)", "Regressão\nLinear", "XGBoost"]
+        bar_colors = [color_dummy, color_lr, color_xgb]
+
+        r2_vals = [baselines[k]["r2"] for k in model_order]
+        mae_vals = [baselines[k]["mae"] for k in model_order]
+        mape_vals = [baselines[k]["mape_percent"] for k in model_order]
+
+        # Linha 2: R² (quanto maior, melhor)
+        ax_r2 = axes[1, col_idx]
+        x_pos = np.arange(len(model_order))
+        bars_r2 = ax_r2.bar(x_pos, r2_vals, width=0.52, color=bar_colors, edgecolor="#0F172A", linewidth=0.7, zorder=3)
+        ax_r2.axhline(0.0, color="#475569", linewidth=0.9, zorder=2)
+        for bar, val in zip(bars_r2, r2_vals):
+            y_txt = val + 0.035 if val >= 0 else 0.035
+            ax_r2.text(
+                bar.get_x() + bar.get_width() / 2.0,
+                y_txt,
+                _fmt_pt(val, 4),
+                ha="center", va="bottom", fontsize=9.8, fontweight="bold", color="#0F172A"
+            )
+        ax_r2.set_ylim(-0.10, 1.15)
+        ax_r2.set_xticks(x_pos)
+        ax_r2.set_xticklabels(model_labels, fontsize=9.5, color="#1E293B")
+        ax_r2.set_ylabel("R² (maior = melhor)" if col_idx == 0 else "", fontsize=10, color="#334155")
+        ax_r2.grid(True, axis="y", linestyle="--", alpha=0.35, color="#CBD5E1")
+        sns.despine(ax=ax_r2)
+
+        # Linha 3: MAE (quanto menor, melhor) + MAPE sutil
+        ax_mae = axes[2, col_idx]
+        bars_mae = ax_mae.bar(x_pos, mae_vals, width=0.52, color=bar_colors, edgecolor="#0F172A", linewidth=0.7, zorder=3)
+        max_mae = max(mae_vals)
+        for bar, mae_v, mape_v in zip(bars_mae, mae_vals, mape_vals):
+            ax_mae.text(
+                bar.get_x() + bar.get_width() / 2.0,
+                mae_v + 0.03 * max_mae,
+                f"{_fmt_pt(mae_v, mae_dec)} {unit}\n(MAPE {_fmt_pt(mape_v, 2)}%)",
+                ha="center", va="bottom", fontsize=8.8, fontweight="bold", color="#0F172A"
+            )
+        ax_mae.set_ylim(0.0, max_mae * 1.32)
+        ax_mae.set_xticks(x_pos)
+        ax_mae.set_xticklabels(model_labels, fontsize=9.5, color="#1E293B")
+        ax_mae.set_ylabel("MAE (menor = melhor)" if col_idx == 0 else "", fontsize=10, color="#334155")
+        ax_mae.grid(True, axis="y", linestyle="--", alpha=0.35, color="#CBD5E1")
+        sns.despine(ax=ax_mae)
+
+    handles, labels = axes[0, 0].get_legend_handles_labels()
+    fig.legend(
+        handles, labels,
+        loc="upper center", ncol=4, frameon=True, framealpha=0.95,
+        facecolor="#F8FAFC", edgecolor="#CBD5E1", fontsize=9.8,
+        bbox_to_anchor=(0.5, 0.945)
+    )
+
+    plt.tight_layout(rect=[0.02, 0.02, 0.98, 0.905])
+    plt.subplots_adjust(hspace=0.34, wspace=0.18)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    plt.savefig(save_path, dpi=300, bbox_inches="tight")
+    plt.close()
+    logger.info(f"Figura comparativa salva com sucesso: {save_path}")
 
 
 def run_dual_xgboost_pipeline():
@@ -539,14 +756,50 @@ def run_dual_xgboost_pipeline():
     fig25_path = OUTPUT_FIGS_DIR / "25_xgboost_real_vs_pred_energy.png"
     fig26_path = OUTPUT_FIGS_DIR / "26_xgboost_residuals_distribution.png"
     fig27_path = OUTPUT_FIGS_DIR / "27_xgboost_feature_importance_shap.png"
+    fig35_path = OUTPUT_FIGS_DIR / "35_comparacao_modelos_baselines_xgboost.png"
+    fig36_path = OUTPUT_FIGS_DIR / "36_linear_regression_real_vs_pred_energy.png"
+    fig37_path = OUTPUT_FIGS_DIR / "37_linear_regression_residuals_distribution.png"
+    fig38_path = OUTPUT_FIGS_DIR / "38_linear_regression_feature_importance_shap.png"
 
     plot_dual_real_vs_pred(res_energy, res_soc, fig25_path)
     plot_dual_residuals_distribution(res_energy, res_soc, fig26_path)
     plot_dual_shap_importance(res_energy, res_soc, fig27_path)
+    plot_models_comparison_panel(res_energy, res_soc, fig35_path)
+
+    # Figuras individuais do baseline Regressão Linear Múltipla
+    plot_dual_real_vs_pred(
+        res_energy,
+        res_soc,
+        fig36_path,
+        suptitle="Desempenho Preditivo da Regressão Linear Múltipla (Baseline) no Conjunto de Teste (Holdout 20%)",
+        model_prep_phrase="pela Regressão Linear",
+        pred_key="lr_pred_test",
+        metrics_key="lr_test_metrics",
+        cv_key="lr_cv_summary",
+    )
+    plot_dual_residuals_distribution(
+        res_energy,
+        res_soc,
+        fig37_path,
+        suptitle="Distribuição e Densidade dos Resíduos — Regressão Linear Múltipla ($e = y_{real} - y_{pred}$)",
+        residuals_key="lr_residuals",
+        headroom_scale=1.28,
+    )
+    plot_dual_shap_importance(
+        res_energy,
+        res_soc,
+        fig38_path,
+        suptitle="Atribuição de Importância das 12 Features Físicas — Regressão Linear Múltipla (SHAP LinearExplainer)",
+        ranking_key="lr_shap_ranking",
+        show_coef_sign=True,
+    )
 
     # Copia figuras para diretório de artefatos
     if ARTIFACT_DIR.exists():
-        for src_fig in [fig25_path, fig26_path, fig27_path]:
+        for src_fig in [
+            fig25_path, fig26_path, fig27_path, fig35_path,
+            fig36_path, fig37_path, fig38_path,
+        ]:
             dst_fig = ARTIFACT_DIR / src_fig.name
             shutil.copy2(src_fig, dst_fig)
             logger.info(f"Artefato copiado para brain: {dst_fig}")
@@ -587,6 +840,34 @@ def run_dual_xgboost_pipeline():
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results_summary, f, indent=2, ensure_ascii=False)
     logger.info(f"Relatório consolidado JSON salvo: {json_path}")
+
+    lr_summary = {
+        "dataset_metadata": results_summary["dataset_metadata"],
+        "models": {
+            model_key: {
+                "label": r["target_label"],
+                "unit": r["unit"],
+                "intercept": r["lr_intercept"],
+                "cv_5fold": r["lr_cv_summary"],
+                "holdout_test": r["lr_test_metrics"],
+                "negative_predictions_test": int(np.sum(r["lr_pred_test"] < 0)),
+                "min_prediction_test": round(float(np.min(r["lr_pred_test"])), 4),
+                "residuals_summary": {
+                    "mean": round(float(np.mean(r["lr_residuals"])), 4),
+                    "std": round(float(np.std(r["lr_residuals"])), 4),
+                    "median": round(float(np.median(r["lr_residuals"])), 4),
+                    "p05": round(float(np.percentile(r["lr_residuals"], 5)), 4),
+                    "p95": round(float(np.percentile(r["lr_residuals"], 95)), 4),
+                },
+                "shap_and_coefficients": r["lr_shap_ranking"],
+            }
+            for model_key, r in [("energy_net_kwh", res_energy), ("delta_soc_percent", res_soc)]
+        },
+    }
+    lr_json_path = OUTPUT_RESULTS_DIR / "linear_regression_baseline_evaluation.json"
+    with open(lr_json_path, "w", encoding="utf-8") as f:
+        json.dump(lr_summary, f, indent=2, ensure_ascii=False)
+    logger.info(f"Relatório do baseline Regressão Linear salvo: {lr_json_path}")
 
     # Tabela Comparativa em CSV
     rows_comp = []
