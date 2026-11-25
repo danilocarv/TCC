@@ -1,0 +1,85 @@
+experiment,target,scale_target,hidden_layer_sizes,activation,alpha,cv_r2_mean,cv_r2_std,cv_mae_mean,cv_rmse_mean,cv_mape_mean,train_r2,r2_gap_train_minus_cv,warnings_cv_folds,warnings_full_train,n_iter_full_train,oof_neg_count,oof_min_pred
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",tanh,20.0,0.8523,0.058,1.1158,1.5818,33.65,0.9425,0.0902,0,0,567,0,0.0367
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",tanh,30.0,0.8473,0.0575,1.1342,1.6145,33.73,0.917,0.0697,0,0,506,0,0.3694
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",tanh,40.0,0.8338,0.0612,1.1856,1.6901,35.72,0.8958,0.062,0,0,343,0,0.5647
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",tanh,50.0,0.803,0.072,1.3003,1.8416,39.34,0.8778,0.0748,0,0,257,0,0.8435
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",tanh,75.0,0.7498,0.0703,1.4792,2.0915,45.31,0.7896,0.0398,0,0,247,0,1.3552
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",tanh,100.0,0.7408,0.0668,1.5005,2.1344,46.56,0.7785,0.0377,0,0,94,0,1.4696
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",relu,20.0,0.8337,0.062,1.1455,1.6815,35.42,0.9393,0.1056,0,0,997,0,0.1734
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",relu,30.0,0.8398,0.0737,1.1443,1.6358,36.42,0.9224,0.0826,0,0,627,0,0.2406
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",relu,40.0,0.8314,0.0713,1.1955,1.6977,37.65,0.9089,0.0775,0,0,874,0,0.2883
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",relu,50.0,0.8059,0.0881,1.2752,1.8013,39.98,0.8832,0.0773,0,0,777,0,0.4358
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",relu,75.0,0.7976,0.09,1.2993,1.8534,39.54,0.8259,0.0283,0,0,497,0,0.5542
+option1_raw_y_extended,delta_soc_percent,False,"(16, 8)",relu,100.0,0.7922,0.0911,1.3264,1.8786,41.12,0.8209,0.0287,0,0,376,0,0.651
+option2_scaled_y,energy_net_kwh,True,"(8,)",relu,0.1,0.9507,0.0168,0.0897,0.1395,18.97,0.9836,0.0329,0,0,728,1,-0.3121
+option2_scaled_y,energy_net_kwh,True,"(8,)",relu,0.5,0.9639,0.0168,0.0785,0.1195,15.48,0.9767,0.0128,0,0,272,1,-0.0805
+option2_scaled_y,energy_net_kwh,True,"(8,)",relu,1.0,0.9667,0.0162,0.0762,0.1149,15.48,0.9757,0.009,0,0,184,1,-0.1136
+option2_scaled_y,energy_net_kwh,True,"(8,)",relu,2.0,0.9638,0.017,0.0806,0.1197,16.27,0.9726,0.0088,0,0,97,1,-0.0661
+option2_scaled_y,energy_net_kwh,True,"(8,)",relu,5.0,0.9636,0.0177,0.0792,0.1193,15.96,0.9688,0.0052,0,0,217,0,0.0769
+option2_scaled_y,energy_net_kwh,True,"(8,)",relu,10.0,0.9576,0.0187,0.0877,0.1285,18.5,0.9636,0.006,0,0,316,0,0.0664
+option2_scaled_y,energy_net_kwh,True,"(8,)",tanh,0.1,0.9394,0.0203,0.0946,0.1533,16.88,0.9851,0.0457,0,0,602,0,0.0196
+option2_scaled_y,energy_net_kwh,True,"(8,)",tanh,0.5,0.9644,0.0151,0.0766,0.119,14.37,0.9801,0.0157,0,0,399,0,0.045
+option2_scaled_y,energy_net_kwh,True,"(8,)",tanh,1.0,0.9666,0.0174,0.074,0.1145,13.99,0.9776,0.011,0,0,226,0,0.0427
+option2_scaled_y,energy_net_kwh,True,"(8,)",tanh,2.0,0.9668,0.0194,0.0731,0.1132,14.63,0.9734,0.0066,0,0,187,0,0.0416
+option2_scaled_y,energy_net_kwh,True,"(8,)",tanh,5.0,0.9634,0.0218,0.0773,0.1184,16.08,0.9676,0.0042,0,0,135,0,0.0273
+option2_scaled_y,energy_net_kwh,True,"(8,)",tanh,10.0,0.9565,0.0245,0.0855,0.1293,18.23,0.962,0.0055,0,0,111,1,-0.0135
+option2_scaled_y,energy_net_kwh,True,"(16,)",relu,0.1,0.9442,0.0195,0.1007,0.1465,21.19,0.9887,0.0445,0,0,633,5,-0.1925
+option2_scaled_y,energy_net_kwh,True,"(16,)",relu,0.5,0.9626,0.0176,0.08,0.1209,16.24,0.9853,0.0227,0,0,383,2,-0.029
+option2_scaled_y,energy_net_kwh,True,"(16,)",relu,1.0,0.9662,0.017,0.0755,0.1149,14.89,0.9801,0.0139,0,0,711,1,-0.0511
+option2_scaled_y,energy_net_kwh,True,"(16,)",relu,2.0,0.9679,0.0175,0.0724,0.1116,14.07,0.9764,0.0085,0,0,340,0,0.0838
+option2_scaled_y,energy_net_kwh,True,"(16,)",relu,5.0,0.9644,0.0169,0.078,0.1176,15.64,0.9707,0.0063,0,0,99,0,0.0626
+option2_scaled_y,energy_net_kwh,True,"(16,)",relu,10.0,0.9587,0.0178,0.0855,0.1268,17.52,0.9643,0.0056,0,0,218,0,0.076
+option2_scaled_y,energy_net_kwh,True,"(16,)",tanh,0.1,0.9186,0.0218,0.1211,0.1783,25.19,0.9913,0.0727,0,0,718,4,-0.3358
+option2_scaled_y,energy_net_kwh,True,"(16,)",tanh,0.5,0.9655,0.0162,0.0757,0.1163,14.35,0.9809,0.0154,0,0,508,0,0.0318
+option2_scaled_y,energy_net_kwh,True,"(16,)",tanh,1.0,0.966,0.0182,0.0741,0.1152,14.12,0.9773,0.0113,0,0,273,0,0.0156
+option2_scaled_y,energy_net_kwh,True,"(16,)",tanh,2.0,0.967,0.0185,0.0734,0.1131,14.96,0.9729,0.0059,0,0,296,0,0.0103
+option2_scaled_y,energy_net_kwh,True,"(16,)",tanh,5.0,0.9644,0.02,0.0777,0.1169,16.73,0.9678,0.0034,0,0,209,1,-0.0237
+option2_scaled_y,energy_net_kwh,True,"(16,)",tanh,10.0,0.956,0.0224,0.0883,0.1299,19.73,0.9625,0.0065,0,0,161,3,-0.0867
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",relu,0.1,0.9329,0.0221,0.1053,0.1607,19.46,0.9954,0.0625,0,0,1370,0,0.0014
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",relu,0.5,0.9596,0.0159,0.0841,0.1259,16.28,0.9847,0.0251,0,0,382,0,0.0085
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",relu,1.0,0.9646,0.0169,0.0779,0.1177,14.53,0.9808,0.0162,0,0,430,0,0.0612
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",relu,2.0,0.9674,0.0172,0.0745,0.1128,14.57,0.9758,0.0084,0,0,176,0,0.0789
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",relu,5.0,0.9643,0.0171,0.0778,0.118,15.57,0.9696,0.0053,0,0,382,0,0.0803
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",relu,10.0,0.9572,0.0182,0.0876,0.1294,18.11,0.9626,0.0054,0,0,231,0,0.0913
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",tanh,0.1,0.9065,0.0092,0.1238,0.1936,24.09,0.9969,0.0904,0,0,1027,5,-0.0446
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",tanh,0.5,0.9654,0.0171,0.0777,0.1155,15.0,0.9825,0.0171,0,0,442,0,0.0617
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",tanh,1.0,0.9668,0.018,0.0732,0.1137,13.97,0.9779,0.0111,0,0,342,0,0.0311
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",tanh,2.0,0.9671,0.0202,0.0731,0.1125,14.78,0.9738,0.0067,0,0,257,0,0.0384
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",tanh,5.0,0.962,0.0231,0.0787,0.1206,16.41,0.9665,0.0045,0,0,219,0,0.0167
+option2_scaled_y,energy_net_kwh,True,"(16, 8)",tanh,10.0,0.9512,0.027,0.0911,0.1371,20.08,0.9589,0.0077,0,0,153,1,-0.0034
+option2_scaled_y,delta_soc_percent,True,"(8,)",relu,0.1,0.8012,0.0516,1.3079,1.8555,39.43,0.9494,0.1482,0,0,825,15,-1.5841
+option2_scaled_y,delta_soc_percent,True,"(8,)",relu,0.5,0.8345,0.0314,1.2007,1.7064,38.43,0.9367,0.1022,0,0,399,13,-1.3821
+option2_scaled_y,delta_soc_percent,True,"(8,)",relu,1.0,0.84,0.0497,1.1929,1.6612,38.06,0.9248,0.0848,0,0,358,14,-1.4636
+option2_scaled_y,delta_soc_percent,True,"(8,)",relu,2.0,0.8363,0.0649,1.1825,1.6679,37.23,0.9081,0.0718,0,0,144,9,-0.8843
+option2_scaled_y,delta_soc_percent,True,"(8,)",relu,5.0,0.8241,0.0698,1.228,1.7322,38.27,0.8811,0.057,0,0,588,4,-0.2918
+option2_scaled_y,delta_soc_percent,True,"(8,)",relu,10.0,0.8053,0.0837,1.2854,1.8207,39.74,0.8536,0.0483,0,0,262,1,-0.0837
+option2_scaled_y,delta_soc_percent,True,"(8,)",tanh,0.1,0.7616,0.0908,1.288,2.0233,37.44,0.968,0.2064,0,0,726,10,-1.1884
+option2_scaled_y,delta_soc_percent,True,"(8,)",tanh,0.5,0.829,0.0802,1.1459,1.6795,34.83,0.957,0.128,0,0,378,7,-0.9714
+option2_scaled_y,delta_soc_percent,True,"(8,)",tanh,1.0,0.843,0.0682,1.0775,1.6198,35.54,0.9453,0.1023,0,0,427,8,-1.1169
+option2_scaled_y,delta_soc_percent,True,"(8,)",tanh,2.0,0.8475,0.0618,1.1074,1.607,34.59,0.924,0.0765,0,0,268,8,-0.8295
+option2_scaled_y,delta_soc_percent,True,"(8,)",tanh,5.0,0.7942,0.0861,1.3239,1.8737,41.25,0.8836,0.0894,0,0,209,1,-0.0561
+option2_scaled_y,delta_soc_percent,True,"(8,)",tanh,10.0,0.7907,0.09,1.331,1.8832,41.34,0.8187,0.028,0,0,122,0,0.1541
+option2_scaled_y,delta_soc_percent,True,"(16,)",relu,0.1,0.7898,0.0541,1.3964,1.9118,47.01,0.9756,0.1858,0,0,872,18,-5.124
+option2_scaled_y,delta_soc_percent,True,"(16,)",relu,0.5,0.8071,0.0473,1.3184,1.8337,41.74,0.9669,0.1598,0,0,1297,12,-2.6432
+option2_scaled_y,delta_soc_percent,True,"(16,)",relu,1.0,0.8246,0.0608,1.2003,1.7253,37.53,0.9523,0.1277,0,0,1064,14,-1.276
+option2_scaled_y,delta_soc_percent,True,"(16,)",relu,2.0,0.8352,0.0659,1.1894,1.669,37.71,0.9329,0.0977,0,0,812,8,-0.9793
+option2_scaled_y,delta_soc_percent,True,"(16,)",relu,5.0,0.8302,0.0717,1.2041,1.6949,37.8,0.8952,0.065,0,0,245,5,-0.4663
+option2_scaled_y,delta_soc_percent,True,"(16,)",relu,10.0,0.8042,0.0893,1.2812,1.8179,39.51,0.859,0.0548,0,0,269,0,0.148
+option2_scaled_y,delta_soc_percent,True,"(16,)",tanh,0.1,0.7211,0.0668,1.5924,2.2001,56.54,0.9847,0.2636,0,0,2180,23,-3.7012
+option2_scaled_y,delta_soc_percent,True,"(16,)",tanh,0.5,0.7831,0.0958,1.2429,1.9016,39.44,0.9723,0.1892,0,0,826,17,-1.5894
+option2_scaled_y,delta_soc_percent,True,"(16,)",tanh,1.0,0.8223,0.0775,1.1351,1.7204,35.62,0.955,0.1327,0,0,417,7,-0.903
+option2_scaled_y,delta_soc_percent,True,"(16,)",tanh,2.0,0.8427,0.0679,1.1049,1.6239,34.53,0.9301,0.0874,0,0,446,9,-0.7888
+option2_scaled_y,delta_soc_percent,True,"(16,)",tanh,5.0,0.8201,0.0836,1.2321,1.7426,39.71,0.8836,0.0635,0,0,239,5,-0.37
+option2_scaled_y,delta_soc_percent,True,"(16,)",tanh,10.0,0.7928,0.0905,1.3246,1.8732,41.95,0.8193,0.0265,0,0,165,2,-0.0664
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",relu,0.1,0.6717,0.1122,1.6458,2.3826,52.79,0.9924,0.3207,0,0,1588,20,-3.0745
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",relu,0.5,0.7636,0.0852,1.3359,2.0027,40.73,0.987,0.2234,0,0,1425,11,-1.2614
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",relu,1.0,0.7668,0.1119,1.3278,1.974,38.38,0.973,0.2062,0,0,960,4,-0.5894
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",relu,2.0,0.8102,0.0653,1.2017,1.7936,36.7,0.9529,0.1427,0,0,1105,2,-0.3964
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",relu,5.0,0.8397,0.0713,1.1622,1.6441,37.02,0.9094,0.0697,0,0,367,0,0.0169
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",relu,10.0,0.798,0.0918,1.3025,1.8464,40.27,0.8586,0.0606,0,0,194,1,-0.0204
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",tanh,0.1,0.6219,0.1776,1.6567,2.5161,55.19,0.9968,0.3749,0,0,2197,30,-4.2453
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",tanh,0.5,0.772,0.0801,1.3211,1.9692,42.5,0.9822,0.2102,0,0,1657,18,-2.0264
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",tanh,1.0,0.7826,0.0996,1.2363,1.899,38.09,0.9735,0.1909,0,0,1584,11,-1.7929
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",tanh,2.0,0.8277,0.0655,1.1318,1.7089,34.73,0.9477,0.12,0,0,710,7,-0.8026
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",tanh,5.0,0.8179,0.1017,1.2181,1.7306,38.9,0.8987,0.0808,0,0,303,4,-0.38
+option2_scaled_y,delta_soc_percent,True,"(16, 8)",tanh,10.0,0.7884,0.0897,1.3406,1.895,41.33,0.8163,0.0279,0,0,143,0,0.225

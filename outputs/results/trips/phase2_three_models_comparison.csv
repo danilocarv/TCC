@@ -1,0 +1,7 @@
+target,model,cv_r2,cv_r2_std,cv_mae,cv_rmse,test_r2,test_mae,test_rmse,test_mape_percent,test_mae_100km
+energy_net_kwh,Regressão Linear (Baseline),0.9566,0.0173,0.0894,0.1302,0.9295,0.1018,0.1343,19.0,3.22
+energy_net_kwh,XGBoost,0.9192,0.0146,0.1115,0.1816,0.93,0.0985,0.1339,18.65,3.26
+energy_net_kwh,MLP,0.9681,0.0175,0.0723,0.1111,0.9616,0.0738,0.0992,12.64,2.18
+delta_soc_percent,Regressão Linear (Baseline),0.7889,0.0806,1.3667,1.8998,0.6906,1.3205,2.0325,38.99,37.44
+delta_soc_percent,XGBoost,0.8286,0.0589,1.1596,1.7205,0.7336,1.1677,1.8859,30.0,31.98
+delta_soc_percent,MLP,0.8523,0.058,1.1158,1.5818,0.8,1.102,1.6342,28.31,28.06
