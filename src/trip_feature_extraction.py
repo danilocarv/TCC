@@ -6,8 +6,9 @@ from 1Hz telemetry, incorporating:
 - Battery state of charge (initial, final, delta SOC)
 - Regeneration and Gross/Net energy (kWh)
 - Climate & HVAC auxiliary power consumption (Heater + AC, OAT)
-- Altimetric features (Open-Meteo elevation, gain, loss, grade)
+- Altimetric features (NASA SRTM 30m local DEM elevation, gain, loss, grade)
 - Driver profile distributions and dominant cluster
+- Data-quality filter: duration >= 60s, distance >= 0.5 km, max OBD gap <= 60s
 """
 
 import sys
@@ -32,6 +33,8 @@ DATA_1HZ_PATH = Path("data/processed/driving_features/ev_trips_1hz.parquet")
 DATA_CLUSTERS_PATH = Path("data/processed/driving_features/driving_behavior_clusters.parquet")
 OUTPUT_DIR = Path("data/processed/trips")
 RESULTS_DIR = Path("outputs/results/trips")
+
+MAX_OBD_GAP_SECONDS = 60.0
 
 PROFILE_NAMES = {
     0: "Econômico / Suave",
@@ -170,8 +173,19 @@ def extract_trip_features(
             dom_id = 1
             dom_label = PROFILE_NAMES[1]
 
-        # Valid trip filter criteria
-        is_valid = bool((dur_s >= 60.0) and (dist_km >= 0.5))
+        # Max continuous OBD recording gap (seconds) along the trip
+        if "second_id" in grp and sample_count > 1:
+            sec_diffs = grp["second_id"].sort_values().diff().dropna()
+            max_obd_gap_s = float(sec_diffs.max()) if len(sec_diffs) > 0 else 0.0
+        else:
+            max_obd_gap_s = 0.0
+
+        # Valid trip filter criteria (duration >= 60s, distance >= 0.5 km, max continuous OBD gap <= 60s)
+        is_valid = bool(
+            (dur_s >= 60.0)
+            and (dist_km >= 0.5)
+            and (max_obd_gap_s <= MAX_OBD_GAP_SECONDS)
+        )
 
         trip_dict = {
             "trip_id": f"{veh_id}_{trip_id}",
@@ -180,6 +194,7 @@ def extract_trip_features(
             "DayNum": day_num,
             "duration_s": round(dur_s, 2),
             "sample_count": sample_count,
+            "max_obd_gap_s": round(max_obd_gap_s, 2),
             "is_valid_trip": is_valid,
 
             # Distance & Kinematics
@@ -274,6 +289,17 @@ def main():
         "total_trips": int(len(df_trips)),
         "valid_trips": int(len(df_valid)),
         "invalid_trips": int(len(df_trips) - len(df_valid)),
+        "invalid_short_or_stationary_trips": int(
+            ((df_trips["duration_s"] < 60.0) | (df_trips["distance_km"] < 0.5)).sum()
+        ),
+        "invalid_obd_gap_gt_60s_trips": int(
+            (
+                (df_trips["duration_s"] >= 60.0)
+                & (df_trips["distance_km"] >= 0.5)
+                & (df_trips["max_obd_gap_s"] > MAX_OBD_GAP_SECONDS)
+            ).sum()
+        ),
+        "max_obd_gap_threshold_s": MAX_OBD_GAP_SECONDS,
         "trips_by_vehicle": df_trips["VehId"].value_counts().to_dict(),
         "valid_trips_by_vehicle": df_valid["VehId"].value_counts().to_dict(),
         "driver_profile_distribution": df_valid["driver_profile_dominant"].value_counts().to_dict(),

@@ -1,9 +1,9 @@
 {
   "dataset_metadata": {
     "total_trips": 504,
-    "valid_trips": 486,
-    "train_trips": 388,
-    "test_trips": 98,
+    "valid_trips": 482,
+    "train_trips": 385,
+    "test_trips": 97,
     "n_features": 12,
     "feature_columns": [
       "distance_km",
@@ -24,308 +24,308 @@
     "energy_net_kwh": {
       "label": "Energia Líquida da Bateria",
       "unit": "kWh",
-      "intercept": -0.548405,
+      "intercept": -0.540241,
       "cv_5fold": {
-        "mean_r2": 0.9566,
-        "std_r2": 0.0173,
-        "mean_mae": 0.0894,
-        "std_mae": 0.0089,
-        "mean_rmse": 0.1302,
-        "std_rmse": 0.0336,
-        "mean_mape_percent": 20.88,
-        "mean_mae_100km": 2.95,
+        "mean_r2": 0.9526,
+        "std_r2": 0.0193,
+        "mean_mae": 0.0914,
+        "std_mae": 0.009,
+        "mean_rmse": 0.131,
+        "std_rmse": 0.0367,
+        "mean_mape_percent": 21.43,
+        "mean_mae_100km": 3.04,
         "folds": [
           {
-            "r2": 0.9728,
-            "mae": 0.0854,
-            "rmse": 0.1139,
-            "mape_percent": 19.56,
-            "mae_100km": 2.71
+            "r2": 0.9655,
+            "mae": 0.0899,
+            "rmse": 0.115,
+            "mape_percent": 28.39,
+            "mae_100km": 3.46
+          },
+          {
+            "r2": 0.9145,
+            "mae": 0.1063,
+            "rmse": 0.2038,
+            "mape_percent": 21.24,
+            "mae_100km": 3.23
           },
           {
             "r2": 0.9648,
-            "mae": 0.0867,
-            "rmse": 0.1139,
-            "mape_percent": 26.36,
-            "mae_100km": 3.43
+            "mae": 0.0784,
+            "rmse": 0.1051,
+            "mape_percent": 14.48,
+            "mae_100km": 2.16
           },
           {
-            "r2": 0.9486,
-            "mae": 0.0914,
-            "rmse": 0.1137,
-            "mape_percent": 20.73,
-            "mae_100km": 3.1
+            "r2": 0.9571,
+            "mae": 0.0892,
+            "rmse": 0.1125,
+            "mape_percent": 19.79,
+            "mae_100km": 2.94
           },
           {
-            "r2": 0.9705,
-            "mae": 0.0782,
-            "rmse": 0.1119,
-            "mape_percent": 18.92,
-            "mae_100km": 2.44
-          },
-          {
-            "r2": 0.9264,
-            "mae": 0.1051,
-            "rmse": 0.1974,
-            "mape_percent": 18.85,
-            "mae_100km": 3.08
+            "r2": 0.9612,
+            "mae": 0.093,
+            "rmse": 0.1186,
+            "mape_percent": 23.23,
+            "mae_100km": 3.39
           }
         ]
       },
       "holdout_test": {
-        "r2": 0.9295,
-        "mae": 0.1018,
-        "rmse": 0.1343,
-        "mape_percent": 19.0,
-        "mae_100km": 3.22
+        "r2": 0.9615,
+        "mae": 0.0932,
+        "rmse": 0.1268,
+        "mape_percent": 18.83,
+        "mae_100km": 3.01
       },
       "negative_predictions_test": 1,
-      "min_prediction_test": -0.0228,
+      "min_prediction_test": -0.0471,
       "residuals_summary": {
-        "mean": -0.0077,
-        "std": 0.1341,
-        "median": -0.0321,
-        "p05": -0.1518,
-        "p95": 0.2488
+        "mean": -0.0205,
+        "std": 0.1251,
+        "median": -0.0235,
+        "p05": -0.2042,
+        "p95": 0.1839
       },
       "shap_and_coefficients": [
         {
           "feature": "elevation_gain_m",
-          "mean_abs_shap": 0.26604,
+          "mean_abs_shap": 0.29235,
           "group": "Topografia (SRTM)",
           "color": "#047857",
-          "coef": 0.00626
+          "coef": 0.00652
         },
         {
           "feature": "distance_km",
-          "mean_abs_shap": 0.20339,
+          "mean_abs_shap": 0.2084,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": 0.074215
+          "coef": 0.074363
         },
         {
           "feature": "elevation_loss_m",
-          "mean_abs_shap": 0.16003,
+          "mean_abs_shap": 0.20008,
           "group": "Topografia (SRTM)",
           "color": "#047857",
-          "coef": -0.003674
+          "coef": -0.00437
         },
         {
           "feature": "aux_hvac_energy_kwh",
-          "mean_abs_shap": 0.13455,
+          "mean_abs_shap": 0.14966,
           "group": "Clima & Conforto (HVAC)",
           "color": "#D97706",
-          "coef": 1.354399
-        },
-        {
-          "feature": "mean_oat_c",
-          "mean_abs_shap": 0.04388,
-          "group": "Clima & Conforto (HVAC)",
-          "color": "#D97706",
-          "coef": -0.004244
-        },
-        {
-          "feature": "mean_speed_kmh",
-          "mean_abs_shap": 0.03797,
-          "group": "Cinemática & Operação",
-          "color": "#1E40AF",
-          "coef": 0.003744
-        },
-        {
-          "feature": "initial_soc_percent",
-          "mean_abs_shap": 0.03098,
-          "group": "Bateria & Eletroquímica",
-          "color": "#7C3AED",
-          "coef": 0.002002
-        },
-        {
-          "feature": "mean_pos_accel_ms2",
-          "mean_abs_shap": 0.0268,
-          "group": "Cinemática & Operação",
-          "color": "#1E40AF",
-          "coef": 0.28995
+          "coef": 1.267352
         },
         {
           "feature": "duration_s",
-          "mean_abs_shap": 0.02452,
+          "mean_abs_shap": 0.05554,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": 7.8e-05
+          "coef": 0.000149
+        },
+        {
+          "feature": "mean_oat_c",
+          "mean_abs_shap": 0.04652,
+          "group": "Clima & Conforto (HVAC)",
+          "color": "#D97706",
+          "coef": -0.004585
+        },
+        {
+          "feature": "mean_speed_kmh",
+          "mean_abs_shap": 0.03549,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF",
+          "coef": 0.003905
+        },
+        {
+          "feature": "initial_soc_percent",
+          "mean_abs_shap": 0.02916,
+          "group": "Bateria & Eletroquímica",
+          "color": "#7C3AED",
+          "coef": 0.001767
+        },
+        {
+          "feature": "mean_pos_accel_ms2",
+          "mean_abs_shap": 0.02424,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF",
+          "coef": 0.26694
         },
         {
           "feature": "std_speed_kmh",
-          "mean_abs_shap": 0.01907,
+          "mean_abs_shap": 0.0219,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": 0.004561
+          "coef": 0.004862
         },
         {
           "feature": "mean_neg_accel_ms2",
-          "mean_abs_shap": 0.00966,
+          "mean_abs_shap": 0.01282,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": -0.098999
+          "coef": -0.124875
         },
         {
           "feature": "net_grade_percent",
-          "mean_abs_shap": 0.003,
+          "mean_abs_shap": 0.00731,
           "group": "Topografia (SRTM)",
           "color": "#047857",
-          "coef": -0.007742
+          "coef": -0.02028
         }
       ]
     },
     "delta_soc_percent": {
       "label": "Variação do Estado de Carga (ΔSOC)",
       "unit": "%",
-      "intercept": 0.183838,
+      "intercept": -0.455829,
       "cv_5fold": {
-        "mean_r2": 0.7889,
-        "std_r2": 0.0806,
-        "mean_mae": 1.3667,
-        "std_mae": 0.0651,
-        "mean_rmse": 1.8998,
-        "std_rmse": 0.3093,
-        "mean_mape_percent": 44.26,
-        "mean_mae_100km": 34.99,
+        "mean_r2": 0.8016,
+        "std_r2": 0.0505,
+        "mean_mae": 1.2746,
+        "std_mae": 0.1194,
+        "mean_rmse": 1.6687,
+        "std_rmse": 0.1804,
+        "mean_mape_percent": 43.63,
+        "mean_mae_100km": 35.63,
         "folds": [
           {
-            "r2": 0.8605,
-            "mae": 1.3639,
-            "rmse": 1.7754,
-            "mape_percent": 38.52,
-            "mae_100km": 32.71
+            "r2": 0.8856,
+            "mae": 1.0807,
+            "rmse": 1.3839,
+            "mape_percent": 39.56,
+            "mae_100km": 34.55
           },
           {
-            "r2": 0.7682,
-            "mae": 1.4033,
-            "rmse": 1.7987,
-            "mape_percent": 38.91,
-            "mae_100km": 36.63
+            "r2": 0.7523,
+            "mae": 1.4405,
+            "rmse": 1.8575,
+            "mape_percent": 38.31,
+            "mae_100km": 40.34
           },
           {
-            "r2": 0.6434,
-            "mae": 1.4544,
-            "rmse": 2.5137,
-            "mape_percent": 49.38,
-            "mae_100km": 34.3
+            "r2": 0.8085,
+            "mae": 1.2242,
+            "rmse": 1.5315,
+            "mape_percent": 45.28,
+            "mae_100km": 34.16
           },
           {
-            "r2": 0.8108,
-            "mae": 1.3547,
-            "rmse": 1.7137,
-            "mape_percent": 60.56,
-            "mae_100km": 35.52
+            "r2": 0.7464,
+            "mae": 1.2976,
+            "rmse": 1.7865,
+            "mape_percent": 52.6,
+            "mae_100km": 30.04
           },
           {
-            "r2": 0.8617,
-            "mae": 1.2571,
-            "rmse": 1.6973,
-            "mape_percent": 33.92,
-            "mae_100km": 35.81
+            "r2": 0.8153,
+            "mae": 1.3301,
+            "rmse": 1.784,
+            "mape_percent": 42.39,
+            "mae_100km": 39.05
           }
         ]
       },
       "holdout_test": {
-        "r2": 0.6906,
-        "mae": 1.3205,
-        "rmse": 2.0325,
-        "mape_percent": 38.99,
-        "mae_100km": 37.44
+        "r2": 0.8727,
+        "mae": 1.1708,
+        "rmse": 1.5314,
+        "mape_percent": 35.02,
+        "mae_100km": 32.59
       },
-      "negative_predictions_test": 3,
-      "min_prediction_test": -0.5681,
+      "negative_predictions_test": 1,
+      "min_prediction_test": -0.5533,
       "residuals_summary": {
-        "mean": 0.4174,
-        "std": 1.9892,
-        "median": 0.3762,
-        "p05": -2.754,
-        "p95": 2.372
+        "mean": 0.3018,
+        "std": 1.5014,
+        "median": 0.235,
+        "p05": -1.9804,
+        "p95": 2.776
       },
       "shap_and_coefficients": [
         {
-          "feature": "distance_km",
-          "mean_abs_shap": 1.84944,
-          "group": "Cinemática & Operação",
-          "color": "#1E40AF",
-          "coef": 0.674834
-        },
-        {
           "feature": "aux_hvac_energy_kwh",
-          "mean_abs_shap": 0.81086,
+          "mean_abs_shap": 0.97363,
           "group": "Clima & Conforto (HVAC)",
           "color": "#D97706",
-          "coef": 8.162125
+          "coef": 8.244671
         },
         {
-          "feature": "elevation_loss_m",
-          "mean_abs_shap": 0.70312,
-          "group": "Topografia (SRTM)",
-          "color": "#047857",
-          "coef": -0.016144
+          "feature": "distance_km",
+          "mean_abs_shap": 0.84777,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF",
+          "coef": 0.302513
         },
         {
           "feature": "elevation_gain_m",
-          "mean_abs_shap": 0.69237,
+          "mean_abs_shap": 0.72786,
           "group": "Topografia (SRTM)",
           "color": "#047857",
-          "coef": 0.016293
-        },
-        {
-          "feature": "initial_soc_percent",
-          "mean_abs_shap": 0.33398,
-          "group": "Bateria & Eletroquímica",
-          "color": "#7C3AED",
-          "coef": -0.021579
-        },
-        {
-          "feature": "mean_oat_c",
-          "mean_abs_shap": 0.30913,
-          "group": "Clima & Conforto (HVAC)",
-          "color": "#D97706",
-          "coef": -0.029897
+          "coef": 0.016234
         },
         {
           "feature": "duration_s",
-          "mean_abs_shap": 0.24806,
+          "mean_abs_shap": 0.67346,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": 0.000792
+          "coef": 0.001812
         },
         {
-          "feature": "mean_neg_accel_ms2",
-          "mean_abs_shap": 0.15501,
-          "group": "Cinemática & Operação",
-          "color": "#1E40AF",
-          "coef": -1.589301
+          "feature": "mean_oat_c",
+          "mean_abs_shap": 0.36814,
+          "group": "Clima & Conforto (HVAC)",
+          "color": "#D97706",
+          "coef": -0.03628
         },
         {
           "feature": "std_speed_kmh",
-          "mean_abs_shap": 0.12364,
+          "mean_abs_shap": 0.28872,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": 0.029568
+          "coef": 0.064114
         },
         {
-          "feature": "net_grade_percent",
-          "mean_abs_shap": 0.04628,
+          "feature": "initial_soc_percent",
+          "mean_abs_shap": 0.28226,
+          "group": "Bateria & Eletroquímica",
+          "color": "#7C3AED",
+          "coef": -0.017107
+        },
+        {
+          "feature": "elevation_loss_m",
+          "mean_abs_shap": 0.27011,
           "group": "Topografia (SRTM)",
           "color": "#047857",
-          "coef": 0.119239
+          "coef": -0.0059
         },
         {
           "feature": "mean_speed_kmh",
-          "mean_abs_shap": 0.0452,
+          "mean_abs_shap": 0.19022,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": 0.004458
+          "coef": 0.020925
+        },
+        {
+          "feature": "mean_neg_accel_ms2",
+          "mean_abs_shap": 0.07774,
+          "group": "Cinemática & Operação",
+          "color": "#1E40AF",
+          "coef": -0.756998
+        },
+        {
+          "feature": "net_grade_percent",
+          "mean_abs_shap": 0.07732,
+          "group": "Topografia (SRTM)",
+          "color": "#047857",
+          "coef": 0.214455
         },
         {
           "feature": "mean_pos_accel_ms2",
-          "mean_abs_shap": 0.04277,
+          "mean_abs_shap": 0.03918,
           "group": "Cinemática & Operação",
           "color": "#1E40AF",
-          "coef": -0.462694
+          "coef": -0.431595
         }
       ]
     }

@@ -1,7 +1,7 @@
 """
 Módulo de Modelagem e Predição de Consumo Energético com XGBoost Regressor Dual.
 
-Executa a predição supervisionada para viagens veiculares completas (N = 486 viagens válidas)
+Executa a predição supervisionada para viagens veiculares completas (N = 482 viagens válidas)
 de veículos 100% elétricos (Nissan Leaf 24 kWh, dataset VED), abordando dois alvos fundamentais:
 1. Alvo 1: Energia Líquida Consumida da Bateria (energy_net_kwh em kWh);
 2. Alvo 2: Variação Real do Estado de Carga da Bateria (delta_soc_percent em %).
@@ -250,12 +250,12 @@ def train_and_evaluate_single_target(
         LinearRegression, X_train, y_train, dist_train, is_energy, unit, "Regressão Linear"
     )
 
-    # 2. Treinamento do Modelo Final XGBoost no Treino Completo (N=388)
+    # 2. Treinamento do Modelo Final XGBoost no Treino Completo (80%)
     logger.info("Treinando Modelo Final XGBoost no conjunto de treino completo...")
     final_model = _make_xgb()
     final_model.fit(X_train, y_train)
 
-    # 3. Avaliação no Teste Holdout (N=98)
+    # 3. Avaliação no Teste Holdout (20%)
     y_pred_test = final_model.predict(X_test)
     test_metrics = calculate_metrics(y_test, y_pred_test, dist_test, is_energy=is_energy)
     logger.info(f"Desempenho no Teste Holdout (20%): R² = {test_metrics['r2']:.4f} | MAE = {test_metrics['mae']:.4f} {unit} | RMSE = {test_metrics['rmse']:.4f} {unit}")
@@ -404,7 +404,7 @@ def plot_dual_real_vs_pred(
         norm_text = f"• MAE/100km: {m['mae_100km']:.2f} {unit}/100km\n" if unit == "kWh" else ""
         mae_fmt = f"{m['mae']:.3f}" if (pred_key == "y_pred_test" or unit != "kWh") else f"{m['mae']:.4f}"
         box_text = (
-            f"Métricas Holdout (N=98 viagens):\n"
+            f"Métricas Holdout (N={len(y_real)} viagens):\n"
             f"• R² = {m['r2']:.4f}\n"
             f"• MAE = {mae_fmt} {unit}\n"
             f"• RMSE = {m['rmse']:.3f} {unit}\n"
@@ -493,7 +493,7 @@ def plot_dual_residuals_distribution(
             ax.set_ylim(ymin, ymax * headroom_scale)
 
         stats_box = (
-            f"Diagnóstico Residual (N=98):\n"
+            f"Diagnóstico Residual (N={len(residuals)}):\n"
             f"• Média:    {mean_res:+.4f} {unit}\n"
             f"• Desv Padrão: {std_res:.4f} {unit}\n"
             f"• Mediana:  {median_res:+.4f} {unit}\n"
@@ -607,8 +607,9 @@ def plot_models_comparison_panel(res_energy: dict, res_soc: dict, save_path: Pat
     sns.set_theme(style="ticks", font_scale=1.0)
     fig, axes = plt.subplots(3, 2, figsize=(13.0, 12.2), dpi=300, gridspec_kw={"height_ratios": [1.55, 0.85, 0.85]})
 
+    n_test = len(res_energy["y_test"])
     fig.suptitle(
-        "Comparação dos Modelos no Teste Final (N = 98 viagens)",
+        f"Comparação dos Modelos no Teste Final (N = {n_test} viagens)",
         fontsize=14,
         fontweight="bold",
         y=0.985,

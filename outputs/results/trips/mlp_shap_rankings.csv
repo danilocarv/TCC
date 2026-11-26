@@ -1,25 +1,25 @@
 target,feature,group,mean_abs_shap,unit
-energy_net_kwh,distance_km,Cinemática & Operação,0.18191,kWh
-energy_net_kwh,elevation_gain_m,Topografia (SRTM),0.13367,kWh
-energy_net_kwh,aux_hvac_energy_kwh,Clima & Conforto (HVAC),0.12454,kWh
-energy_net_kwh,duration_s,Cinemática & Operação,0.05875,kWh
-energy_net_kwh,mean_oat_c,Clima & Conforto (HVAC),0.05444,kWh
-energy_net_kwh,net_grade_percent,Topografia (SRTM),0.03975,kWh
-energy_net_kwh,mean_speed_kmh,Cinemática & Operação,0.03844,kWh
-energy_net_kwh,mean_pos_accel_ms2,Cinemática & Operação,0.02825,kWh
-energy_net_kwh,elevation_loss_m,Topografia (SRTM),0.0239,kWh
-energy_net_kwh,initial_soc_percent,Bateria & Eletroquímica,0.02169,kWh
-energy_net_kwh,std_speed_kmh,Cinemática & Operação,0.01722,kWh
-energy_net_kwh,mean_neg_accel_ms2,Cinemática & Operação,0.01512,kWh
-delta_soc_percent,distance_km,Cinemática & Operação,1.51205,%
-delta_soc_percent,initial_soc_percent,Bateria & Eletroquímica,0.77964,%
-delta_soc_percent,aux_hvac_energy_kwh,Clima & Conforto (HVAC),0.72298,%
-delta_soc_percent,duration_s,Cinemática & Operação,0.61781,%
-delta_soc_percent,elevation_gain_m,Topografia (SRTM),0.57732,%
-delta_soc_percent,mean_oat_c,Clima & Conforto (HVAC),0.50596,%
-delta_soc_percent,elevation_loss_m,Topografia (SRTM),0.24294,%
-delta_soc_percent,mean_neg_accel_ms2,Cinemática & Operação,0.23538,%
-delta_soc_percent,mean_speed_kmh,Cinemática & Operação,0.21895,%
-delta_soc_percent,net_grade_percent,Topografia (SRTM),0.20197,%
-delta_soc_percent,mean_pos_accel_ms2,Cinemática & Operação,0.09666,%
-delta_soc_percent,std_speed_kmh,Cinemática & Operação,0.0738,%
+energy_net_kwh,distance_km,Cinemática & Operação,0.2129,kWh
+energy_net_kwh,aux_hvac_energy_kwh,Clima & Conforto (HVAC),0.14134,kWh
+energy_net_kwh,elevation_gain_m,Topografia (SRTM),0.11322,kWh
+energy_net_kwh,duration_s,Cinemática & Operação,0.06711,kWh
+energy_net_kwh,mean_oat_c,Clima & Conforto (HVAC),0.05738,kWh
+energy_net_kwh,net_grade_percent,Topografia (SRTM),0.03994,kWh
+energy_net_kwh,initial_soc_percent,Bateria & Eletroquímica,0.02874,kWh
+energy_net_kwh,mean_speed_kmh,Cinemática & Operação,0.02858,kWh
+energy_net_kwh,mean_pos_accel_ms2,Cinemática & Operação,0.02775,kWh
+energy_net_kwh,std_speed_kmh,Cinemática & Operação,0.02763,kWh
+energy_net_kwh,elevation_loss_m,Topografia (SRTM),0.02122,kWh
+energy_net_kwh,mean_neg_accel_ms2,Cinemática & Operação,0.01736,kWh
+delta_soc_percent,duration_s,Cinemática & Operação,1.07501,%
+delta_soc_percent,initial_soc_percent,Bateria & Eletroquímica,0.91408,%
+delta_soc_percent,aux_hvac_energy_kwh,Clima & Conforto (HVAC),0.91134,%
+delta_soc_percent,elevation_gain_m,Topografia (SRTM),0.69388,%
+delta_soc_percent,distance_km,Cinemática & Operação,0.54122,%
+delta_soc_percent,mean_oat_c,Clima & Conforto (HVAC),0.4787,%
+delta_soc_percent,mean_speed_kmh,Cinemática & Operação,0.26728,%
+delta_soc_percent,net_grade_percent,Topografia (SRTM),0.20218,%
+delta_soc_percent,mean_neg_accel_ms2,Cinemática & Operação,0.16446,%
+delta_soc_percent,elevation_loss_m,Topografia (SRTM),0.14937,%
+delta_soc_percent,std_speed_kmh,Cinemática & Operação,0.13758,%
+delta_soc_percent,mean_pos_accel_ms2,Cinemática & Operação,0.031,%

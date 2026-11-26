@@ -1,10 +1,10 @@
 """
-Módulo da Etapa 1 (Diagnóstico Base) — MLP Regressor para Consumo Energético.
+Módulo de Modelagem e Avaliação em Etapas — MLP Regressor para Consumo Energético.
 
-Implementa o modelo base de Rede Neural Artificial (MLPRegressor) encapsulado em
+Implementa o modelo de Rede Neural Artificial (MLPRegressor) encapsulado em
 Pipeline com StandardScaler para ambos os alvos (Energia Líquida e ΔSOC), utilizando
-exatamente a mesma divisão estratificada (388 treino / 98 holdout, seed=42) e os
-mesmos 5 folds de validação cruzada da Fase 2.
+exatamente a mesma divisão estratificada (80% treino / 20% holdout, seed=42; 385 / 97
+viagens na base saneada de 482 viagens) e os mesmos 5 folds de validação cruzada da Fase 2.
 
 Na Etapa 1, avaliamos convergência, estabilidade na CV 5-fold, diferença entre
 desempenho no treino e na CV (diagnóstico de overfitting) e eventuais previsões
@@ -159,7 +159,7 @@ def run_mlp_stage1_diagnostic() -> dict:
         )
         oof_preds, oof_conv_warnings = _collect_oof_predictions(X_train, y_train, dist_train)
 
-        # Ajuste no conjunto completo de treino (388 viagens) para comparar Treino vs. CV
+        # Ajuste no conjunto completo de treino (80% das viagens válidas) para comparar Treino vs. CV
         full_pipe = make_mlp_pipeline()
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always", ConvergenceWarning)
@@ -595,7 +595,7 @@ MLP_FINAL_CONFIGS = {
 
 
 def run_mlp_stage3_final_evaluation() -> dict:
-    """Etapa 3: treino final (388), avaliação no holdout (98), SHAP KernelExplainer e gráficos."""
+    """Etapa 3: treino final (80%), avaliação no holdout (20%), SHAP KernelExplainer e gráficos."""
     df_valid, train_idx, test_idx, n_valid, n_holdout = _load_train_split()
     X = df_valid[FEATURE_COLS].copy()
     distances = df_valid["distance_km"].to_numpy(dtype=np.float64)
@@ -655,7 +655,7 @@ def run_mlp_stage3_final_evaluation() -> dict:
             f"MAPE={test_metrics['mape_percent']:.2f}% | neg={int(np.sum(y_pred_test < 0))}"
         )
 
-        # SHAP KernelExplainer nas 98 viagens de teste
+        # SHAP KernelExplainer no conjunto de teste holdout
         logger.info(f"Calculando SHAP KernelExplainer para MLP [{target_key}]...")
         np.random.seed(42)
 
@@ -754,7 +754,7 @@ def run_mlp_stage3_final_evaluation() -> dict:
 
     # Salva JSON consolidado do MLP
     mlp_report = {
-        "stage": "Etapa 3 - Avaliação final do MLP no Holdout (98 viagens) + SHAP KernelExplainer",
+        "stage": f"Etapa 3 - Avaliação final do MLP no Holdout ({int(n_holdout)} viagens) + SHAP KernelExplainer",
         "dataset_metadata": {
             "valid_trips": int(n_valid),
             "train_trips": int(len(train_idx)),
@@ -841,8 +841,11 @@ def plot_three_models_bars_cv_vs_test(
     sns.set_theme(style="ticks", font_scale=1.0)
     fig, axes = plt.subplots(2, 2, figsize=(13.2, 9.2), dpi=300)
 
+    n_train = mlp_data["dataset_metadata"]["train_trips"]
+    n_test = mlp_data["dataset_metadata"]["test_trips"]
+
     fig.suptitle(
-        "Comparação dos Modelos da Fase 2: Validação Cruzada (N = 388) vs. Teste Final (N = 98)",
+        f"Comparação dos Modelos da Fase 2: Validação Cruzada (N = {n_train}) vs. Teste Final (N = {n_test})",
         fontsize=13.5,
         fontweight="bold",
         y=0.975,
@@ -855,8 +858,8 @@ def plot_three_models_bars_cv_vs_test(
         ("MLP", mlp_data, "#6EE7B7", "#047857"),
     ]
     cols_cfg = [
-        (0, "energy_net_kwh", "Energia Líquida (kWh)", "kWh", 4, 0.84, 1.03),
-        (1, "delta_soc_percent", "Queda de Carga — ΔSOC (%)", "%", 2, 0.55, 0.98),
+        (0, "energy_net_kwh", "Energia Líquida (kWh)", "kWh", 4, 0.84, 1.035),
+        (1, "delta_soc_percent", "Queda de Carga — ΔSOC (%)", "%", 2, 0.65, 1.02),
     ]
 
     x = np.arange(len(model_specs))
@@ -952,9 +955,11 @@ def plot_three_models_bars_cv_vs_test(
         ax_mae.grid(True, axis="y", linestyle="--", alpha=0.35, color="#CBD5E1")
         sns.despine(ax=ax_mae)
 
+    dum_e = xgb_data["models"]["energy_net_kwh"]["baselines"]["dummy_mean"]
+    dum_s = xgb_data["models"]["delta_soc_percent"]["baselines"]["dummy_mean"]
     legend_handles = [
-        plt.Rectangle((0, 0), 1, 1, facecolor="#E2E8F0", edgecolor="#334155", hatch="//", label="CV 5-Fold no Treino (N = 388, barras de erro = ±1 DP)"),
-        plt.Rectangle((0, 0), 1, 1, facecolor="#475569", edgecolor="#0F172A", label="Teste Final Holdout (N = 98 viagens inéditas)"),
+        plt.Rectangle((0, 0), 1, 1, facecolor="#E2E8F0", edgecolor="#334155", hatch="//", label=f"CV 5-Fold no Treino (N = {n_train}, barras de erro = ±1 DP)"),
+        plt.Rectangle((0, 0), 1, 1, facecolor="#475569", edgecolor="#0F172A", label=f"Teste Final Holdout (N = {n_test} viagens inéditas)"),
     ]
     fig.legend(
         handles=legend_handles, loc="upper center", ncol=2, frameon=True,
@@ -962,7 +967,8 @@ def plot_three_models_bars_cv_vs_test(
     )
     fig.text(
         0.5, 0.012,
-        "Referência piso Dummy (Média no teste): Energia Líquida R² = −0,0145 (MAE = 0,4036 kWh) | ΔSOC R² = −0,0020 (MAE = 2,69 %).",
+        f"Referência piso Dummy (Média no teste): Energia Líquida R² = {_fmt_pt(dum_e['r2'], 4)} (MAE = {_fmt_pt(dum_e['mae'], 4)} kWh) | "
+        f"ΔSOC R² = {_fmt_pt(dum_s['r2'], 4)} (MAE = {_fmt_pt(dum_s['mae'], 2)} %).",
         ha="center", fontsize=8.8, color="#475569", style="italic",
     )
 
@@ -988,8 +994,9 @@ def plot_three_models_scatter_and_bars(
         gridspec_kw={"height_ratios": [1.6, 0.82, 0.85]},
     )
 
+    n_test = mlp_data["dataset_metadata"]["test_trips"]
     fig.suptitle(
-        "Comparação dos Três Modelos no Conjunto de Teste Final (N = 98 viagens)",
+        f"Comparação dos Três Modelos no Conjunto de Teste Final (N = {n_test} viagens)",
         fontsize=14,
         fontweight="bold",
         y=0.985,
@@ -1001,8 +1008,8 @@ def plot_three_models_scatter_and_bars(
     c_mlp = "#047857"
 
     cols_cfg = [
-        (0, "energy_net_kwh", "Energia Líquida (kWh)", "kWh", -0.12, 4, 0.85, 1.02),
-        (1, "delta_soc_percent", "Queda de Carga — ΔSOC (%)", "%", -1.1, 2, 0.55, 0.92),
+        (0, "energy_net_kwh", "Energia Líquida (kWh)", "kWh", -0.12, 4, 0.85, 1.03),
+        (1, "delta_soc_percent", "Queda de Carga — ΔSOC (%)", "%", -1.1, 2, 0.70, 0.98),
     ]
 
     for col_idx, target_key, col_title, unit, y_floor, mae_dec, r2_ymin, r2_ymax in cols_cfg:
@@ -1115,7 +1122,7 @@ def generate_three_models_comparison_figures() -> None:
     xgb_data = json.loads(xgb_json.read_text(encoding="utf-8"))
     mlp_data = json.loads(mlp_json.read_text(encoding="utf-8"))
 
-    # Carrega previsões no mesmo conjunto de teste (98 viagens) usando modelos salvos + LinearRegression
+    # Carrega previsões no mesmo conjunto de teste holdout usando modelos salvos + LinearRegression
     df_valid, train_idx, test_idx, _, _ = _load_train_split()
     X_train = df_valid[FEATURE_COLS].iloc[train_idx].copy()
     X_test = df_valid[FEATURE_COLS].iloc[test_idx].copy()
